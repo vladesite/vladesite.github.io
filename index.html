@@ -601,7 +601,7 @@
     <header>
         <h1>八王子周辺の新築マンションのご案内</h1>
         <p>お客様のご希望に合わせた新築マンションをご案内します</p>
-        <p class="copyright">Copyright© 2025-2026 S.HIRAI@ITOCHU HOUSING.CO., LTD　Ver.2.04</p>
+        <p class="copyright">Copyright© 2025-2026 S.HIRAI@ITOCHU HOUSING.CO., LTD Ver.2.04</p>
     </header>
     
     <div class="progress-container">
@@ -671,7 +671,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="areasize">ご希望の専有面積[cite: 1]</label>
+                    <label for="areasize">ご希望の専有面積</label>
                     <div class="select-wrapper">
                         <select id="areasize">
                             <option value="40">40㎡〜</option>
@@ -785,7 +785,7 @@
             </div>
 
             <div class="step" data-step="6">
-                <div class="question-title">Q6. 周辺環境や建物構造についての重要度度は？</div>
+                <div class="question-title">Q6. 周辺環境や建物構造についての重要度は？</div>
                 <div class="form-group">
                     <label for="earthquake">高い耐震性（免震・制振構造など）</label>
                     <div class="select-wrapper">
@@ -948,7 +948,7 @@
             },
             tags: ["価格重視", "低炭素建築物","全戸南東向き"],
             benefits: ["エリア初「東京こどもすくすく住宅認定」取得", "「ZEH-M Oriented」 & 「低炭素建築物」ダブル認定", "3LDK中心、平均71㎡超。全邸南東向き", "予算を抑えつつ広めの専有面積を確保しやすい"],
-            demerits: ["駅徒歩距離があるため、毎日の徒歩通勤・通学を重視する世帯には負担","夜間は周辺が暗いため注意が必要" "川沿いの立地で、ハザードマップ（浸水リスク1M～3M想定）の確認が事前に必須", "JR八高線の線路沿いのため、騒音懸念有り"],
+            demerits: ["駅徒歩距離があるため、毎日の徒歩通勤・通学を重視する世帯には負担", "夜間は周辺が暗いため注意が必要", "川沿いの立地で、ハザードマップ（浸水リスク1M～3M想定）の確認が事前に必須", "JR八高線の線路沿いのため、騒音懸念有り"],
             comment: "お客様のご要望にマッチするのは<span style='color: #c5a059; font-weight: bold;'>『ローレルコート八王子明神町』</span>です。予算を5,500万円以下に抑えつつ、3LDK/平均71㎡超で風通しや採光、開放感をより一層満喫いただけるよう、住み心地に配慮したプランニング。室内の大型収納も魅力です。"
         },
         {
@@ -1063,7 +1063,7 @@
             demerits: ["3LDK/60㎡タイプのため手狭感がある", "JR八王子駅へは距離があるため、中央線をメインに使う場合はバス便を検討", "駅から大和田橋（浅川）を渡るため交通量が多く暗い道。スーパー等も無いため女性や子供は注意", "八王子市ハザードマップ（浸水リスク）エリアのため事前確認が必須", "構造や共用部は非常にシンプルであり、高級ホテルのような豪華さを求める層には不向き"],
             comment: "「京王八王子」駅利用で新宿への座っての通勤（始発電車）やコストパフォーマンスを手に入れたい方には<span style='color: #c5a059; font-weight: bold;'>『サンクレイドル京王八王子』</span>をお勧めします。"
         },
-　　　　{
+        {
             name: "プレシス八王子横山町",
             minBudget: 5000,
             matchConditions: {
@@ -1212,9 +1212,11 @@
             interiorSpec: elements.interiorSpec.value,
             innerCorridor: elements.innerCorridor.value,
             management: elements.management.value,
+            amenities: elements.amenities.value,
             earthquake: elements.earthquake.value, 
             hazard: elements.hazard.value,
             childcare: elements.childcare.value,
+            shopping: elements.shopping.value,
             parking: elements.parking.value
         };
 
@@ -1230,11 +1232,10 @@
                 score -= (prop.minBudget - userBudget) * 0.2; 
             }
 
-            if (prop.matchConditions.commute.includes(userCommute)) {
+            if (prop.matchConditions.commute && prop.matchConditions.commute.includes(userCommute)) {
                 score += 15;
             }
 
-            // 追加条件のスコアリング
             if (prop.matchConditions.family && prop.matchConditions.family.includes(userFamily)) {
                 score += 10;
             }
@@ -1248,6 +1249,8 @@
             Object.keys(userPreferences).forEach(key => {
                 const userVal = userPreferences[key];
                 let propVal = prop.matchConditions[key];
+
+                if (propVal === undefined) return;
 
                 if (!Array.isArray(propVal)) {
                     propVal = [propVal];
@@ -1348,13 +1351,13 @@
     }
 
     function restartDiagnosis() {
-        elements.resultStep.classList.remove('active');
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        
         currentStep = 1;
         isProcessing = false;
         
         const firstStep = document.querySelector(`.step[data-step="1"]`);
-        if (firstStep) firstStep.classList.add('add');
-        firstStep.classList.add('active');
+        if (firstStep) firstStep.classList.add('active');
         
         elements.navButtons.style.display = 'flex';
         elements.prevBtn.style.visibility = 'hidden';
