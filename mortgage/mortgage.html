@@ -285,11 +285,11 @@
               <div class="flex justify-between items-center mb-1">
                 <label for="ownCapitalNum" class="font-semibold text-slate-300">自己資金（頭金）</label>
                 <div class="flex items-center space-x-1">
-                  <input type="number" id="ownCapitalNum" value="10" min="0" max="10000" step="10" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-slate-300 focus:outline-none focus:border-cyan-500">
+                  <input type="number" id="ownCapitalNum" value="0" min="0" max="10000" step="10" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-slate-300 focus:outline-none focus:border-cyan-500">
                   <span class="text-slate-400">万円</span>
                 </div>
               </div>
-              <input type="range" id="ownCapital" min="0" max="3000" step="10" value="10" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+              <input type="range" id="ownCapital" min="0" max="3000" step="10" value="0" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
             </div>
 
             <!-- 借入総額（自動計算） -->
@@ -574,10 +574,10 @@
 
     // デフォルト値にリセット
     function resetDefaults() {
-      propertyPriceInput.value = 8788;
-      propertyPriceNum.value = 8788;
-      ownCapitalInput.value = 8;
-      ownCapitalNum.value = 8;
+      propertyPriceInput.value = 8780;
+      propertyPriceNum.value = 8780;
+      ownCapitalInput.value = 0;
+      ownCapitalNum.value = 0;
       interestRateInput.value = 1.125;
       interestRateNum.value = 1.125;
       evalYearsInput.value = 28;
