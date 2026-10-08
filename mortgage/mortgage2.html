@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>住宅ローン返済額＆資産運用（NISA）シミュレーター</title>
+  <!-- JR東日本伊藤忠ハウジング（株） Copyright© 2026 SHUICHI HIRAI All Rights Reserved. -->
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              800: '#131e32',
+              900: '#0b1324',
+              950: '#050a14'
+            },
+            accent: {
+              gold: '#fbbf24',
+              goldglow: '#f59e0b',
+              emerald: '#10b981',
+              cyan: '#06b6d4',
+              rose: '#f43f5e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #0b1324;
+      color: #f1f5f9;
+    }
+    
+    input[type=range] {
+      accent-color: #06b6d4;
+    }
+    
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #fff3b0 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .emerald-gradient-text {
+      background: linear-gradient(135deg, #a7f3d0 0%, #10b981 50%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .glass-panel {
+      background: rgba(19, 30, 50, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* 印刷およびPDF出力用の最適化 (白地＆濃色文字) */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+      }
+      
+      .no-print {
+        display: none !important;
+      }
+      
+      .glass-panel {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        color: #0f172a !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      
+      .gold-gradient-text {
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        -webkit-text-fill-color: #b45309 !important;
+        color: #b45309 !important;
+        font-weight: 900 !important;
+      }
+      
+      .emerald-gradient-text {
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        -webkit-text-fill-color: #047857 !important;
+        color: #047857 !important;
+        font-weight: 900 !important;
+      }
+
+      .text-white, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400, .text-slate-500 {
+        color: #0f172a !important;
+      }
+      
+      .text-cyan-300, .text-cyan-400 {
+        color: #0284c7 !important;
+      }
+      
+      .text-emerald-300, .text-emerald-400 {
+        color: #047857 !important;
+      }
+      
+      .text-amber-300, .text-amber-400 {
+        color: #b45309 !important;
+      }
+      
+      .text-rose-300, .text-rose-400 {
+        color: #be123c !important;
+      }
+
+      input[type=number], input[type=range], select, button {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #94a3b8 !important;
+      }
+
+      .bg-slate-900, .bg-slate-900\/80, .bg-navy-900, .bg-navy-950, .bg-slate-900\/60 {
+        background-color: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+      }
+
+      .bg-emerald-500\/20 {
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border-color: #6ee7b7 !important;
+      }
+      
+      .bg-amber-500\/10, .bg-amber-500\/20 {
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+        border-color: #fde68a !important;
+      }
+      
+      .bg-cyan-500\/20 {
+        background-color: #e0f2fe !important;
+        color: #075985 !important;
+        border-color: #7dd3fc !important;
+      }
+      
+      .bg-rose-500\/20 {
+        background-color: #ffe4e6 !important;
+        color: #9f1239 !important;
+        border-color: #fecdd3 !important;
+      }
+
+      table {
+        color: #0f172a !important;
+      }
+      
+      th {
+        background-color: #e2e8f0 !important;
+        color: #0f172a !important;
+      }
+      
+      tr {
+        border-color: #cbd5e1 !important;
+      }
+      
+      .bg-cyan-950\/50 {
+        background-color: #f0f9ff !important;
+      }
+
+      .chart-container {
+        height: 320px !important;
+        max-height: 350px !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      
+      header, footer {
+        border-color: #cbd5e1 !important;
+        background-color: #ffffff !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white">
+
+  <!-- ヘッダー -->
+  <header class="bg-navy-900/90 border-b border-slate-800/80 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-row justify-between items-center gap-3">
+      
+      <!-- ロゴ・タイトル -->
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-gradient-to-tr from-cyan-600 via-teal-500 to-emerald-400 rounded-xl shadow-lg shadow-cyan-950/50">
+          <i class="fa-solid fa-calculator text-xl text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg sm:text-xl font-black tracking-wide text-white">
+              住宅ローン長期返済 ＆ NISA資産運用シミュレーター
+            </h1>
+            <span class="px-2 py-0.5 text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded-full">参考資料</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">35年〜50年ローン比較・キャッシュフローの創出・早期完済のご提案</p>
+        </div>
+      </div>
+      
+      <!-- アクションボタン -->
+      <div class="no-print">
+        <button type="button" id="printBtn" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold border border-cyan-400/40 rounded-xl text-xs sm:text-sm transition flex items-center space-x-2 shadow-lg shadow-cyan-950/50 cursor-pointer">
+          <i class="fa-solid fa-print"></i>
+          <span>印刷 / 提案書PDF保存</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow space-y-6">
+
+    <!-- 概念強調バナー -->
+    <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-cyan-400 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-12 -bottom-12 opacity-5 text-cyan-300 pointer-events-none">
+        <i class="fa-solid fa-chart-line text-[200px]"></i>
+      </div>
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-2 max-w-4xl">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-300 text-xs font-bold">
+            <i class="fa-solid fa-bolt"></i>
+            <span>賢い住宅ローンの新常識：長期返済（35年〜50年）× 投資運用</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-white leading-tight">
+            返済期間を延ばして<span class="gold-gradient-text">返済額を削減</span> ＆ 浮いた差額をNISA等で運用して<span class="emerald-gradient-text">早期完済</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            35年ローンにこだわらず返済期間（最長50年）を延ばすことで、毎月の返済負担を抑えて手元キャッシュフローにゆとりを確保。その浮いた差額をNISA等で複利運用することで、将来的に運用資産額がローン残債を逆転します。35年で返すよりも<strong class="text-emerald-400">「流動資産を保有しながら圧倒的に早く完済できる」</strong>資金計画をご提案します。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- 左側：入力設定パネル -->
+      <div class="lg:col-span-4 space-y-5">
+        <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-700/80">
+            <h2 class="text-base font-bold text-white flex items-center">
+              <i class="fa-solid fa-sliders text-cyan-400 mr-2"></i> シミュレーション条件設定
+            </h2>
+            <button type="button" id="resetBtn" class="text-xs text-slate-400 hover:text-cyan-400 transition underline no-print cursor-pointer">
+              初期値に戻す
+            </button>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            
+            <!-- 物件購入価格 -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="propertyPriceNum" class="font-semibold text-slate-300">物件販売価格</label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="propertyPriceNum" value="8780" min="1000" max="25000" step="10" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-cyan-300 focus:outline-none focus:border-cyan-500">
+                  <span class="text-slate-400">万円</span>
+                </div>
+              </div>
+              <input type="range" id="propertyPrice" min="1000" max="25000" step="10" value="8780" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+            </div>
+
+            <!-- 自己資金 -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="ownCapitalNum" class="font-semibold text-slate-300">自己資金（頭金）</label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="ownCapitalNum" value="0" min="0" max="10000" step="10" class="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-slate-300 focus:outline-none focus:border-cyan-500">
+                  <span class="text-slate-400">万円</span>
+                </div>
+              </div>
+              <input type="range" id="ownCapital" min="0" max="10000" step="10" value="0" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+            </div>
+
+            <!-- 借入総額 -->
+            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
+              <span class="font-bold text-slate-300">借入金額（総ローン額）</span>
+              <div>
+                <span id="loanAmountDisplay" class="text-base font-extrabold text-cyan-400">8,780</span>
+                <span class="text-slate-400"> 万円</span>
+              </div>
+            </div>
+
+            <!-- 借入金利 -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="interestRateNum" class="font-semibold text-slate-300">住宅ローン借入金利 (年利)</label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="interestRateNum" value="1.125" min="0.0" max="5.0" step="0.001" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-cyan-300 focus:outline-none focus:border-cyan-500">
+                  <span class="text-slate-400">%</span>
+                </div>
+              </div>
+              <input type="range" id="interestRate" min="0.0" max="5.0" step="0.001" value="1.125" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+            </div>
+
+            <!-- 長期ローン比較年数選択 (35年〜50年で動的選択可能に改修) -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="selectedLoanYearsNum" class="font-semibold text-cyan-300">長期ローンの返済期間設定</label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="selectedLoanYearsNum" value="50" min="35" max="50" step="1" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-cyan-300 focus:outline-none focus:border-cyan-500">
+                  <span class="text-slate-400">年返済</span>
+                </div>
+              </div>
+              <input type="range" id="selectedLoanYears" min="35" max="50" step="1" value="50" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+              
+              <!-- 主要年数クイック選択ボタン -->
+              <div class="grid grid-cols-4 gap-1.5 mt-2">
+                <button type="button" class="quick-year-btn py-1 text-[11px] font-bold rounded border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition cursor-pointer" data-years="35">35年</button>
+                <button type="button" class="quick-year-btn py-1 text-[11px] font-bold rounded border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition cursor-pointer" data-years="40">40年</button>
+                <button type="button" class="quick-year-btn py-1 text-[11px] font-bold rounded border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition cursor-pointer" data-years="45">45年</button>
+                <button type="button" class="quick-year-btn py-1 text-[11px] font-bold rounded border border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-md cursor-pointer" data-years="50">50年</button>
+              </div>
+            </div>
+
+            <hr class="border-slate-800 my-2">
+
+            <!-- 判定目標運用期間 -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="evalYearsNum" class="font-semibold text-amber-300 flex items-center">
+                  <i class="fa-solid fa-hourglass-half mr-1"></i> 完済の目標年数
+                </label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="evalYearsNum" value="28" min="5" max="50" step="1" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-amber-400 focus:outline-none focus:border-amber-500">
+                  <span class="text-slate-400">年後</span>
+                </div>
+              </div>
+              <input type="range" id="evalYears" min="5" max="50" step="1" value="28" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+              <p class="text-[11px] text-slate-400 mt-1">※この経過年数時点での「残債 vs 運用資産」を一括判定します</p>
+            </div>
+
+            <!-- 想定運用利回り -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="investReturnNum" class="font-semibold text-emerald-400 flex items-center">
+                  <i class="fa-solid fa-chart-pie mr-1"></i> NISA等 想定運用利回り (年利)
+                </label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="investReturnNum" value="7.0" min="0.0" max="15.0" step="0.1" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-right font-bold text-emerald-400 focus:outline-none focus:border-emerald-500">
+                  <span class="text-slate-400">%</span>
+                </div>
+              </div>
+              <input type="range" id="investReturn" min="0.0" max="15.0" step="0.1" value="7.0" class="w-full h-1.5 bg-slate-700 rounded appearance-none cursor-pointer">
+              <p class="text-[11px] text-slate-400 mt-1">※世界株・S&P500等の長期インデックス運用平均を想定</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- アピールポイント要約 -->
+        <div class="glass-panel rounded-2xl p-5 border-l-4 border-l-amber-400 shadow-xl space-y-2 text-xs">
+          <div class="font-bold text-amber-300 flex items-center text-sm">
+            <i class="fa-solid fa-lightbulb text-amber-400 mr-2"></i> お客様提案時のポイント
+          </div>
+          <ul class="space-y-1.5 text-slate-300 list-disc list-inside leading-relaxed">
+            <li>無理に35年で返済せず、長期ローンで月々の返済額を大幅軽減。</li>
+            <li>軽減された差額を毎月自動でNISA積立投資へ配分。</li>
+            <li>団体信用生命保険（団信）の保障期間も最長50年で保持可能。</li>
+            <li>手元の現金手残りを確保しつつ、20〜30年目で一括完済できる自由度を獲得。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 右側：結果表示・ハイライト・グラフエリア -->
+      <div class="lg:col-span-8 space-y-6">
+
+        <!-- ハイライトメトリックスカード -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          
+          <!-- 毎月節約額 -->
+          <div class="glass-panel rounded-2xl p-5 border-t-2 border-emerald-400 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="flex justify-between items-start">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">毎月の返済削減額</p>
+              <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 rounded font-bold border border-emerald-500/30">35年返済比</span>
+            </div>
+            <div class="my-3">
+              <div class="flex items-baseline">
+                <span id="monthlySavingsDisplay" class="text-3xl font-black text-emerald-400">0</span>
+                <span class="ml-1 text-sm font-bold text-slate-200">円 /月</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">
+                手元の毎月キャッシュフローが改善
+              </p>
+            </div>
+            <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 flex justify-between">
+              <span>35年返済月額:</span>
+              <span id="m35PaymentDisplay" class="font-bold text-slate-200">0円</span>
+            </div>
+          </div>
+
+          <!-- 指定運用年積立資産 -->
+          <div class="glass-panel rounded-2xl p-5 border-t-2 border-amber-400 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="flex justify-between items-start">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider"><span id="evalYearAssetLabel">28</span>年目の差額積立資産</p>
+              <span class="px-2 py-0.5 text-[10px] bg-amber-500/20 text-amber-300 rounded font-bold border border-amber-500/30">NISA複利</span>
+            </div>
+            <div class="my-3">
+              <div class="flex items-baseline">
+                <span id="evalAssetDisplay" class="text-3xl font-black gold-gradient-text">0</span>
+                <span class="ml-1 text-sm font-bold text-slate-200">万円</span>
+              </div>
+              <p class="text-[11px] text-emerald-400 font-medium mt-1">
+                うち運用益: <span id="evalProfitDisplay" class="font-bold">0</span> 万円
+              </p>
+            </div>
+            <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 flex justify-between">
+              <span>積立元本累計:</span>
+              <span id="evalPrincipalDisplay" class="font-bold text-slate-200">0万円</span>
+            </div>
+          </div>
+
+          <!-- 実質完済判定カード -->
+          <div id="payoffStatusCard" class="glass-panel rounded-2xl p-5 border-t-2 border-cyan-400 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="flex justify-between items-start">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">実質一括完済判定</p>
+              <span id="payoffBadge" class="px-2 py-0.5 text-[10px] bg-cyan-500/20 text-cyan-300 rounded font-bold border border-cyan-500/30">完済可能</span>
+            </div>
+            <div class="my-2">
+              <div class="text-xs text-slate-300 font-bold mb-1">
+                <span id="evalTargetYearText">28</span>年目のローン残債: <span id="evalLoanBalanceDisplay" class="text-rose-400 font-extrabold">0</span> 万円
+              </div>
+              <div id="payoffStatusMessage" class="text-xs font-bold text-emerald-400 leading-snug">
+                <!-- JSで動的判定メッセージ -->
+              </div>
+            </div>
+            <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 flex justify-between items-center">
+              <span>最速実質完済:</span>
+              <span id="earliestCrossYearDisplay" class="font-extrabold text-amber-300">-- 年目</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- グラフエリア -->
+        <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-800">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white flex items-center">
+                <i class="fa-solid fa-chart-area text-cyan-400 mr-2"></i> ローン残債推移 vs 差額積立資産（複利）
+              </h3>
+              <p class="text-xs text-slate-400">積立資産（緑）が残債額（青）を上回るポイントで実質一括完済が可能です</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 text-[11px]">
+              <span class="flex items-center"><span class="w-3 h-1 bg-cyan-400 rounded-full mr-1"></span><span id="chartLoanLabel">50年残債</span></span>
+              <span class="flex items-center"><span class="w-3 h-1 bg-emerald-400 rounded-full mr-1"></span>NISA積立資産</span>
+              <span class="flex items-center"><span class="w-3 h-1 bg-slate-500 rounded-full mr-1"></span>35年残債</span>
+            </div>
+          </div>
+
+          <div class="relative w-full h-[320px] sm:h-[380px] chart-container">
+            <canvas id="simulationChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 詳細比較テーブル -->
+        <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm sm:text-base font-bold text-white flex items-center">
+              <i class="fa-solid fa-table-list text-amber-400 mr-2"></i> 返済期間別 詳細比較表
+            </h3>
+            <span class="text-xs text-slate-400">（借入金利: <span id="tableRateDisplay" class="text-cyan-300 font-bold">1.125</span>%）</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[650px]">
+              <thead>
+                <tr class="border-b border-slate-700/80 text-[11px] font-semibold text-slate-400 bg-slate-900/60">
+                  <th class="py-2.5 px-3">返済期間</th>
+                  <th class="py-2.5 px-3">毎月返済額</th>
+                  <th class="py-2.5 px-3">35年比（毎月節約額）</th>
+                  <th class="py-2.5 px-3">総返済額</th>
+                  <th class="py-2.5 px-3"><span class="tableEvalYearText">28</span>年目の積立資産</th>
+                  <th class="py-2.5 px-3"><span class="tableEvalYearText">28</span>年目の残債</th>
+                  <th class="py-2.5 px-3 text-right"><span class="tableEvalYearText">28</span>年目の完済判定</th>
+                </tr>
+              </thead>
+              <tbody id="comparisonTableBody" class="text-xs divide-y divide-slate-800/60">
+                <!-- JSで動的生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- 注意事項・コンプライアンス表記 -->
+    <div class="glass-panel rounded-2xl p-5 border border-slate-800 text-xs text-slate-400 space-y-2">
+      <div class="font-bold text-slate-300 flex items-center">
+        <i class="fa-solid fa-triangle-exclamation text-amber-400 mr-2"></i> 本シミュレーションに関する注意事項・免責事項
+      </div>
+      <p class="leading-relaxed">
+        ※ 本シミュレーションは試算値であり、将来の金利変動、税率の変更、運用の成果を保証するものではありません。
+        住宅ローン利用時には別途、事務手数料、保証料、登記費用などの諸費用が発生します。
+        資産運用（NISA）の利回りは仮定であり、元本割れが発生するリスクもあります。実際の融資条件・投資判断につきましては各種専門機関にご相談の上、お客様ご自身の判断で行ってください。
+      </p>
+    </div>
+
+  </main>
+
+  <!-- フッター -->
+  <footer class="bg-navy-950 border-t border-slate-800 py-6 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div>
+        <p class="text-slate-300 font-medium">お客様提案用「住宅ローン返済額＆資産運用（NISA）シミュレーター」</p>
+      </div>
+      <div>
+        <p class="font-semibold text-slate-200 tracking-wider">Copyright© 2026 SHUICHI HIRAI All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    'use strict';
+
+    (function () {
+      // グローバル変数・Chartインスタンス
+      let chartInstance = null;
+
+      // DOM要素の参照
+      const propertyPriceInput = document.getElementById('propertyPrice');
+      const propertyPriceNum = document.getElementById('propertyPriceNum');
+      const ownCapitalInput = document.getElementById('ownCapital');
+      const ownCapitalNum = document.getElementById('ownCapitalNum');
+      const interestRateInput = document.getElementById('interestRate');
+      const interestRateNum = document.getElementById('interestRateNum');
+      const evalYearsInput = document.getElementById('evalYears');
+      const evalYearsNum = document.getElementById('evalYearsNum');
+      const investReturnInput = document.getElementById('investReturn');
+      const investReturnNum = document.getElementById('investReturnNum');
+      const selectedLoanYearsInput = document.getElementById('selectedLoanYears');
+      const selectedLoanYearsNum = document.getElementById('selectedLoanYearsNum');
+
+      // 双方向入力同期・バリデーションヘルパー
+      function setupSync(rangeEl, numEl, callback) {
+        const handler = (source) => {
+          let val = parseFloat(source.value);
+          if (isNaN(val)) val = 0;
+
+          const min = parseFloat(source.min);
+          const max = parseFloat(source.max);
+
+          // 入力ガード処理
+          if (val < min) val = min;
+          if (val > max) val = max;
+
+          rangeEl.value = val;
+          numEl.value = val;
+
+          // 自己資金が物件価格を超えないガード
+          const currentPrice = parseFloat(propertyPriceInput.value) || 0;
+          const currentCapital = parseFloat(ownCapitalInput.value) || 0;
+          if (currentCapital > currentPrice) {
+            ownCapitalInput.value = currentPrice;
+            ownCapitalNum.value = currentPrice;
+          }
+
+          callback();
+        };
+
+        rangeEl.addEventListener('input', () => handler(rangeEl));
+        numEl.addEventListener('input', () => handler(numEl));
+        numEl.addEventListener('change', () => handler(numEl));
+      }
+
+      // 各入力項目のバインド
+      setupSync(propertyPriceInput, propertyPriceNum, updateAllCalculations);
+      setupSync(ownCapitalInput, ownCapitalNum, updateAllCalculations);
+      setupSync(interestRateInput, interestRateNum, updateAllCalculations);
+      setupSync(evalYearsInput, evalYearsNum, updateAllCalculations);
+      setupSync(investReturnInput, investReturnNum, updateAllCalculations);
+      setupSync(selectedLoanYearsInput, selectedLoanYearsNum, () => {
+        updateQuickYearButtons(parseInt(selectedLoanYearsInput.value));
+        updateAllCalculations();
+      });
+
+      // クイック年数切り替えボタンの表示更新
+      function updateQuickYearButtons(selectedYears) {
+        document.querySelectorAll('.quick-year-btn').forEach(btn => {
+          const bYears = parseInt(btn.getAttribute('data-years'));
+          if (bYears === selectedYears) {
+            btn.className = "quick-year-btn py-1 text-[11px] font-bold rounded border border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-md cursor-pointer";
+          } else {
+            btn.className = "quick-year-btn py-1 text-[11px] font-bold rounded border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition cursor-pointer";
+          }
+        });
+      }
+
+      // クイックボタンイベントのバインド
+      document.querySelectorAll('.quick-year-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const years = parseInt(btn.getAttribute('data-years'));
+          selectedLoanYearsInput.value = years;
+          selectedLoanYearsNum.value = years;
+          updateQuickYearButtons(years);
+          updateAllCalculations();
+        });
+      });
+
+      // デフォルト値にリセット
+      function resetDefaults() {
+        propertyPriceInput.value = 8780;
+        propertyPriceNum.value = 8780;
+        ownCapitalInput.value = 0;
+        ownCapitalNum.value = 0;
+        interestRateInput.value = 1.125;
+        interestRateNum.value = 1.125;
+        evalYearsInput.value = 28;
+        evalYearsNum.value = 28;
+        investReturnInput.value = 7.0;
+        investReturnNum.value = 7.0;
+        selectedLoanYearsInput.value = 50;
+        selectedLoanYearsNum.value = 50;
+        
+        updateQuickYearButtons(50);
+        updateAllCalculations();
+      }
+
+      document.getElementById('resetBtn').addEventListener('click', resetDefaults);
+      document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+      /**
+       * 住宅ローン毎月返済額（PMT）の計算 (円)
+       */
+      function calcPMT(principalYen, annualRatePercent, totalYears) {
+        if (principalYen <= 0) return 0;
+        if (annualRatePercent <= 0) return Math.round(principalYen / (totalYears * 12));
+        const r = (annualRatePercent / 100) / 12;
+        const n = totalYears * 12;
+        const pmt = principalYen * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        return Math.round(pmt);
+      }
+
+      /**
+       * 指定月数経過後のローン残債額の計算 (万円)
+       */
+      function calcLoanBalance(principalYen, annualRatePercent, totalYears, elapsedMonths) {
+        const n = totalYears * 12;
+        if (elapsedMonths >= n || principalYen <= 0) return 0;
+        const r = (annualRatePercent / 100) / 12;
+        if (r <= 0) {
+          return Math.max(0, Math.round((principalYen * (1 - elapsedMonths / n)) / 10000));
+        }
+        const balanceYen = principalYen * (Math.pow(1 + r, n) - Math.pow(1 + r, elapsedMonths)) / (Math.pow(1 + r, n) - 1);
+        return Math.max(0, Math.round(balanceYen / 10000));
+      }
+
+      /**
+       * 月々積立複利運用の資産額の計算 (万円)
+       */
+      function calcInvestmentFV(monthlySavingsYen, annualReturnPercent, elapsedMonths) {
+        if (monthlySavingsYen <= 0 || elapsedMonths <= 0) return 0;
+        const r = (annualReturnPercent / 100) / 12;
+        if (r <= 0) {
+          return Math.round((monthlySavingsYen * elapsedMonths) / 10000);
+        }
+        const fvYen = monthlySavingsYen * (Math.pow(1 + r, elapsedMonths) - 1) / r;
+        return Math.round(fvYen / 10000);
+      }
+
+      // メイン計算＆更新処理
+      function updateAllCalculations() {
+        const priceVal = parseFloat(propertyPriceInput.value) || 0;
+        const capitalVal = parseFloat(ownCapitalInput.value) || 0;
+        const loanAmountYen = Math.max(0, (priceVal - capitalVal)) * 10000;
+        const rateVal = parseFloat(interestRateInput.value) || 0;
+        const selectedYears = parseInt(selectedLoanYearsInput.value) || 50;
+        const evalYearsVal = parseInt(evalYearsInput.value) || 28;
+        const returnVal = parseFloat(investReturnInput.value) || 0;
+
+        // 借入金額表示
+        document.getElementById('loanAmountDisplay').innerText = (loanAmountYen / 10000).toLocaleString();
+
+        // 返済額算出
+        const m35 = calcPMT(loanAmountYen, rateVal, 35);
+        const mSelected = calcPMT(loanAmountYen, rateVal, selectedYears);
+        const monthlySavings = Math.max(0, m35 - mSelected);
+
+        // サマリーカード1 (毎月削減額)
+        document.getElementById('monthlySavingsDisplay').innerText = monthlySavings.toLocaleString();
+        document.getElementById('m35PaymentDisplay').innerText = m35.toLocaleString() + ' 円';
+
+        // 評価年時点の各種数値
+        const evalMonths = evalYearsVal * 12;
+        const evalAssetVal = calcInvestmentFV(monthlySavings, returnVal, evalMonths);
+        const totalPrincipalInvested = Math.round((monthlySavings * evalMonths) / 10000);
+        const evalProfitVal = Math.max(0, evalAssetVal - totalPrincipalInvested);
+        const evalLoanBalance = calcLoanBalance(loanAmountYen, rateVal, selectedYears, evalMonths);
+
+        // サマリーカード2 (運用資産)
+        document.getElementById('evalYearAssetLabel').innerText = evalYearsVal;
+        document.getElementById('evalAssetDisplay').innerText = evalAssetVal.toLocaleString();
+        document.getElementById('evalProfitDisplay').innerText = evalProfitVal.toLocaleString();
+        document.getElementById('evalPrincipalDisplay').innerText = totalPrincipalInvested.toLocaleString() + '万円';
+
+        // サマリーカード3 (実質完済判定)
+        document.getElementById('evalTargetYearText').innerText = evalYearsVal;
+        document.getElementById('evalLoanBalanceDisplay').innerText = evalLoanBalance.toLocaleString();
+
+        const diffVal = evalAssetVal - evalLoanBalance;
+        const payoffStatusMsg = document.getElementById('payoffStatusMessage');
+        const payoffBadge = document.getElementById('payoffBadge');
+
+        if (diffVal >= 0) {
+          payoffBadge.className = "px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 rounded font-bold border border-emerald-500/30";
+          payoffBadge.innerText = "完済可能！";
+          payoffStatusMsg.className = "text-xs font-bold text-emerald-400 leading-snug";
+          payoffStatusMsg.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> 運用資産で残債を一括完済可能です！<br><span class="text-amber-300 font-extrabold">+${diffVal.toLocaleString()} 万円</span> の黒字手残り`;
+        } else {
+          payoffBadge.className = "px-2 py-0.5 text-[10px] bg-rose-500/20 text-rose-300 rounded font-bold border border-rose-500/30";
+          payoffBadge.innerText = "残債あり";
+          payoffStatusMsg.className = "text-xs font-bold text-slate-300 leading-snug";
+          payoffStatusMsg.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> 残債まであと <span class="text-rose-400 font-bold">${Math.abs(diffVal).toLocaleString()} 万円</span>（積立継続で逆転へ）`;
+        }
+
+        // 最速実質完済達成月数の特定（月単位精密計算）
+        let earliestCrossMonth = null;
+        if (monthlySavings > 0) {
+          for (let m = 1; m <= selectedYears * 12; m++) {
+            const bal = calcLoanBalance(loanAmountYen, rateVal, selectedYears, m);
+            const ast = calcInvestmentFV(monthlySavings, returnVal, m);
+            if (ast >= bal) {
+              earliestCrossMonth = m;
+              break;
+            }
+          }
+        }
+
+        const crossYearDisplay = document.getElementById('earliestCrossYearDisplay');
+        if (earliestCrossMonth) {
+          const y = Math.floor(earliestCrossMonth / 12);
+          const m = earliestCrossMonth % 12;
+          crossYearDisplay.innerText = m === 0 ? `${y} 年目` : `${y}年${m}ヶ月目`;
+        } else {
+          crossYearDisplay.innerText = '期間内未達成';
+        }
+
+        // 比較テーブル描画
+        renderComparisonTable(loanAmountYen, rateVal, returnVal, evalYearsVal);
+
+        // グラフ描画
+        renderChart(loanAmountYen, rateVal, selectedYears, returnVal, monthlySavings);
+      }
+
+      // 比較表更新
+      function renderComparisonTable(loanYen, ratePercent, returnPercent, evalYears) {
+        // 現在選択中の年数がリストに含まれない場合も柔軟に対応
+        const baseYears = [35, 40, 45, 50];
+        const selectedYr = parseInt(selectedLoanYearsInput.value);
+        if (!baseYears.includes(selectedYr)) {
+          baseYears.push(selectedYr);
+          baseYears.sort((a, b) => a - b);
+        }
+
+        const m35 = calcPMT(loanYen, ratePercent, 35);
+        const tbody = document.getElementById('comparisonTableBody');
+        tbody.innerHTML = '';
+
+        document.querySelectorAll('.tableEvalYearText').forEach(el => el.innerText = evalYears);
+        document.getElementById('tableRateDisplay').innerText = ratePercent;
+
+        baseYears.forEach(yr => {
+          const mPay = calcPMT(loanYen, ratePercent, yr);
+          const savings = Math.max(0, m35 - mPay);
+          const totalPayVal = Math.round((mPay * 12 * yr) / 10000);
+
+          const evalMonths = evalYears * 12;
+          const astVal = calcInvestmentFV(savings, returnPercent, evalMonths);
+          const balVal = calcLoanBalance(loanYen, ratePercent, yr, evalMonths);
+          const diff = astVal - balVal;
+
+          const isSelected = (yr === selectedYr);
+
+          const tr = document.createElement('tr');
+          tr.className = isSelected 
+            ? "bg-cyan-950/50 border-l-4 border-cyan-400 font-semibold" 
+            : "hover:bg-slate-800/40 transition";
+
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-bold text-white flex items-center">
+              ${yr}年返済 ${isSelected ? '<span class="ml-2 px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 text-[9px] rounded border border-cyan-500/30">選択中</span>' : ''}
+            </td>
+            <td class="py-2.5 px-3 font-bold text-slate-100">${mPay.toLocaleString()} <span class="text-[10px] text-slate-400">円</span></td>
+            <td class="py-2.5 px-3 font-bold ${savings > 0 ? 'text-emerald-400' : 'text-slate-500'}">
+              ${savings > 0 ? '▲ ' + savings.toLocaleString() + ' 円' : '基準(35年)'}
+            </td>
+            <td class="py-2.5 px-3 text-slate-300">${totalPayVal.toLocaleString()} <span class="text-[10px] text-slate-400">万円</span></td>
+            <td class="py-2.5 px-3 font-bold text-amber-300">${astVal.toLocaleString()} <span class="text-[10px] text-slate-400">万円</span></td>
+            <td class="py-2.5 px-3 font-bold text-rose-300">${balVal.toLocaleString()} <span class="text-[10px] text-slate-400">万円</span></td>
+            <td class="py-2.5 px-3 text-right">
+              ${diff >= 0 
+                ? `<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded text-[10px] border border-emerald-500/30">完済可 (+${diff.toLocaleString()}万)</span>`
+                : `<span class="px-2 py-0.5 bg-slate-800 text-slate-400 rounded text-[10px]">残債あり</span>`
+              }
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Chart.js グラフ最適化更新
+      function renderChart(loanYen, ratePercent, selectedYears, returnPercent, monthlySavings) {
+        const labels = [];
+        const schedule35 = [];
+        const scheduleSelected = [];
+        const scheduleInvest = [];
+
+        for (let y = 0; y <= 50; y++) {
+          labels.push(`${y}年`);
+          const m = y * 12;
+          schedule35.push(calcLoanBalance(loanYen, ratePercent, 35, m));
+          scheduleSelected.push(calcLoanBalance(loanYen, ratePercent, selectedYears, m));
+          scheduleInvest.push(calcInvestmentFV(monthlySavings, returnPercent, m));
+        }
+
+        document.getElementById('chartLoanLabel').innerText = `${selectedYears}年返済残債`;
+
+        if (chartInstance) {
+          chartInstance.data.labels = labels;
+          chartInstance.data.datasets[0].label = `${selectedYears}年返済 ローン残債`;
+          chartInstance.data.datasets[0].data = scheduleSelected;
+          chartInstance.data.datasets[1].data = scheduleInvest;
+          chartInstance.data.datasets[2].data = schedule35;
+          chartInstance.update();
+        } else {
+          const ctx = document.getElementById('simulationChart').getContext('2d');
+          chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: `${selectedYears}年返済 ローン残債`,
+                  data: scheduleSelected,
+                  borderColor: '#06b6d4',
+                  backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.1,
+                  pointRadius: 0,
+                  pointHoverRadius: 6
+                },
+                {
+                  label: '毎月差額 NISA積立資産累計',
+                  data: scheduleInvest,
+                  borderColor: '#10b981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.2,
+                  pointRadius: 0,
+                  pointHoverRadius: 6
+                },
+                {
+                  label: '35年返済 ローン残債（参考）',
+                  data: schedule35,
+                  borderColor: '#64748b',
+                  borderWidth: 1.5,
+                  borderDash: [4, 4],
+                  fill: false,
+                  tension: 0.1,
+                  pointRadius: 0
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                mode: 'index',
+                intersect: false,
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'rgba(11, 19, 36, 0.95)',
+                  titleColor: '#38bdf8',
+                  bodyColor: '#f1f5f9',
+                  borderColor: '#334155',
+                  borderWidth: 1,
+                  padding: 12,
+                  boxPadding: 6,
+                  usePointStyle: true,
+                  callbacks: {
+                    label: function(context) {
+                      return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} 万円`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                  ticks: {
+                    color: '#94a3b8',
+                    maxTicksLimit: 12,
+                    font: { size: 11 }
+                  }
+                },
+                y: {
+                  grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                  ticks: {
+                    color: '#94a3b8',
+                    font: { size: 11 },
+                    callback: function(val) {
+                      return val.toLocaleString() + ' 万';
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // 印刷時にグラフ軸の色を紙面用(濃色)に動的調整
+      window.addEventListener('beforeprint', () => {
+        if (chartInstance) {
+          chartInstance.options.scales.x.ticks.color = '#334155';
+          chartInstance.options.scales.x.grid.color = '#cbd5e1';
+          chartInstance.options.scales.y.ticks.color = '#334155';
+          chartInstance.options.scales.y.grid.color = '#cbd5e1';
+          chartInstance.update();
+        }
+      });
+
+      window.addEventListener('afterprint', () => {
+        if (chartInstance) {
+          chartInstance.options.scales.x.ticks.color = '#94a3b8';
+          chartInstance.options.scales.x.grid.color = 'rgba(51, 65, 85, 0.3)';
+          chartInstance.options.scales.y.ticks.color = '#94a3b8';
+          chartInstance.options.scales.y.grid.color = 'rgba(51, 65, 85, 0.3)';
+          chartInstance.update();
+        }
+      });
+
+      // 初期化実行
+      window.addEventListener('DOMContentLoaded', () => {
+        resetDefaults();
+      });
+    })();
+  </script>
+</body>
+</html>
