@@ -1,7 +1,8 @@
 # 住宅ローン＆NISAシミュレーター システム設計書・取扱説明書
 
----
 Copyright© 2026 SHUICHI HIRAI(@vladesite) All Rights Reserved.
+---
+
 
 ## 第1部：取扱説明書（ユーザー向け操作ガイド）
 
