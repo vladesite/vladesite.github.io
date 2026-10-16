@@ -113,7 +113,7 @@
 
             <!-- 背景画像コントロール＆凡例 -->
             <div class="flex flex-wrap items-center justify-between pt-2 border-t border-slate-800/60 gap-3 text-xs text-slate-400">
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 flex-wrap gap-2">
                     <span class="font-semibold text-slate-300">背景参照図面:</span>
                     <label class="bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 px-3 py-1 rounded-lg cursor-pointer transition flex items-center space-x-1.5">
                         <i class="fa-solid fa-image"></i>
@@ -121,39 +121,24 @@
                         <input type="file" id="bgImageInput" accept="image/*" onchange="handleBgImageUpload(event)" class="hidden">
                     </label>
                     <button id="removeBgBtn" onclick="removeBackgroundMap()" class="hidden text-rose-400 hover:text-rose-300 transition"><i class="fa-solid fa-trash"></i> 削除</button>
-                    <div id="opacityControl" class="hidden flex items-center space-x-2">
-                        <span>透明度:</span>
-                        <input type="range" id="bgOpacityRange" min="0.1" max="1" step="0.05" value="0.4" oninput="changeBgOpacity(this.value)" class="w-24 accent-indigo-500">
+                    <div id="opacityControl" class="hidden flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-800">
+                        <span>透明度: <strong id="opacityVal" class="text-indigo-400 font-mono">0.4</strong></span>
+                        <input type="range" id="bgOpacityRange" min="0.05" max="1" step="0.05" value="0.4" oninput="changeBgOpacity(this.value)" class="w-28 accent-indigo-500 cursor-pointer">
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3 overflow-x-auto">
-                    <span class="font-semibold text-slate-300">凡例:</span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-300"></span><span class="text-slate-200 text-xs font-medium">300万</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-400"></span><span class="text-slate-200 text-xs font-medium">400万</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-500"></span><span class="text-slate-200 text-xs font-medium">500万</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-600"></span><span class="text-slate-200 text-xs font-medium">600万</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-700"></span><span class="text-slate-200 text-xs font-medium">700万</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-8900"></span><span class="text-slate-200 text-xs font-medium">800-900万</span>
-                    </span>
-                    <span class="flex items-center space-x-1.5 cursor-pointer bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800" onclick="openLegendModal()" title="価格帯カラー変更">
-                        <span class="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" id="legendDot-1000"></span><span class="text-slate-200 text-xs font-medium">1000万+</span>
-                    </span>
-                    <button onclick="openLegendModal()" class="ml-1 px-2.5 py-1 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs transition flex items-center space-x-1 shadow-sm">
-                        <i class="fa-solid fa-palette"></i><span>色設定</span>
-                    </button>
+                <div class="flex items-center space-x-2 overflow-x-auto" id="toolbarLegendContainer">
+                    <span class="font-semibold text-slate-300 mr-1">凡例:</span>
+                    <!-- 動的生成 -->
                 </div>
+                <button onclick="openLegendModal()" class="px-2.5 py-1 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs transition flex items-center space-x-1 shadow-sm">
+                    <i class="fa-solid fa-palette"></i><span>価格帯・色設定</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- メイン画面エリア -->
+        <main class="flex-grow flex flex-col space-y-4">
             </div>
         </div>
 
@@ -189,15 +174,15 @@
 
                 <!-- スライドバーコントロールバー -->
                 <div class="bg-slate-100 border-t border-slate-300 px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs z-20">
-                    <div class="flex items-center space-x-3 flex-grow max-w-sm">
-                        <span class="text-slate-600 font-semibold whitespace-nowrap"><i class="fa-solid fa-arrows-left-right mr-1"></i> 横スクロール:</span>
-                        <input type="range" id="panXSlider" min="-600" max="600" step="5" value="0" oninput="onPanSliderChange()" class="w-full accent-indigo-500 cursor-pointer">
-                    </div>
-                    <div class="flex items-center space-x-3 flex-grow max-w-sm">
-                        <span class="text-slate-600 font-semibold whitespace-nowrap"><i class="fa-solid fa-arrows-up-down mr-1"></i> 縦スクロール:</span>
-                        <input type="range" id="panYSlider" min="-400" max="400" step="5" value="0" oninput="onPanSliderChange()" class="w-full accent-indigo-500 cursor-pointer">
-                    </div>
-                    <button onclick="resetPanSliders()" class="text-slate-700 hover:text-black px-2.5 py-1 bg-white border border-slate-300 rounded-lg transition shadow-sm">位置中央戻し</button>
+                    <select id="filterPriceRange" onchange="renderApp()" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-200">
+                        <option value="">すべての価格帯</option>
+                        <option value="400万台">400万台</option>
+                        <option value="500万台">500万台</option>
+                        <option value="600万台">600万台</option>
+                        <option value="700万台">700万台</option>
+                        <option value="800～900万台">800～900万台</option>
+                        <option value="1000万以上">1000万以上</option>
+                    </select>
                 </div>
             </div>
 
@@ -286,7 +271,6 @@
                     <div>
                         <label class="block font-semibold text-slate-300 mb-1">価格帯区分</label>
                         <select id="stationRange" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
-                            <option value="300万台">300万台</option>
                             <option value="400万台">400万台</option>
                             <option value="500万台">500万台</option>
                             <option value="600万台">600万台</option>
@@ -367,16 +351,21 @@
 
     <!-- 凡例カラー設定モーダル -->
     <div id="legendModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
             <div class="bg-slate-950 px-5 py-4 border-b border-slate-800 flex justify-between items-center">
                 <h3 class="font-bold text-sm text-white flex items-center space-x-2">
                     <i class="fa-solid fa-palette text-indigo-400"></i>
-                    <span>価格帯ヒートマップカラー設定</span>
+                    <span>価格帯区分およびヒートマップカラー設定</span>
                 </h3>
                 <button onclick="closeLegendModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-5 space-y-3 text-xs overflow-y-auto max-h-[60vh]">
-                <p class="text-slate-400 mb-2">各価格帯区分のヒートマップカラー（マップ上の正六角形色）を自由に変更できます。</p>
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-slate-400">価格帯の名称変更、追加、削除、およびヒートマップカラーの変更が可能です。</p>
+                    <button onclick="addPriceRangeConfig()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition flex items-center space-x-1 flex-shrink-0">
+                        <i class="fa-solid fa-plus"></i><span>新規追加</span>
+                    </button>
+                </div>
                 <div id="legendColorList" class="space-y-2.5"></div>
             </div>
             <div class="bg-slate-950 px-5 py-3 border-t border-slate-800 flex justify-between items-center">
@@ -402,19 +391,18 @@
             { id: "other", name: "その他", color: "#9333ea" }
         ];
 
-        let defaultRangeColors = {
-            '300万台': '#38bdf8',
-            '400万台': '#4ade80',
-            '500万台': '#accf34',
-            '600万台': '#facc15',
-            '700万台': '#fb923c',
-            '800～900万台': '#f87171',
-            '1000万以上': '#c084fc'
-        };
+        let defaultPriceRanges = [
+            { name: '400万台', color: '#4ade80' },
+            { name: '500万台', color: '#accf34' },
+            { name: '600万台', color: '#facc15' },
+            { name: '700万台', color: '#fb923c' },
+            { name: '800～900万台', color: '#f87171' },
+            { name: '1000万以上', color: '#c084fc' }
+        ];
 
-        let rangeColors = Object.assign({}, defaultRangeColors);
+        let priceRangesConfig = JSON.parse(JSON.stringify(defaultPriceRanges));
 
-        let bgImageUrl = null;
+        let bgImageUrl = "https://vladesite.github.io/market/Tokyo_Free.jpg";
         let bgOpacity = 0.4;
         let lineChartInstance = null;
         let priceChartInstance = null;
@@ -433,8 +421,6 @@
             { name: "府中", tsubo: 440, price: 9300, range: "400万台", line: "京王線", x: 305, y: 465 },
             { name: "明大前", tsubo: 650, price: 13700, range: "600万台", line: "京王線", x: 465, y: 415 },
             { name: "渋谷", tsubo: 1300, price: 28000, range: "1000万以上", line: "山手線", x: 595, y: 455 },
-            { name: "所沢", tsubo: 350, price: 7400, range: "300万台", line: "西武新宿線", x: 235, y: 235 },
-            { name: "田無", tsubo: 350, price: 7400, range: "300万台", line: "西武新宿線", x: 365, y: 265 },
             { name: "高田馬場", tsubo: 900, price: 19000, range: "800～900万台", line: "山手線", x: 595, y: 255 },
             { name: "石神井公園", tsubo: 600, price: 12700, range: "600万台", line: "西武池袋線", x: 335, y: 195 },
             { name: "練馬", tsubo: 600, price: 12700, range: "600万台", line: "西武池袋線", x: 495, y: 225 },
@@ -451,19 +437,14 @@
             { name: "学芸大学", tsubo: 1000, price: 21100, range: "1000万以上", line: "その他", x: 595, y: 525 },
             { name: "新宿御苑前", tsubo: 1400, price: 29600, range: "1000万以上", line: "その他", x: 635, y: 355 },
             { name: "大山", tsubo: 650, price: 13700, range: "600万台", line: "その他", x: 505, y: 205 },
-            { name: "花小金井", tsubo: 300, price: 6300, range: "300万台", line: "その他", x: 335, y: 265 },
             { name: "都立家政", tsubo: 450, price: 9500, range: "400万台", line: "その他", x: 435, y: 245 },
             { name: "東久留米", tsubo: 400, price: 8400, range: "400万台", line: "その他", x: 365, y: 195 },
-            { name: "志木", tsubo: 350, price: 7400, range: "300万台", line: "その他", x: 465, y: 145 },
-            { name: "朝霞台", tsubo: 350, price: 7400, range: "300万台", line: "その他", x: 485, y: 145 },
-            { name: "ふじみ野", tsubo: 300, price: 6300, range: "300万台", line: "その他", x: 505, y: 145 },
-            { name: "川口", tsubo: 400, price: 8400, range: "400万台", line: "その他", x: 665, y: 175 },
             { name: "十条", tsubo: 600, price: 12700, range: "600万台", line: "その他", x: 605, y: 215 },
             { name: "三鷹", tsubo: 650, price: 13700, range: "600万台", line: "中央線", x: 415, y: 335 },
             { name: "高井戸", tsubo: 600, price: 12700, range: "600万台", line: "その他", x: 435, y: 415 },
             { name: "祖師ヶ谷大蔵", tsubo: 600, price: 12700, range: "600万台", line: "その他", x: 445, y: 495 },
             { name: "天王洲アイル", tsubo: 650, price: 13700, range: "600万台", line: "その他", x: 705, y: 505 },
-            { name: "草加", tsubo: 350, price: 7400, range: "300万台", line: "その他", x: 745, y: 175 },
+            { name: "草加", tsubo: 350, price: 7400, range: "400万台", line: "その他", x: 745, y: 175 },
             { name: "錦糸町", tsubo: 650, price: 13700, range: "600万台", line: "その他", x: 745, y: 315 },
             { name: "御徒町", tsubo: 800, price: 16900, range: "800～900万台", line: "山手線", x: 685, y: 275 },
             { name: "浅草橋", tsubo: 700, price: 14800, range: "700万台", line: "その他", x: 725, y: 315 },
@@ -482,7 +463,6 @@
             { name: "自由が丘", tsubo: 1000, price: 21100, range: "1000万以上", line: "その他", x: 545, y: 525 },
             { name: "下北沢", tsubo: 1000, price: 21100, range: "1000万以上", line: "その他", x: 505, y: 455 },
             { name: "登戸", tsubo: 450, price: 9500, range: "400万台", line: "その他", x: 305, y: 585 },
-            { name: "センター北", tsubo: 450, price: 9500, range: "400万台", line: "その他", x: 375, y: 685 },
             { name: "大崎", tsubo: 1000, price: 21100, range: "1000万以上", line: "山手線", x: 635, y: 455 },
             { name: "不動前", tsubo: 800, price: 16900, range: "800～900万台", line: "その他", x: 605, y: 495 },
             { name: "大岡山", tsubo: 750, price: 15800, range: "700万台", line: "その他", x: 565, y: 555 },
@@ -493,8 +473,6 @@
             { name: "雑色", tsubo: 400, price: 8400, range: "400万台", line: "その他", x: 675, y: 535 },
             { name: "用賀", tsubo: 700, price: 14800, range: "700万台", line: "その他", x: 475, y: 525 },
             { name: "西国分寺", tsubo: 450, price: 9500, range: "400万台", line: "中央線", x: 335, y: 395 },
-            { name: "昭島", tsubo: 300, price: 6300, range: "300万台", line: "その他", x: 235, y: 365 },
-            { name: "萩山", tsubo: 300, price: 7000, range: "300万台", line: "その他", x: 325, y: 235 },
             { name: "武蔵境", tsubo: 550, price: 11600, range: "500万台", line: "中央線", x: 415, y: 365 },
             { name: "町屋", tsubo: 500, price: 10500, range: "500万台", line: "その他", x: 705, y: 225 },
             { name: "北綾瀬", tsubo: 500, price: 10500, range: "500万台", line: "その他", x: 805, y: 195 },
@@ -509,16 +487,14 @@
             { name: "たまプラーザ", tsubo: 550, price: 11600, range: "500万台", line: "その他", x: 405, y: 685 },
             { name: "反町", tsubo: 500, price: 10500, range: "500万台", line: "その他", x: 525, y: 765 },
             { name: "新川崎", tsubo: 450, price: 9500, range: "400万台", line: "その他", x: 585, y: 765 },
-            { name: "橋本", tsubo: 380, price: 8100, range: "300万台", line: "その他", x: 195, y: 555 }
+            { name: "橋本", tsubo: 380, price: 8100, range: "400万台", line: "その他", x: 195, y: 555 }
         ];
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadData();
-            if (!bgImageUrl) {
-                bgImageUrl = "https://vladesite.github.io/market/Tokyo_Free.jpg";
-            }
             updateLineSelects();
-            updateLegendDots();
+            updateRangeSelects();
+            renderToolbarLegend();
             renderApp();
 
             const colorPicker = document.getElementById('newLineColor');
@@ -532,13 +508,12 @@
         async function loadData() {
             const savedStations = localStorage.getItem('capital_stations_2026');
             const savedLines = localStorage.getItem('capital_lines_2026');
-            const savedColors = localStorage.getItem('capital_range_colors_2026');
+            const savedRangesConfig = localStorage.getItem('capital_price_ranges_config_2026');
             const savedBg = localStorage.getItem('capital_bg_image_2026');
 
             if (savedStations) { try { stationsData = JSON.parse(savedStations); } catch(e) {} }
             if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
 
-            // 外部JSONから読み込みを試行 (ローカル保存データがない場合、またはリモートを優先したい場合のエンドポイント)
             try {
                 const response = await fetch('https://vladesite.github.io/market/marketprice.json');
                 if (response.ok) {
@@ -558,7 +533,7 @@
                 console.log("リモートJSONの取得に失敗しました。ローカルデータまたはデフォルトデータを使用します。", err);
             }
 
-            if (savedColors) { try { rangeColors = JSON.parse(savedColors); } catch(e) {} }
+            if (savedRangesConfig) { try { priceRangesConfig = JSON.parse(savedRangesConfig); } catch(e) {} }
             if (savedBg) {
                 bgImageUrl = savedBg;
                 const removeBtn = document.getElementById('removeBgBtn');
@@ -573,17 +548,17 @@
         function saveData() {
             localStorage.setItem('capital_stations_2026', JSON.stringify(stationsData));
             localStorage.setItem('capital_lines_2026', JSON.stringify(linesData));
-            localStorage.setItem('capital_range_colors_2026', JSON.stringify(rangeColors));
+            localStorage.setItem('capital_price_ranges_config_2026', JSON.stringify(priceRangesConfig));
             if (bgImageUrl) {
                 localStorage.setItem('capital_bg_image_2026', bgImageUrl);
             }
         }
 
         function resetData() {
-            if (confirm('路線・駅データおよび色設定を初期状態にリセットしますか？')) {
+            if (confirm('路線・駅データおよび価格帯・色設定を初期状態にリセットしますか？')) {
                 localStorage.removeItem('capital_stations_2026');
                 localStorage.removeItem('capital_lines_2026');
-                localStorage.removeItem('capital_range_colors_2026');
+                localStorage.removeItem('capital_price_ranges_config_2026');
                 localStorage.removeItem('capital_bg_image_2026');
                 location.reload();
             }
@@ -617,7 +592,80 @@
 
         function changeBgOpacity(val) {
             bgOpacity = parseFloat(val);
+            const valLabel = document.getElementById('opacityVal');
+            if (valLabel) valLabel.textContent = bgOpacity.toFixed(2);
             renderMap();
+        }
+
+        function updateLineSelects() {
+            const filterLineSelect = document.getElementById('filterLine');
+            const stationLineSelect = document.getElementById('stationLine');
+
+            if (filterLineSelect) {
+                const currentVal = filterLineSelect.value;
+                filterLineSelect.innerHTML = '<option value="">すべての路線</option>';
+                linesData.forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l.name;
+                    opt.textContent = l.name;
+                    if (l.name === currentVal) opt.selected = true;
+                    filterLineSelect.appendChild(opt);
+                });
+            }
+
+            if (stationLineSelect) {
+                const currentVal = stationLineSelect.value;
+                stationLineSelect.innerHTML = '';
+                linesData.forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l.name;
+                    opt.textContent = l.name;
+                    if (l.name === currentVal) opt.selected = true;
+                    stationLineSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function updateRangeSelects() {
+            const filterRangeSelect = document.getElementById('filterPriceRange');
+            const stationRangeSelect = document.getElementById('stationRange');
+
+            if (filterRangeSelect) {
+                const currentVal = filterRangeSelect.value;
+                filterRangeSelect.innerHTML = '<option value="">すべての価格帯</option>';
+                priceRangesConfig.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    if (r.name === currentVal) opt.selected = true;
+                    filterRangeSelect.appendChild(opt);
+                });
+            }
+
+            if (stationRangeSelect) {
+                const currentVal = stationRangeSelect.value;
+                stationRangeSelect.innerHTML = '';
+                priceRangesConfig.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    if (r.name === currentVal) opt.selected = true;
+                    stationRangeSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function renderToolbarLegend() {
+            const container = document.getElementById('toolbarLegendContainer');
+            if (!container) return;
+            container.innerHTML = '<span class="font-semibold text-slate-300 mr-1">凡例:</span>';
+            priceRangesConfig.forEach(r => {
+                const span = document.createElement('span');
+                span.className = "px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-slate-900";
+                span.style.backgroundColor = r.color;
+                span.textContent = r.name;
+                container.appendChild(span);
+            });
         }
 
         function switchTab(tabId) {
@@ -650,7 +698,8 @@
 
         function renderApp() {
             updateLineSelects();
-            updateLegendDots();
+            updateRangeSelects();
+            renderToolbarLegend();
             if (currentTab === 'table') {
                 renderTable();
             } else if (currentTab === 'analytics') {
@@ -660,56 +709,14 @@
             }
         }
 
-        function updateLegendDots() {
-            const keys = Object.keys(rangeColors);
-            keys.forEach(k => {
-                let idKey = k === '800～900万台' ? '8900' : (k === '1000万以上' ? '1000' : k.replace('万台', '00'));
-                const dot = document.getElementById(`legendDot-${idKey}`);
-                if (dot) {
-                    dot.style.backgroundColor = rangeColors[k];
-                }
-            });
-        }
-
-        function updateLineSelects() {
-            const filterLine = document.getElementById('filterLine');
-            const stationLine = document.getElementById('stationLine');
-            if (!filterLine || !stationLine) return;
-            const currentFilter = filterLine.value;
-            const currentStationLine = stationLine.value;
-
-            filterLine.innerHTML = '<option value="">すべての路線</option>';
-            stationLine.innerHTML = '';
-
-            linesData.forEach(l => {
-                filterLine.innerHTML += `<option value="${escapeHTML(l.name)}">${escapeHTML(l.name)}</option>`;
-                stationLine.innerHTML += `<option value="${escapeHTML(l.name)}">${escapeHTML(l.name)}</option>`;
-            });
-
-            filterLine.value = currentFilter;
-            stationLine.value = currentStationLine || (linesData[0] ? linesData[0].name : '');
-        }
-
         function getLineColor(lineName) {
             const found = linesData.find(l => l.name === lineName);
             return found ? found.color : '#6366f1';
         }
 
         function getHexColor(range) {
-            return rangeColors[range] || '#4ade80';
-        }
-
-        function getBadgeClass(range) {
-            switch (range) {
-                case '300万台': return 'badge-300';
-                case '400万台': return 'badge-400';
-                case '500万台': return 'badge-500';
-                case '600万台': return 'badge-600';
-                case '700万台': return 'badge-700';
-                case '800～900万台': return 'badge-8900';
-                case '1000万以上': return 'badge-1000';
-                default: return 'badge-400';
-            }
+            const found = priceRangesConfig.find(r => r.name === range);
+            return found ? found.color : '#4ade80';
         }
 
         function autoCalculatePrice(tsuboVal) {
@@ -719,16 +726,17 @@
             const rangeSelect = document.getElementById('stationRange');
             if (!priceInput || !rangeSelect) return;
 
-            const calcPrice = Math.round(tsubo * 21.1); // 70㎡換算の目安
+            const calcPrice = Math.round(tsubo * 21.1);
             priceInput.value = calcPrice;
 
-            if (tsubo < 350) rangeSelect.value = "300万台";
-            else if (tsubo < 450) rangeSelect.value = "400万台";
-            else if (tsubo < 550) rangeSelect.value = "500万台";
-            else if (tsubo < 650) rangeSelect.value = "600万台";
-            else if (tsubo < 780) rangeSelect.value = "700万台";
-            else if (tsubo < 950) rangeSelect.value = "800～900万台";
-            else rangeSelect.value = "1000万以上";
+            if (priceRangesConfig.length > 0) {
+                if (tsubo < 450) rangeSelect.value = priceRangesConfig[0].name;
+                else if (tsubo < 550 && priceRangesConfig.length > 1) rangeSelect.value = priceRangesConfig[1].name;
+                else if (tsubo < 650 && priceRangesConfig.length > 2) rangeSelect.value = priceRangesConfig[2].name;
+                else if (tsubo < 780 && priceRangesConfig.length > 3) rangeSelect.value = priceRangesConfig[3].name;
+                else if (tsubo < 950 && priceRangesConfig.length > 4) rangeSelect.value = priceRangesConfig[4].name;
+                else rangeSelect.value = priceRangesConfig[priceRangesConfig.length - 1].name;
+            }
         }
 
         function renderMap() {
@@ -743,7 +751,6 @@
             if (!bgLayer) return;
             bgLayer.innerHTML = '';
 
-            // 白ベース背景（背景画像またはグリッド）
             if (bgImageUrl) {
                 const rectBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rectBg.setAttribute('width', '1200');
@@ -792,8 +799,6 @@
                     if (!isDraggingStation) openEditModal(originalIndex);
                 });
 
-                // 正六角形（Regular Hexagon）の計算
-                // 文字数やサイズに応じて大きさを決定しつつ、高さと幅の比率を正六角形（尖った上または平らな上）に保つ
                 const radius = Math.max(38, Math.max(st.name.length * 6, 36));
                 const points = [];
                 for (let i = 0; i < 6; i++) {
@@ -811,7 +816,6 @@
                 polygon.setAttribute('filter', 'drop-shadow(0px 2px 3px rgba(0,0,0,0.15))');
                 g.appendChild(polygon);
 
-                // 駅名テキスト (上段)
                 const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 textName.setAttribute('x', '0');
                 textName.setAttribute('y', '-5');
@@ -822,7 +826,6 @@
                 textName.textContent = st.name;
                 g.appendChild(textName);
 
-                // 坪単価テキスト (下段) - フォントサイズを大きくし太字に調整
                 const textPrice = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 textPrice.setAttribute('x', '0');
                 textPrice.setAttribute('y', '11');
@@ -898,7 +901,6 @@
 
             filtered.forEach(st => {
                 const originalIndex = stationsData.findIndex(item => item === st);
-                const badgeClass = getBadgeClass(st.range);
                 const lineColor = getLineColor(st.line);
 
                 const tr = document.createElement('tr');
@@ -910,7 +912,7 @@
                     </td>
                     <td class="py-2.5 px-4 font-mono font-medium">${st.tsubo} 万円</td>
                     <td class="py-2.5 px-4 font-mono font-medium">${st.price} 万円</td>
-                    <td class="py-2.5 px-4"><span class="px-2 py-0.5 text-xs font-semibold rounded border ${badgeClass}">${st.range}</span></td>
+                    <td class="py-2.5 px-4"><span class="px-2.5 py-1 text-xs font-semibold rounded text-slate-900" style="background-color: ${getHexColor(st.range)}">${escapeHTML(st.range)}</span></td>
                     <td class="py-2.5 px-4 flex items-center space-x-1.5">
                         <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${lineColor}"></span>
                         <span class="text-slate-200">${escapeHTML(st.line)}</span>
@@ -926,9 +928,9 @@
         }
 
         function renderCharts() {
-            const ranges = ["300万台", "400万台", "500万台", "600万台", "700万台", "800～900万台", "1000万以上"];
+            const ranges = priceRangesConfig.map(r => r.name);
             const rangeCounts = ranges.map(r => stationsData.filter(s => s.range === r).length);
-            const rangeColorsList = ranges.map(r => rangeColors[r]);
+            const rangeColorsList = priceRangesConfig.map(r => r.color);
 
             if (priceChartInstance) priceChartInstance.destroy();
             const priceCanvas = document.getElementById('priceRangeChart');
@@ -1179,37 +1181,78 @@
             if (!container) return;
             container.innerHTML = '';
 
-            Object.keys(rangeColors).forEach(rangeKey => {
-                const colorVal = rangeColors[rangeKey];
+            priceRangesConfig.forEach((rc, idx) => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 gap-3 shadow-inner";
                 div.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <span class="w-4 h-4 rounded-full border border-slate-700 shadow-sm flex-shrink-0" style="background-color: ${colorVal}"></span>
-                        <span class="font-medium text-slate-200">${rangeKey}</span>
+                    <div class="flex items-center space-x-2 flex-grow">
+                        <input type="color" value="${rc.color}" onchange="updatePriceRangeColor(${idx}, this.value)" class="w-9 h-9 rounded-lg border border-slate-700 bg-slate-900 cursor-pointer p-1 flex-shrink-0">
+                        <input type="text" value="${escapeHTML(rc.name)}" onchange="updatePriceRangeName(${idx}, this.value)" class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-white font-medium text-xs w-full">
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <input type="color" value="${colorVal}" onchange="changeRangeColor('${rangeKey}', this.value)" class="w-9 h-9 rounded-lg border border-slate-700 bg-slate-900 cursor-pointer p-1">
-                        <span class="font-mono text-slate-300 text-xs bg-slate-900 px-2 py-1 rounded border border-slate-800">${colorVal}</span>
-                    </div>
+                    <button onclick="deletePriceRange(${idx})" class="text-rose-400 hover:text-rose-300 p-2 transition flex-shrink-0" title="削除"><i class="fa-solid fa-trash"></i></button>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function changeRangeColor(rangeKey, newColor) {
-            rangeColors[rangeKey] = newColor;
+        function updatePriceRangeColor(idx, newColor) {
+            priceRangesConfig[idx].color = newColor;
             saveData();
             renderApp();
+        }
+
+        function updatePriceRangeName(idx, newName) {
+            newName = newName.trim();
+            if (!newName) return;
+            const oldName = priceRangesConfig[idx].name;
+            priceRangesConfig[idx].name = newName;
+
+            stationsData.forEach(st => {
+                if (st.range === oldName) st.range = newName;
+            });
+
+            saveData();
+            renderApp();
+            showToast("価格帯名を更新しました");
+        }
+
+        function addPriceRangeConfig() {
+            const newName = "新価格帯";
+            const newColor = "#38bdf8";
+            if (priceRangesConfig.some(r => r.name === newName)) {
+                showToast("同名の価格帯が既に存在します", "error");
+                return;
+            }
+            priceRangesConfig.push({ name: newName, color: newColor });
+            saveData();
             renderLegendColorList();
+            renderApp();
+            showToast("価格帯を追加しました");
+        }
+
+        function deletePriceRange(idx) {
+            if (priceRangesConfig.length <= 1) {
+                showToast("最低1つの価格帯が必要です", "error");
+                return;
+            }
+            const targetName = priceRangesConfig[idx].name;
+            const count = stationsData.filter(s => s.range === targetName).length;
+            if (count > 0) {
+                if (!confirm(`「${targetName}」に属する駅が ${count} 件あります。価格帯を削除しますか？（該当駅の価格帯は他の区分に変更してください）`)) return;
+            }
+            priceRangesConfig.splice(idx, 1);
+            saveData();
+            renderLegendColorList();
+            renderApp();
+            showToast("価格帯を削除しました");
         }
 
         function resetLegendColors() {
-            rangeColors = Object.assign({}, defaultRangeColors);
+            priceRangesConfig = JSON.parse(JSON.stringify(defaultPriceRanges));
             saveData();
             renderApp();
             renderLegendColorList();
-            showToast("凡例の色をデフォルトにリセットしました");
+            showToast("価格帯と色の設定をデフォルトにリセットしました");
         }
 
         function renderLineList() {
@@ -1292,7 +1335,7 @@
         }
 
         function exportJSON() {
-            const exportObj = { lines: linesData, stations: stationsData };
+            const exportObj = { lines: linesData, stations: stationsData, priceRanges: priceRangesConfig };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
@@ -1313,6 +1356,7 @@
                     if (parsed.stations && Array.isArray(parsed.stations)) {
                         stationsData = parsed.stations;
                         if (parsed.lines && Array.isArray(parsed.lines)) linesData = parsed.lines;
+                        if (parsed.priceRanges && Array.isArray(parsed.priceRanges)) priceRangesConfig = parsed.priceRanges;
                         saveData();
                         renderApp();
                         showToast("データを正常にインポートしました");
