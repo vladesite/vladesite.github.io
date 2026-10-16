@@ -13,7 +13,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans JP', 'Inter', sans-serif; }
-        .map-container { cursor: grab; }
+        .map-container { cursor: grab; overflow: hidden; position: relative; }
         .map-container:active { cursor: grabbing; }
         .badge-300 { background-color: #38bdf8; color: #0369a1; }
         .badge-400 { background-color: #4ade80; color: #166534; }
@@ -143,141 +143,169 @@
         <!-- メイン画面エリア -->
         <div class="flex-grow flex flex-col space-y-4">
 
-            <!-- 1. 路線図ビュー（背景画像対応） -->
-            <div id="mapViewContainer" class="relative bg-slate-950 border border-slate-800 rounded-2xl shadow-inner overflow-hidden flex-grow min-h-[580px] flex items-center justify-center map-container">
-                <div class="absolute top-4 right-4 z-20 flex flex-col space-y-1 bg-slate-900/90 border border-slate-700 p-1.5 rounded-xl shadow-lg backdrop-blur">
-                    <button onclick="zoomMap(1.2)" class="p-2 hover:bg-slate-800 rounded-lg text-slate-300 text-xs" title="拡大"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                    <button onclick="resetZoom()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-300 text-xs" title="リセット"><i class="fa-solid fa-house"></i></button>
-                    <button onclick="zoomMap(0.8)" class="p-2 hover:bg-slate-800 rounded-lg text-slate-300 text-xs" title="縮小"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <!-- 1. 路線図ビュー -->
+            <div id="mapViewContainer" class="relative bg-white border border-slate-300 rounded-2xl shadow-inner overflow-hidden flex-grow min-h-[580px] flex flex-col">
+                <div class="relative flex-grow flex items-center justify-center map-container" onmousedown="startPanMap(event)">
+                    <div class="absolute top-4 right-4 z-20 flex flex-col space-y-1 bg-white/90 border border-slate-300 p-1.5 rounded-xl shadow-lg backdrop-blur">
+                        <button onclick="zoomMap(1.2)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-700 text-xs" title="拡大"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                        <button onclick="resetZoom()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-700 text-xs" title="リセット"><i class="fa-solid fa-house"></i></button>
+                        <button onclick="zoomMap(0.8)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-700 text-xs" title="縮小"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                    </div>
+
+                    <!-- SVG全体をラップして一括でズーム・パン移動させる -->
+                    <div id="svgWrapper" class="w-full h-full flex items-center justify-center origin-center select-none" style="transform: scale(1) translate(0px, 0px); transition: transform 0.05s ease-out;">
+                        <svg id="railwayMap" class="w-full h-full relative overflow-visible" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+                                </pattern>
+                            </defs>
+                            <!-- 背景画像・グリッドレイヤーをsvg内に配置してズーム・移動に完全連動 -->
+                            <g id="bgLayer">
+                                <rect width="1200" height="800" fill="url(#grid)" />
+                            </g>
+                            <g id="linePaths"></g>
+                            <g id="stationNodes"></g>
+                        </svg>
+                    </div>
+                    
+                    <div class="absolute bottom-4 left-4 z-20 bg-white/90 border border-slate-300 px-3 py-2 rounded-xl text-xs text-slate-700 backdrop-blur flex items-center space-x-2 pointer-events-none shadow-sm">
+                        <i class="fa-solid fa-circle-info text-indigo-600"></i>
+                        <span>マップをドラッグ、または下部のスライドバーで移動可能です。正六角形の枠内に駅名と坪単価が表示されます。</span>
+                    </div>
                 </div>
 
-                <div id="svgWrapper" class="w-full h-full flex items-center justify-center transition-transform duration-100 origin-center select-none" style="transform: scale(1);">
-                    <svg id="railwayMap" class="w-full h-full relative" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
-                            </pattern>
-                        </defs>
-                        <!-- 背景グリッドまたはアップロード画像 -->
-                        <g id="bgLayer">
-                            <rect width="1200" height="800" fill="url(#grid)" />
-                        </g>
-
-                        <!-- 路線パス描画グループ -->
-                        <g id="linePaths"></g>
-                        <!-- 駅ノード描画グループ -->
-                        <g id="stationNodes"></g>
-                    </svg>
-                </div>
-                
-                <div class="absolute bottom-4 left-4 z-20 bg-slate-900/90 border border-slate-700 px-3 py-2 rounded-xl text-xs text-slate-300 backdrop-blur flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-info text-indigo-400"></i>
-                    <span>「背景参照図面」からお持ちの路線図画像をアップロードすると、上部に透かして重ね合わせながら駅の配置や座標を直感的に調整できます。</span>
+                <!-- スライドバーコントロールバー -->
+                <div class="bg-slate-100 border-t border-slate-300 px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs z-20">
+                    <div class="flex items-center space-x-3 flex-grow max-w-sm">
+                        <span class="text-slate-600 font-semibold whitespace-nowrap"><i class="fa-solid fa-arrows-left-right mr-1"></i> 横スクロール:</span>
+                        <input type="range" id="panXSlider" min="-600" max="600" step="5" value="0" oninput="onPanSliderChange()" class="w-full accent-indigo-500 cursor-pointer">
+                    </div>
+                    <div class="flex items-center space-x-3 flex-grow max-w-sm">
+                        <span class="text-slate-600 font-semibold whitespace-nowrap"><i class="fa-solid fa-arrows-up-down mr-1"></i> 縦スクロール:</span>
+                        <input type="range" id="panYSlider" min="-400" max="400" step="5" value="0" oninput="onPanSliderChange()" class="w-full accent-indigo-500 cursor-pointer">
+                    </div>
+                    <button onclick="resetPanSliders()" class="text-slate-700 hover:text-black px-2.5 py-1 bg-white border border-slate-300 rounded-lg transition shadow-sm">位置中央戻し</button>
                 </div>
             </div>
 
             <!-- 2. データテーブル一覧ビュー -->
-            <div id="tableViewContainer" class="hidden bg-slate-950 border border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-grow">
-                <div class="overflow-x-auto max-h-[520px]">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="sticky top-0 bg-slate-900 z-10 text-xs font-semibold text-slate-400 border-b border-slate-800 uppercase">
+            <div id="tableViewContainer" class="hidden bg-slate-950 border border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-grow flex flex-col">
+                <div class="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                    <h2 class="font-bold text-sm text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-table text-indigo-400"></i>
+                        <span>登録駅データ管理テーブル</span>
+                    </h2>
+                    <span class="text-xs text-slate-400">各駅の坪単価・想定70㎡価格・座標の調整が可能です</span>
+                </div>
+                <div class="overflow-x-auto flex-grow">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-slate-400 border-b border-slate-800">
                             <tr>
-                                <th class="py-3 px-4">駅名</th>
-                                <th class="py-3 px-4">坪単価</th>
-                                <th class="py-3 px-4">70㎡価格</th>
-                                <th class="py-3 px-4">価格帯</th>
-                                <th class="py-3 px-4">所属路線</th>
-                                <th class="py-3 px-4">座標 (X, Y)</th>
-                                <th class="py-3 px-4 text-right">操作</th>
+                                <th class="py-3 px-4 font-semibold">駅名</th>
+                                <th class="py-3 px-4 font-semibold">坪単価 (万円)</th>
+                                <th class="py-3 px-4 font-semibold">70㎡価格 (万円)</th>
+                                <th class="py-3 px-4 font-semibold">価格帯</th>
+                                <th class="py-3 px-4 font-semibold">所属路線</th>
+                                <th class="py-3 px-4 font-semibold">座標 (X, Y)</th>
+                                <th class="py-3 px-4 font-semibold text-right">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="divide-y divide-slate-800 text-xs text-slate-200"></tbody>
+                        <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 3. 統計・グラフ分析ビュー -->
-            <div id="analyticsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
-                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col">
-                    <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center space-x-2">
+            <!-- 3. 統計グラフ分析ビュー -->
+            <div id="analyticsViewContainer" class="hidden bg-slate-950 border border-slate-800 rounded-2xl shadow-sm p-6 flex-grow flex flex-col space-y-6">
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <h2 class="font-bold text-sm text-white flex items-center space-x-2">
                         <i class="fa-solid fa-chart-pie text-indigo-400"></i>
-                        <span>価格帯別 駅数分布割合</span>
-                    </h3>
-                    <div class="relative flex-grow flex items-center justify-center min-h-[280px]">
-                        <canvas id="priceRangeChart"></canvas>
-                    </div>
+                        <span>路線単価＆価格帯分布アナリティクス</span>
+                    </h2>
+                    <span class="text-xs text-slate-400">現在の全駅データを基にリアルタイム集計しています</span>
                 </div>
-                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col">
-                    <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center space-x-2">
-                        <i class="fa-solid fa-chart-column text-indigo-400"></i>
-                        <span>路線別 平均坪単価比較</span>
-                    </h3>
-                    <div class="relative flex-grow flex items-center justify-center min-h-[280px]">
-                        <canvas id="lineAvgChart"></canvas>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow items-center">
+                    <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center">
+                        <h3 class="text-xs font-semibold text-slate-300 mb-3">価格帯別 駅数シェア割合</h3>
+                        <div class="w-full h-64 relative">
+                            <canvas id="priceRangeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center">
+                        <h3 class="text-xs font-semibold text-slate-300 mb-3">路線別 平均坪単価比較</h3>
+                        <div class="w-full h-64 relative">
+                            <canvas id="lineAvgChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
-
     </main>
 
-    <!-- 駅データ追加・編集モーダル -->
+    <!-- 駅追加・編集モーダル -->
     <div id="stationModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col">
             <div class="bg-slate-950 px-5 py-4 border-b border-slate-800 flex justify-between items-center">
-                <h3 id="modalTitle" class="font-bold text-sm text-white">駅データ管理</h3>
+                <h3 id="modalTitle" class="font-bold text-sm text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-train text-indigo-400"></i>
+                    <span>駅データの編集</span>
+                </h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="stationForm" onsubmit="saveStation(event)" class="p-5 space-y-3.5 text-xs">
+            <form id="stationForm" onsubmit="saveStation(event)" class="p-5 space-y-4 text-xs">
                 <input type="hidden" id="editIndex" value="-1">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">駅名 <span class="text-rose-400">*</span></label>
-                    <input type="text" id="stationName" required placeholder="例: 新宿" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
+                    <label class="block font-semibold text-slate-300 mb-1">駅名</label>
+                    <input type="text" id="stationName" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">坪単価 (万円) <span class="text-rose-400">*</span></label>
-                        <input type="number" id="stationTsubo" required min="100" max="3000" placeholder="750" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
+                        <label class="block font-semibold text-slate-300 mb-1">坪単価 (万円)</label>
+                        <input type="number" id="stationTsubo" required oninput="autoCalculatePrice(this.value)" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">70㎡価格 (万円) <span class="text-rose-400">*</span></label>
-                        <input type="number" id="stationPrice" required min="500" max="15000" placeholder="15800" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
+                        <label class="block font-semibold text-slate-300 mb-1">70㎡価格 (自動算出)</label>
+                        <input type="number" id="stationPrice" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">価格帯</label>
-                        <select id="stationRange" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
+                        <label class="block font-semibold text-slate-300 mb-1">価格帯区分</label>
+                        <select id="stationRange" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                             <option value="300万台">300万台</option>
                             <option value="400万台">400万台</option>
                             <option value="500万台">500万台</option>
                             <option value="600万台">600万台</option>
                             <option value="700万台">700万台</option>
                             <option value="800～900万台">800～900万台</option>
-                            <option value="1000万以上" selected>1000万以上</option>
+                            <option value="1000万以上">1000万以上</option>
                         </select>
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-300 mb-1">所属路線</label>
-                        <select id="stationLine" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
-                            <!-- 動的生成 -->
-                        </select>
+                        <select id="stationLine" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"></select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-300 mb-1">路線図 X 座標</label>
-                        <input type="number" id="stationX" value="500" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                        <input type="number" id="stationX" value="600" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-300 mb-1">路線図 Y 座標</label>
                         <input type="number" id="stationY" value="400" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
                     </div>
                 </div>
-                <div class="pt-4 flex justify-end space-x-2 border-t border-slate-800">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium transition">キャンセル</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow transition">保存する</button>
+                <div class="pt-4 flex justify-between items-center border-t border-slate-800">
+                    <button type="button" id="modalDeleteBtn" onclick="deleteStationFromModal()" class="hidden px-3 py-2 bg-rose-950/80 hover:bg-rose-900 text-rose-300 rounded-lg font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-trash"></i><span>削除</span>
+                    </button>
+                    <div class="flex space-x-2 ml-auto">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium transition">キャンセル</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow transition">保存する</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -294,7 +322,6 @@
                 <button onclick="closeLineModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-5 overflow-y-auto space-y-4 text-xs flex-grow">
-                <!-- 新規路線追加フォーム -->
                 <form id="lineAddForm" onsubmit="addLine(event)" class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
                     <h4 class="font-semibold text-slate-200">新規路線を追加</h4>
                     <div class="grid grid-cols-3 gap-2">
@@ -315,12 +342,9 @@
                     </div>
                 </form>
 
-                <!-- 登録済み路線一覧 -->
                 <div class="space-y-2">
                     <h4 class="font-semibold text-slate-300">登録済み路線一覧</h4>
-                    <div id="lineListContainer" class="space-y-2">
-                        <!-- 動的生成 -->
-                    </div>
+                    <div id="lineListContainer" class="space-y-2"></div>
                 </div>
             </div>
             <div class="bg-slate-950 px-5 py-3 border-t border-slate-800 flex justify-end">
@@ -336,7 +360,6 @@
 
     <!-- スクリプト部 -->
     <script>
-        // 鉄道路線マスター
         let linesData = [
             { id: "chuo", name: "中央線", color: "#ea580c" },
             { id: "keio", name: "京王線", color: "#be185d" },
@@ -346,12 +369,15 @@
             { id: "other", name: "その他", color: "#9333ea" }
         ];
 
-        // 背景地図画像用のグローバル変数
         let bgImageUrl = null;
         let bgOpacity = 0.4;
         let lineChartInstance = null;
+        let priceChartInstance = null;
+        let currentScale = 1;
+        let panX = 0;
+        let panY = 0;
+        let currentTab = 'map';
 
-        // 駅データ（位置情報 X, Y 含む：添付の公式路線図画像に合わせて位置調整）
         let stationsData = [
             { name: "八王子", tsubo: 400, price: 8400, range: "400万台", line: "中央線", x: 170, y: 395 },
             { name: "立川", tsubo: 480, price: 10100, range: "400万台", line: "中央線", x: 295, y: 395 },
@@ -359,19 +385,15 @@
             { name: "中野", tsubo: 850, price: 18000, range: "800～900万台", line: "中央線", x: 535, y: 305 },
             { name: "新宿", tsubo: 1200, price: 25000, range: "1000万以上", line: "山手線", x: 595, y: 355 },
             { name: "東京", tsubo: 1400, price: 29600, range: "1000万以上", line: "中央線", x: 795, y: 305 },
-            
             { name: "府中", tsubo: 440, price: 9300, range: "400万台", line: "京王線", x: 305, y: 465 },
             { name: "明大前", tsubo: 650, price: 13700, range: "600万台", line: "京王線", x: 465, y: 415 },
             { name: "渋谷", tsubo: 1300, price: 28000, range: "1000万以上", line: "山手線", x: 595, y: 455 },
-
             { name: "所沢", tsubo: 350, price: 7400, range: "300万台", line: "西武新宿線", x: 235, y: 235 },
             { name: "田無", tsubo: 350, price: 7400, range: "300万台", line: "西武新宿線", x: 365, y: 265 },
             { name: "高田馬場", tsubo: 900, price: 19000, range: "800～900万台", line: "山手線", x: 595, y: 255 },
-
             { name: "石神井公園", tsubo: 600, price: 12700, range: "600万台", line: "西武池袋線", x: 335, y: 195 },
             { name: "練馬", tsubo: 600, price: 12700, range: "600万台", line: "西武池袋線", x: 495, y: 225 },
             { name: "池袋", tsubo: 1100, price: 23500, range: "1000万以上", line: "山手線", x: 535, y: 285 },
-
             { name: "光が丘", tsubo: 450, price: 9500, range: "400万台", line: "その他", x: 395, y: 145 },
             { name: "上石神井", tsubo: 450, price: 9500, range: "400万台", line: "西武新宿線", x: 405, y: 245 },
             { name: "荻窪", tsubo: 700, price: 14800, range: "700万台", line: "中央線", x: 495, y: 315 },
@@ -445,41 +467,36 @@
             { name: "橋本", tsubo: 380, price: 8100, range: "300万台", line: "その他", x: 195, y: 555 }
         ];
 
-        let currentTab = 'map';
-        let currentScale = 1;
-        let priceChartInstance = null;
-        // 初期読込時に添付の公式路線図画像をデフォルト背景として設定
         window.addEventListener('DOMContentLoaded', () => {
             loadData();
             if (!bgImageUrl) {
-                // デフォルト背景に添付画像をセット (Data URI または サンプルURL)
                 bgImageUrl = "https://placehold.co/1200x800/1e293b/ffffff?text=Tokyo+Railway+Map";
             }
             updateLineSelects();
             renderApp();
 
-            // カラーピッカー連動
             const colorPicker = document.getElementById('newLineColor');
             const colorText = document.getElementById('newLineColorText');
-            colorPicker.addEventListener('input', (e) => { colorText.value = e.target.value; });
-            colorText.addEventListener('input', (e) => { if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) colorPicker.value = e.target.value; });
+            if (colorPicker && colorText) {
+                colorPicker.addEventListener('input', (e) => { colorText.value = e.target.value; });
+                colorText.addEventListener('input', (e) => { if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) colorPicker.value = e.target.value; });
+            }
         });
 
         function loadData() {
             const savedStations = localStorage.getItem('capital_stations_2026');
             const savedLines = localStorage.getItem('capital_lines_2026');
             const savedBg = localStorage.getItem('capital_bg_image_2026');
-            if (savedStations) {
-                try { stationsData = JSON.parse(savedStations); } catch(e) {}
-            }
-            if (savedLines) {
-                try { linesData = JSON.parse(savedLines); } catch(e) {}
-            }
+            if (savedStations) { try { stationsData = JSON.parse(savedStations); } catch(e) {} }
+            if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
             if (savedBg) {
                 bgImageUrl = savedBg;
-                document.getElementById('removeBgBtn').classList.remove('hidden');
-                document.getElementById('opacityControl').classList.remove('hidden');
-                document.getElementById('bgFileName').textContent = "背景図面設定中 (変更)";
+                const removeBtn = document.getElementById('removeBgBtn');
+                const opacityCtrl = document.getElementById('opacityControl');
+                const bgFileName = document.getElementById('bgFileName');
+                if (removeBtn) removeBtn.classList.remove('hidden');
+                if (opacityCtrl) opacityCtrl.classList.remove('hidden');
+                if (bgFileName) bgFileName.textContent = "背景図面設定中 (変更)";
             }
         }
 
@@ -500,7 +517,6 @@
             }
         }
 
-        // 背景画像のアップロード処理
         function handleBgImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -532,7 +548,6 @@
             renderMap();
         }
 
-        // タブ切り替え
         function switchTab(tabId) {
             currentTab = tabId;
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -575,6 +590,7 @@
         function updateLineSelects() {
             const filterLine = document.getElementById('filterLine');
             const stationLine = document.getElementById('stationLine');
+            if (!filterLine || !stationLine) return;
             const currentFilter = filterLine.value;
             const currentStationLine = stationLine.value;
 
@@ -621,21 +637,43 @@
             }
         }
 
-        // 路線図（SVG）の背景描画・パス描画・駅ノード描画
-        function renderMap() {
-            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
-            const filterLine = document.getElementById('filterLine').value;
-            const filterRange = document.getElementById('filterPriceRange').value;
+        function autoCalculatePrice(tsuboVal) {
+            const tsubo = parseFloat(tsuboVal);
+            if (isNaN(tsubo)) return;
+            const priceInput = document.getElementById('stationPrice');
+            const rangeSelect = document.getElementById('stationRange');
+            if (!priceInput || !rangeSelect) return;
 
-            // 0. 背景レイヤー (グリッド or アップロード画像)
+            const calcPrice = Math.round(tsubo * 21.1); // 70㎡換算の目安
+            priceInput.value = calcPrice;
+
+            if (tsubo < 350) rangeSelect.value = "300万台";
+            else if (tsubo < 450) rangeSelect.value = "400万台";
+            else if (tsubo < 550) rangeSelect.value = "500万台";
+            else if (tsubo < 650) rangeSelect.value = "600万台";
+            else if (tsubo < 780) rangeSelect.value = "700万台";
+            else if (tsubo < 950) rangeSelect.value = "800～900万台";
+            else rangeSelect.value = "1000万以上";
+        }
+
+        function renderMap() {
+            const keywordElem = document.getElementById('searchKeyword');
+            const filterLineElem = document.getElementById('filterLine');
+            const filterRangeElem = document.getElementById('filterPriceRange');
+            const keyword = keywordElem ? keywordElem.value.toLowerCase() : '';
+            const filterLine = filterLineElem ? filterLineElem.value : '';
+            const filterRange = filterRangeElem ? filterRangeElem.value : '';
+
             const bgLayer = document.getElementById('bgLayer');
+            if (!bgLayer) return;
             bgLayer.innerHTML = '';
 
+            // 白ベース背景（背景画像またはグリッド）
             if (bgImageUrl) {
                 const rectBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rectBg.setAttribute('width', '1200');
                 rectBg.setAttribute('height', '800');
-                rectBg.setAttribute('fill', '#090d16');
+                rectBg.setAttribute('fill', '#ffffff');
                 bgLayer.appendChild(rectBg);
 
                 const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
@@ -660,34 +698,9 @@
                 return matchKeyword && matchLine && matchRange;
             });
 
-            // 1. 路線パス描画
             const pathsGroup = document.getElementById('linePaths');
             pathsGroup.innerHTML = '';
 
-            linesData.forEach(line => {
-                if (filterLine && filterLine !== line.name) return;
-                const lineStations = stationsData.filter(s => s.line === line.name);
-                if (lineStations.length < 2) return;
-
-                lineStations.sort((a, b) => a.x - b.x);
-
-                let pathD = `M ${lineStations[0].x} ${lineStations[0].y}`;
-                for (let i = 1; i < lineStations.length; i++) {
-                    pathD += ` L ${lineStations[i].x} ${lineStations[i].y}`;
-                }
-
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', pathD);
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke', line.color);
-                path.setAttribute('stroke-width', '4');
-                path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('stroke-linejoin', 'round');
-                path.setAttribute('opacity', '0.85');
-                pathsGroup.appendChild(path);
-            });
-
-            // 2. 駅ノード描画
             const nodesGroup = document.getElementById('stationNodes');
             nodesGroup.innerHTML = '';
 
@@ -701,60 +714,66 @@
                 
                 g.addEventListener('mousedown', (e) => startDrag(e, originalIndex));
                 g.addEventListener('click', (e) => {
-                    if (!isDragging) openEditModal(originalIndex);
+                    if (!isDraggingStation) openEditModal(originalIndex);
                 });
 
-                const circleBg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circleBg.setAttribute('r', '14');
-                circleBg.setAttribute('fill', color);
-                circleBg.setAttribute('opacity', '0.35');
-                g.appendChild(circleBg);
+                // 正六角形（Regular Hexagon）の計算
+                // 文字数やサイズに応じて大きさを決定しつつ、高さと幅の比率を正六角形（尖った上または平らな上）に保つ
+                const radius = Math.max(38, Math.max(st.name.length * 6, 36));
+                const points = [];
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3;
+                    const px = radius * Math.cos(angle);
+                    const py = radius * Math.sin(angle);
+                    points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+                }
 
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('r', '6');
-                circle.setAttribute('fill', color);
-                circle.setAttribute('stroke', '#0f172a');
-                circle.setAttribute('stroke-width', '2');
-                g.appendChild(circle);
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', points.join(' '));
+                polygon.setAttribute('fill', color);
+                polygon.setAttribute('stroke', '#1e293b');
+                polygon.setAttribute('stroke-width', '1.5');
+                polygon.setAttribute('filter', 'drop-shadow(0px 2px 3px rgba(0,0,0,0.15))');
+                g.appendChild(polygon);
 
-                const labelWidth = Math.max(st.name.length * 12 + 35, 65);
-                const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                textBg.setAttribute('x', '10');
-                textBg.setAttribute('y', '-10');
-                textBg.setAttribute('width', `${labelWidth}`);
-                textBg.setAttribute('height', '26');
-                textBg.setAttribute('rx', '4');
-                textBg.setAttribute('fill', '#090d16');
-                textBg.setAttribute('stroke', '#334155');
-                textBg.setAttribute('stroke-width', '1');
-                g.appendChild(textBg);
+                // 駅名テキスト (上段)
+                const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textName.setAttribute('x', '0');
+                textName.setAttribute('y', '-5');
+                textName.setAttribute('text-anchor', 'middle');
+                textName.setAttribute('fill', '#0f172a');
+                textName.setAttribute('font-size', '11px');
+                textName.setAttribute('font-weight', 'bold');
+                textName.textContent = st.name;
+                g.appendChild(textName);
 
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', '16');
-                text.setAttribute('y', '7');
-                text.setAttribute('fill', '#f8fafc');
-                text.setAttribute('font-size', '10px');
-                text.textContent = `${st.name} (${st.tsubo}万)`;
-                g.appendChild(text);
+                // 坪単価テキスト (下段) - フォントサイズを大きくし太字に調整
+                const textPrice = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textPrice.setAttribute('x', '0');
+                textPrice.setAttribute('y', '11');
+                textPrice.setAttribute('text-anchor', 'middle');
+                textPrice.setAttribute('fill', '#0f172a');
+                textPrice.setAttribute('font-size', '12px');
+                textPrice.setAttribute('font-weight', '800');
+                textPrice.textContent = `${st.tsubo}万円`;
+                g.appendChild(textPrice);
 
                 nodesGroup.appendChild(g);
             });
         }
 
-        // 駅ノードのドラッグ＆ドロップ移動処理
-        let isDragging = false;
-        let dragStartTime = 0;
+        let isDraggingStation = false;
 
         function startDrag(e, index) {
             e.stopPropagation();
-            draggingStationIndex = index;
-            isDragging = false;
-            dragStartTime = Date.now();
+            const draggingStationIndex = index;
+            isDraggingStation = false;
 
             const svg = document.getElementById('railwayMap');
+            if (!svg) return;
             
             function onMouseMove(event) {
-                isDragging = true;
+                isDraggingStation = true;
                 const pt = svg.createSVGPoint();
                 pt.x = event.clientX;
                 pt.y = event.clientY;
@@ -768,7 +787,7 @@
             function onMouseUp() {
                 window.removeEventListener('mousemove', onMouseMove);
                 window.removeEventListener('mouseup', onMouseUp);
-                if (isDragging) {
+                if (isDraggingStation) {
                     saveData();
                     showToast(`「${stationsData[draggingStationIndex].name}」の位置を更新しました`);
                 }
@@ -778,11 +797,13 @@
             window.addEventListener('mouseup', onMouseUp);
         }
 
-        // テーブル一覧描画
         function renderTable() {
-            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
-            const filterLine = document.getElementById('filterLine').value;
-            const filterRange = document.getElementById('filterPriceRange').value;
+            const keywordElem = document.getElementById('searchKeyword');
+            const filterLineElem = document.getElementById('filterLine');
+            const filterRangeElem = document.getElementById('filterPriceRange');
+            const keyword = keywordElem ? keywordElem.value.toLowerCase() : '';
+            const filterLine = filterLineElem ? filterLineElem.value : '';
+            const filterRange = filterRangeElem ? filterRangeElem.value : '';
 
             const filtered = stationsData.filter(st => {
                 const matchKeyword = st.name.toLowerCase().includes(keyword);
@@ -792,6 +813,7 @@
             });
 
             const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             if (filtered.length === 0) {
@@ -828,29 +850,31 @@
             });
         }
 
-        // 統計グラフ描画
         function renderCharts() {
             const ranges = ["300万台", "400万台", "500万台", "600万台", "700万台", "800～900万台", "1000万以上"];
             const rangeCounts = ranges.map(r => stationsData.filter(s => s.range === r).length);
 
             if (priceChartInstance) priceChartInstance.destroy();
-            const ctxPrice = document.getElementById('priceRangeChart').getContext('2d');
-            priceChartInstance = new Chart(ctxPrice, {
-                type: 'doughnut',
-                data: {
-                    labels: ranges,
-                    datasets: [{
-                        data: rangeCounts,
-                        backgroundColor: ['#38bdf8', '#4ade80', '#accf34', '#facc15', '#fb923c', '#f87171', '#c084fc'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } }
-                }
-            });
+            const priceCanvas = document.getElementById('priceRangeChart');
+            if (priceCanvas) {
+                const ctxPrice = priceCanvas.getContext('2d');
+                priceChartInstance = new Chart(ctxPrice, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ranges,
+                        datasets: [{
+                            data: rangeCounts,
+                            backgroundColor: ['#38bdf8', '#4ade80', '#accf34', '#facc15', '#fb923c', '#f87171', '#c084fc'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } }
+                    }
+                });
+            }
 
             const lineNames = linesData.map(l => l.name);
             const lineAvg = lineNames.map(lName => {
@@ -861,55 +885,126 @@
             const lineColors = linesData.map(l => l.color);
 
             if (lineChartInstance) lineChartInstance.destroy();
-            const ctxLine = document.getElementById('lineAvgChart').getContext('2d');
-            lineChartInstance = new Chart(ctxLine, {
-                type: 'bar',
-                data: {
-                    labels: lineNames,
-                    datasets: [{
-                        label: '平均坪単価 (万円)',
-                        data: lineAvg,
-                        backgroundColor: lineColors,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
-                        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
+            const lineCanvas = document.getElementById('lineAvgChart');
+            if (lineCanvas) {
+                const ctxLine = lineCanvas.getContext('2d');
+                lineChartInstance = new Chart(ctxLine, {
+                    type: 'bar',
+                    data: {
+                        labels: lineNames,
+                        datasets: [{
+                            label: '平均坪単価 (万円)',
+                            data: lineAvg,
+                            backgroundColor: lineColors,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
-        // 路線図ズーム
         function zoomMap(factor) {
-            currentScale = Math.max(0.6, Math.min(2.5, currentScale * factor));
-            document.getElementById('svgWrapper').style.transform = `scale(${currentScale})`;
+            currentScale = Math.max(0.6, Math.min(3.5, currentScale * factor));
+            updateMapTransform();
         }
+
         function resetZoom() {
             currentScale = 1;
-            document.getElementById('svgWrapper').style.transform = `scale(1)`;
+            panX = 0;
+            panY = 0;
+            syncPanSliders();
+            updateMapTransform();
         }
 
-        // 駅モーダル操作
+        function resetPanSliders() {
+            panX = 0;
+            panY = 0;
+            syncPanSliders();
+            updateMapTransform();
+        }
+
+        function syncPanSliders() {
+            const xSlider = document.getElementById('panXSlider');
+            const ySlider = document.getElementById('panYSlider');
+            if (xSlider) xSlider.value = panX;
+            if (ySlider) ySlider.value = panY;
+        }
+
+        function onPanSliderChange() {
+            const xSlider = document.getElementById('panXSlider');
+            const ySlider = document.getElementById('panYSlider');
+            if (xSlider && ySlider) {
+                panX = parseInt(xSlider.value);
+                panY = parseInt(ySlider.value);
+                updateMapTransform();
+            }
+        }
+
+        function updateMapTransform() {
+            const wrapper = document.getElementById('svgWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+            }
+        }
+
+        let isPanningMap = false;
+        let startPanClientX = 0;
+        let startPanClientY = 0;
+
+        function startPanMap(e) {
+            if (e.target.closest('g') || e.target.closest('button') || e.target.closest('div.absolute') || e.target.closest('input')) return;
+            isPanningMap = true;
+            startPanClientX = e.clientX - panX;
+            startPanClientY = e.clientY - panY;
+
+            function onMouseMove(event) {
+                if (!isPanningMap) return;
+                panX = event.clientX - startPanClientX;
+                panY = event.clientY - startPanClientY;
+                panX = Math.max(-600, Math.min(600, panX));
+                panY = Math.max(-400, Math.min(400, panY));
+                syncPanSliders();
+                updateMapTransform();
+            }
+
+            function onMouseUp() {
+                isPanningMap = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
         function openAddModal() {
-            document.getElementById('modalTitle').textContent = "新規駅データ追加";
+            const modal = document.getElementById('stationModal');
+            if (!modal) return;
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-train text-indigo-400"></i><span>駅データを追加</span>';
             document.getElementById('editIndex').value = "-1";
-            document.getElementById('stationName').value = "";
-            document.getElementById('stationTsubo').value = "";
-            document.getElementById('stationPrice').value = "";
-            document.getElementById('stationX').value = Math.floor(Math.random() * 600) + 300;
-            document.getElementById('stationY').value = Math.floor(Math.random() * 400) + 200;
-            document.getElementById('stationModal').classList.remove('hidden');
+            document.getElementById('stationForm').reset();
+            document.getElementById('modalDeleteBtn').classList.add('hidden');
+            document.getElementById('stationX').value = 600;
+            document.getElementById('stationY').value = 400;
+            modal.classList.remove('hidden');
         }
 
         function openEditModal(index) {
+            const modal = document.getElementById('stationModal');
+            if (!modal) return;
             const st = stationsData[index];
-            document.getElementById('modalTitle').textContent = "駅データ編集";
+            if (!st) return;
+
+            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-train text-indigo-400"></i><span>「${escapeHTML(st.name)}」の編集</span>`;
             document.getElementById('editIndex').value = index;
             document.getElementById('stationName').value = st.name;
             document.getElementById('stationTsubo').value = st.tsubo;
@@ -918,37 +1013,34 @@
             document.getElementById('stationLine').value = st.line;
             document.getElementById('stationX').value = st.x;
             document.getElementById('stationY').value = st.y;
-            document.getElementById('stationModal').classList.remove('hidden');
+            document.getElementById('modalDeleteBtn').classList.remove('hidden');
+            modal.classList.remove('hidden');
         }
 
         function closeModal() {
-            document.getElementById('stationModal').classList.add('hidden');
+            const modal = document.getElementById('stationModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function saveStation(event) {
             event.preventDefault();
             const index = parseInt(document.getElementById('editIndex').value);
             const name = document.getElementById('stationName').value.trim();
-            const tsubo = Number(document.getElementById('stationTsubo').value);
-            const price = Number(document.getElementById('stationPrice').value);
+            const tsubo = parseInt(document.getElementById('stationTsubo').value);
+            const price = parseInt(document.getElementById('stationPrice').value);
             const range = document.getElementById('stationRange').value;
             const line = document.getElementById('stationLine').value;
-            const x = Number(document.getElementById('stationX').value);
-            const y = Number(document.getElementById('stationY').value);
+            const x = parseInt(document.getElementById('stationX').value);
+            const y = parseInt(document.getElementById('stationY').value);
 
-            if (!name || isNaN(tsubo) || isNaN(price)) {
-                showToast("正しい値を入力してください", "error");
-                return;
-            }
-
-            const data = { name, tsubo, price, range, line, x, y };
+            if (!name) return;
 
             if (index === -1) {
-                stationsData.unshift(data);
-                showToast("新しい駅データを追加しました");
+                stationsData.push({ name, tsubo, price, range, line, x, y });
+                showToast(`「${name}」を追加しました`);
             } else {
-                stationsData[index] = data;
-                showToast("駅データを更新しました");
+                stationsData[index] = { name, tsubo, price, range, line, x, y };
+                showToast(`「${name}」を更新しました`);
             }
 
             saveData();
@@ -957,37 +1049,56 @@
         }
 
         function deleteStation(index) {
-            if (confirm(`「${stationsData[index].name}」のデータを削除しますか？`)) {
+            const name = stationsData[index].name;
+            if (confirm(`「${name}」の駅データを削除しますか？`)) {
                 stationsData.splice(index, 1);
                 saveData();
                 renderApp();
-                showToast("データを削除しました");
+                showToast(`「${name}」を削除しました`);
             }
         }
 
-        // 路線管理モーダル関連
+        function deleteStationFromModal() {
+            const index = parseInt(document.getElementById('editIndex').value);
+            if (index >= 0 && index < stationsData.length) {
+                const name = stationsData[index].name;
+                if (confirm(`「${name}」の駅データを削除しますか？`)) {
+                    stationsData.splice(index, 1);
+                    saveData();
+                    closeModal();
+                    renderApp();
+                    showToast(`「${name}」を削除しました`);
+                }
+            }
+        }
+
         function openLineModal() {
-            renderLineList();
-            document.getElementById('lineModal').classList.remove('hidden');
+            const modal = document.getElementById('lineModal');
+            if (modal) {
+                renderLineList();
+                modal.classList.remove('hidden');
+            }
         }
 
         function closeLineModal() {
-            document.getElementById('lineModal').classList.add('hidden');
+            const modal = document.getElementById('lineModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function renderLineList() {
             const container = document.getElementById('lineListContainer');
+            if (!container) return;
             container.innerHTML = '';
 
-            linesData.forEach((line, idx) => {
+            linesData.forEach((l, idx) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800";
+                div.className = "flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 gap-2";
                 div.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <input type="color" value="${line.color}" onchange="updateLineColor(${idx}, this.value)" class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer">
-                        <input type="text" value="${escapeHTML(line.name)}" onchange="updateLineName(${idx}, this.value)" class="bg-slate-950 px-2 py-1 border border-slate-700 rounded text-white text-xs">
+                    <div class="flex items-center space-x-2 flex-grow">
+                        <input type="color" value="${l.color}" onchange="updateLineColor(${idx}, this.value)" class="w-7 h-7 rounded border-0 bg-transparent cursor-pointer">
+                        <input type="text" value="${escapeHTML(l.name)}" onchange="updateLineName(${idx}, this.value)" class="bg-slate-950 border border-slate-700 px-2 py-1 rounded text-white text-xs w-full">
                     </div>
-                    <button onclick="deleteLine(${idx})" class="text-slate-400 hover:text-rose-400 p-1 transition" title="路線削除"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="deleteLine(${idx})" class="text-rose-400 hover:text-rose-300 p-1.5 transition" title="路線を削除"><i class="fa-solid fa-trash"></i></button>
                 `;
                 container.appendChild(div);
             });
@@ -995,8 +1106,11 @@
 
         function addLine(event) {
             event.preventDefault();
-            const name = document.getElementById('newLineName').value.trim();
-            const color = document.getElementById('newLineColor').value;
+            const nameElem = document.getElementById('newLineName');
+            const colorElem = document.getElementById('newLineColor');
+            if (!nameElem || !colorElem) return;
+            const name = nameElem.value.trim();
+            const color = colorElem.value;
 
             if (!name) return;
             if (linesData.some(l => l.name === name)) {
@@ -1006,7 +1120,7 @@
 
             linesData.push({ id: 'line_' + Date.now(), name, color });
             saveData();
-            document.getElementById('newLineName').value = "";
+            nameElem.value = "";
             renderLineList();
             renderApp();
             showToast("路線を追加しました");
@@ -1091,14 +1205,17 @@
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = message;
-            document.getElementById('toastIcon').className = type === 'error' ? "fa-solid fa-circle-exclamation text-rose-400" : "fa-solid fa-circle-check text-emerald-400";
+            const msgElem = document.getElementById('toastMessage');
+            const iconElem = document.getElementById('toastIcon');
+            if (!toast || !msgElem || !iconElem) return;
+            msgElem.textContent = message;
+            iconElem.className = type === 'error' ? "fa-solid fa-circle-exclamation text-rose-400" : "fa-solid fa-circle-check text-emerald-400";
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'"\\]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '\\': '&#92;' }[tag] || tag));
+            return String(str).replace(/[&<>'"\\]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '\\': '&#92;' }[tag] || tag));
         }
     </script>
 </body>
