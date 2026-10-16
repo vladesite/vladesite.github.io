@@ -4,7 +4,7 @@
 **※対応するお客様の年齢が"44歳以上（ローン期間35年以下）"の方には説明不要ですので、ご注意ください。**
 
 ---
-Copyright© 2026 SHICHI HIRAI(vladesite) All Rights Reserved.
+Copyright© 2026 SHUICHI HIRAI(@vladesite) All Rights Reserved.
 
 ## 1. 画面構成と基本操作
 
