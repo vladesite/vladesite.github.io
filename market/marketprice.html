@@ -15,6 +15,10 @@
         body { font-family: 'Noto Sans JP', 'Inter', sans-serif; }
         .map-container { cursor: grab; overflow: hidden; position: relative; }
         .map-container:active { cursor: grabbing; }
+        .station-tooltip {
+            pointer-events: none;
+            transition: opacity 0.15s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col select-none">
@@ -28,9 +32,9 @@
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-white flex items-center space-x-2">
                     <span>首都圏鉄道路線図ヒートマップエディター</span>
-                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">社内資料 2026/10月</span>
+                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">Pro 2026</span>
                 </h1>
-                <p class="text-xs text-slate-400">路線・駅レイアウト＆単価ヒートマップ統合管理</p>
+                <p class="text-xs text-slate-400">路線図自動リンク・駅レイアウト＆単価ヒートマップ統合管理</p>
             </div>
         </div>
         <div class="flex items-center space-x-2 flex-wrap gap-2">
@@ -127,7 +131,12 @@
 
             <!-- 1. 路線図ビュー -->
             <div id="mapViewContainer" class="relative bg-white border border-slate-300 rounded-2xl shadow-inner overflow-hidden flex-grow min-h-[620px] flex flex-col">
-                <div class="relative flex-grow flex items-center justify-center map-container" id="mapCanvasArea" onmousedown="startPanMap(event)">
+                <div class="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur text-slate-200 text-[11px] px-3 py-1.5 rounded-lg border border-slate-700 shadow flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-info text-indigo-400"></i>
+                    <span>マップ内をダブルクリックでその位置に駅を追加できます (ドラッグで移動)</span>
+                </div>
+
+                <div class="relative flex-grow flex items-center justify-center map-container" id="mapCanvasArea" onmousedown="startPanMap(event)" ondblclick="handleMapDblClick(event)">
                     
                     <!-- ズーム操作用ボタンパネル -->
                     <div class="absolute top-4 right-4 z-20 flex flex-col space-y-1 bg-white/90 border border-slate-300 p-1.5 rounded-xl shadow-lg backdrop-blur">
@@ -146,7 +155,7 @@
                             </defs>
                             <!-- 背景画像・グリッドレイヤー -->
                             <g id="bgLayer"></g>
-                            <g id="linePaths"></g>
+                            <!-- 駅ノードレイヤー -->
                             <g id="stationNodes"></g>
                         </svg>
                     </div>
@@ -337,7 +346,7 @@
 
     <!-- フッター -->
     <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
-        &copy; 2026 首都圏鉄道路線図ヒートマップエディター. 社内資料 2026/10月 版　Copyright© S.HIRAI
+        &copy; 2026 首都圏鉄道路線図ヒートマップエディター Pro. All Rights Reserved.
     </footer>
 
     <!-- スクリプト部 -->
@@ -401,14 +410,12 @@
                 colorText.addEventListener('input', (e) => { if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) colorPicker.value = e.target.value; });
             }
 
-            // マウスホイールでのズーム・スクロールイベントを設定
             const mapCanvasArea = document.getElementById('mapCanvasArea');
             if (mapCanvasArea) {
                 mapCanvasArea.addEventListener('wheel', handleWheelZoom, { passive: false });
             }
         });
 
-        // マウスホイールによる拡大・縮小処理
         function handleWheelZoom(e) {
             e.preventDefault();
             const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
@@ -420,7 +427,6 @@
             const mouseX = e.clientX - rect.left - rect.width / 2;
             const mouseY = e.clientY - rect.top - rect.height / 2;
 
-            // マウス位置を中心に引き寄せる調整計算
             panX = mouseX - (mouseX - panX) * (newScale / currentScale);
             panY = mouseY - (mouseY - panY) * (newScale / currentScale);
             currentScale = newScale;
@@ -429,10 +435,10 @@
         }
 
         async function loadData() {
-            const savedStations = localStorage.getItem('capital_stations_2026');
-            const savedLines = localStorage.getItem('capital_lines_2026');
-            const savedRangesConfig = localStorage.getItem('capital_price_ranges_config_2026');
-            const savedBg = localStorage.getItem('capital_bg_image_2026');
+            const savedStations = localStorage.getItem('capital_stations_2026_pro');
+            const savedLines = localStorage.getItem('capital_lines_2026_pro');
+            const savedRangesConfig = localStorage.getItem('capital_price_ranges_config_2026_pro');
+            const savedBg = localStorage.getItem('capital_bg_image_2026_pro');
 
             if (savedStations) { try { stationsData = JSON.parse(savedStations); } catch(e) {} }
             if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
@@ -453,7 +459,7 @@
                     }
                 }
             } catch (err) {
-                console.log("リモートJSONデータの取得に失敗しました。ローカルデータを使用します。", err);
+                console.log("リモートJSONの取得に失敗しました。ローカルデータを使用します。", err);
             }
 
             if (savedRangesConfig) { try { priceRangesConfig = JSON.parse(savedRangesConfig); } catch(e) {} }
@@ -474,20 +480,20 @@
         }
 
         function saveData() {
-            localStorage.setItem('capital_stations_2026', JSON.stringify(stationsData));
-            localStorage.setItem('capital_lines_2026', JSON.stringify(linesData));
-            localStorage.setItem('capital_price_ranges_config_2026', JSON.stringify(priceRangesConfig));
+            localStorage.setItem('capital_stations_2026_pro', JSON.stringify(stationsData));
+            localStorage.setItem('capital_lines_2026_pro', JSON.stringify(linesData));
+            localStorage.setItem('capital_price_ranges_config_2026_pro', JSON.stringify(priceRangesConfig));
             if (bgImageUrl) {
-                localStorage.setItem('capital_bg_image_2026', bgImageUrl);
+                localStorage.setItem('capital_bg_image_2026_pro', bgImageUrl);
             }
         }
 
         function resetData() {
             if (confirm('路線・駅データおよび価格帯・色設定を初期状態にリセットしますか？')) {
-                localStorage.removeItem('capital_stations_2026');
-                localStorage.removeItem('capital_lines_2026');
-                localStorage.removeItem('capital_price_ranges_config_2026');
-                localStorage.removeItem('capital_bg_image_2026');
+                localStorage.removeItem('capital_stations_2026_pro');
+                localStorage.removeItem('capital_lines_2026_pro');
+                localStorage.removeItem('capital_price_ranges_config_2026_pro');
+                localStorage.removeItem('capital_bg_image_2026_pro');
                 location.reload();
             }
         }
@@ -510,7 +516,7 @@
 
         function removeBackgroundMap() {
             bgImageUrl = null;
-            localStorage.removeItem('capital_bg_image_2026');
+            localStorage.removeItem('capital_bg_image_2026_pro');
             document.getElementById('removeBgBtn').classList.add('hidden');
             document.getElementById('opacityControl').classList.add('hidden');
             document.getElementById('bgFileName').textContent = "路線図画像をアップロード";
@@ -708,9 +714,6 @@
                 return matchKeyword && matchLine && matchRange;
             });
 
-            const pathsGroup = document.getElementById('linePaths');
-            pathsGroup.innerHTML = '';
-
             const nodesGroup = document.getElementById('stationNodes');
             nodesGroup.innerHTML = '';
 
@@ -727,7 +730,6 @@
                     if (!isDraggingStation) openEditModal(originalIndex);
                 });
 
-                // 正六角形ノード
                 const radius = Math.max(38, Math.max(st.name.length * 6, 36));
                 const points = [];
                 for (let i = 0; i < 6; i++) {
@@ -741,8 +743,8 @@
                 polygon.setAttribute('points', points.join(' '));
                 polygon.setAttribute('fill', color);
                 polygon.setAttribute('stroke', '#1e293b');
-                polygon.setAttribute('stroke-width', '1.5');
-                polygon.setAttribute('filter', 'drop-shadow(0px 2px 3px rgba(0,0,0,0.15))');
+                polygon.setAttribute('stroke-width', '2');
+                polygon.setAttribute('filter', 'drop-shadow(0px 3px 4px rgba(0,0,0,0.25))');
                 g.appendChild(polygon);
 
                 const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -757,12 +759,12 @@
 
                 const textPrice = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 textPrice.setAttribute('x', '0');
-                textPrice.setAttribute('y', '11');
+                textPrice.setAttribute('y', '12');
                 textPrice.setAttribute('text-anchor', 'middle');
                 textPrice.setAttribute('fill', '#0f172a');
                 textPrice.setAttribute('font-size', '12px');
                 textPrice.setAttribute('font-weight', '800');
-                textPrice.textContent = `${st.tsubo}万円`;
+                textPrice.textContent = `${st.tsubo}万`;
                 g.appendChild(textPrice);
 
                 nodesGroup.appendChild(g);
@@ -804,6 +806,17 @@
             window.addEventListener('mouseup', onMouseUp);
         }
 
+        function handleMapDblClick(e) {
+            const svg = document.getElementById('railwayMap');
+            if (!svg) return;
+            const pt = svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+            openAddModalAt(Math.round(svgP.x), Math.round(svgP.y));
+        }
+
         function zoomMap(factor) {
             currentScale = Math.max(0.4, Math.min(4.0, currentScale * factor));
             updateMapTransform();
@@ -828,7 +841,6 @@
         let startPanClientY = 0;
 
         function startPanMap(e) {
-            // UI操作用のボタンや入力エリアがクリックされた場合はドラッグ移動を開始しない
             if (e.target.closest('button') || e.target.closest('div.absolute') || e.target.closest('input')) return;
             
             isPanningMap = true;
@@ -968,14 +980,20 @@
         }
 
         function openAddModal() {
+            openAddModalAt(600, 400);
+        }
+
+        function openAddModalAt(x, y) {
             const modal = document.getElementById('stationModal');
             if (!modal) return;
             document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-train text-indigo-400"></i><span>駅データを追加</span>';
             document.getElementById('editIndex').value = "-1";
             document.getElementById('stationForm').reset();
             document.getElementById('modalDeleteBtn').classList.add('hidden');
-            document.getElementById('stationX').value = 600;
-            document.getElementById('stationY').value = 400;
+            document.getElementById('stationX').value = x;
+            document.getElementById('stationY').value = y;
+            document.getElementById('stationTsubo').value = 500;
+            autoCalculatePrice(500);
             modal.classList.remove('hidden');
         }
 
@@ -1141,7 +1159,7 @@
             const targetName = priceRangesConfig[idx].name;
             const count = stationsData.filter(s => s.range === targetName).length;
             if (count > 0) {
-                if (!confirm(`「${targetName}」に属する駅が ${count} 件あります。価格帯を削除しますか？（該当駅の価格帯は他の区分に変更してください）`)) return;
+                if (!confirm(`「${targetName}」に属する駅が ${count} 件あります。価格帯を削除しますか？`)) return;
             }
             priceRangesConfig.splice(idx, 1);
             saveData();
@@ -1225,7 +1243,7 @@
             const targetLine = linesData[idx].name;
             const count = stationsData.filter(s => s.line === targetLine).length;
             if (count > 0) {
-                if (!confirm(`「${targetLine}」には ${count} 件の所属駅があります。路線を削除しますか？（所属駅の路線は「その他」に変更されます）`)) return;
+                if (!confirm(`「${targetLine}」には ${count} 件の所属駅があります。路線を削除しますか？（所属駅は「その他」に変更されます）`)) return;
                 stationsData.forEach(s => {
                     if (s.line === targetLine) s.line = "その他";
                 });
@@ -1242,7 +1260,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "capital_railway_heatmap_2026.json");
+            dl.setAttribute("download", "capital_railway_heatmap_2026_pro.json");
             document.body.appendChild(dl);
             dl.click();
             dl.remove();
