@@ -400,7 +400,33 @@
                 colorPicker.addEventListener('input', (e) => { colorText.value = e.target.value; });
                 colorText.addEventListener('input', (e) => { if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) colorPicker.value = e.target.value; });
             }
+
+            // マウスホイールでのズーム・スクロールイベントを設定
+            const mapCanvasArea = document.getElementById('mapCanvasArea');
+            if (mapCanvasArea) {
+                mapCanvasArea.addEventListener('wheel', handleWheelZoom, { passive: false });
+            }
         });
+
+        // マウスホイールによる拡大・縮小処理
+        function handleWheelZoom(e) {
+            e.preventDefault();
+            const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+            const newScale = Math.max(0.4, Math.min(6.0, currentScale * zoomFactor));
+
+            if (newScale === currentScale) return;
+
+            const rect = e.currentTarget.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left - rect.width / 2;
+            const mouseY = e.clientY - rect.top - rect.height / 2;
+
+            // マウス位置を中心に引き寄せる調整計算
+            panX = mouseX - (mouseX - panX) * (newScale / currentScale);
+            panY = mouseY - (mouseY - panY) * (newScale / currentScale);
+            currentScale = newScale;
+
+            updateMapTransform();
+        }
 
         async function loadData() {
             const savedStations = localStorage.getItem('capital_stations_2026');
@@ -802,7 +828,9 @@
         let startPanClientY = 0;
 
         function startPanMap(e) {
-            if (e.target.closest('g') || e.target.closest('button') || e.target.closest('div.absolute') || e.target.closest('input')) return;
+            // UI操作用のボタンや入力エリアがクリックされた場合はドラッグ移動を開始しない
+            if (e.target.closest('button') || e.target.closest('div.absolute') || e.target.closest('input')) return;
+            
             isPanningMap = true;
             startPanClientX = e.clientX - panX;
             startPanClientY = e.clientY - panY;
