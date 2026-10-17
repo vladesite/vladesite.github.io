@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首都圏鉄道路線図ヒートマップエディター</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans JP', 'Inter', sans-serif; }
+        .map-container { cursor: grab; overflow: hidden; position: relative; }
+        .map-container:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col select-none">
+
+    <!-- ヘッダー -->
+    <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 shadow-md flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2.5 rounded-xl shadow-inner flex items-center justify-center">
+                <i class="fa-solid fa-train-subway text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center space-x-2">
+                    <span>首都圏鉄道路線図ヒートマップエディター</span>
+                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">社内資料 2026/6</span>
+                </h1>
+                <p class="text-xs text-slate-400">路線・駅レイアウト＆単価ヒートマップ統合管理</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 flex-wrap gap-2">
+            <button onclick="openLineModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 shadow">
+                <i class="fa-solid fa-route"></i>
+                <span>路線管理</span>
+            </button>
+            <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 shadow">
+                <i class="fa-solid fa-plus"></i>
+                <span>駅データを追加</span>
+            </button>
+            <button onclick="exportJSON()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-download"></i>
+                <span>JSON出力</span>
+            </button>
+            <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5">
+                <i class="fa-solid fa-upload"></i>
+                <span>読込</span>
+                <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+            </label>
+            <button onclick="resetData()" class="bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/50 px-3 py-1.5 rounded-lg text-xs font-medium transition" title="初期データにリセット">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 space-y-4 flex flex-col">
+
+        <!-- トースト通知 -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center space-x-3 pointer-events-none">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="toastMessage" class="text-xs font-medium">通知メッセージ</span>
+        </div>
+
+        <!-- ツールバー -->
+        <div class="bg-slate-950/80 backdrop-blur border border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+            <div class="flex flex-wrap justify-between items-center gap-3">
+                <div class="flex border-b border-slate-800 space-x-1 overflow-x-auto">
+                    <button onclick="switchTab('map')" id="tab-map" class="tab-btn px-4 py-2 text-xs font-semibold border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap transition">
+                        <i class="fa-solid fa-map mr-1"></i> 路線図ビジュアル編集
+                    </button>
+                    <button onclick="switchTab('table')" id="tab-table" class="tab-btn px-4 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">
+                        <i class="fa-solid fa-table mr-1"></i> 駅データ一覧
+                    </button>
+                    <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-4 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">
+                        <i class="fa-solid fa-chart-pie mr-1"></i> 統計グラフ分析
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2 flex-wrap gap-2">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="searchKeyword" oninput="renderApp()" placeholder="駅名検索..." class="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-100">
+                    </div>
+                    <select id="filterLine" onchange="renderApp()" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-200">
+                        <option value="">すべての路線</option>
+                    </select>
+                    <select id="filterPriceRange" onchange="renderApp()" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-200">
+                        <option value="">すべての価格帯</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 背景画像コントロール＆凡例 -->
+            <div class="flex flex-wrap items-center justify-between pt-2 border-t border-slate-800/60 gap-3 text-xs text-slate-400">
+                <div class="flex items-center space-x-3 flex-wrap gap-2">
+                    <span class="font-semibold text-slate-300">背景参照図面:</span>
+                    <label class="bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 px-3 py-1 rounded-lg cursor-pointer transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-image"></i>
+                        <span id="bgFileName">路線図画像をアップロード</span>
+                        <input type="file" id="bgImageInput" accept="image/*" onchange="handleBgImageUpload(event)" class="hidden">
+                    </label>
+                    <button id="removeBgBtn" onclick="removeBackgroundMap()" class="hidden text-rose-400 hover:text-rose-300 transition"><i class="fa-solid fa-trash"></i> 削除</button>
+                    <div id="opacityControl" class="hidden flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-800">
+                        <span>透明度: <strong id="opacityVal" class="text-indigo-400 font-mono">0.40</strong></span>
+                        <input type="range" id="bgOpacityRange" min="0.05" max="1" step="0.05" value="0.4" oninput="changeBgOpacity(this.value)" class="w-24 accent-indigo-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 overflow-x-auto" id="toolbarLegendContainer">
+                    <!-- 動的生成 -->
+                </div>
+                <button onclick="openLegendModal()" class="px-2.5 py-1 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs transition flex items-center space-x-1 shadow-sm">
+                    <i class="fa-solid fa-palette"></i><span>価格帯・色設定</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- メイン画面エリア -->
+        <div class="flex-grow flex flex-col space-y-4">
+
+            <!-- 1. 路線図ビュー -->
+            <div id="mapViewContainer" class="relative bg-white border border-slate-300 rounded-2xl shadow-inner overflow-hidden flex-grow min-h-[620px] flex flex-col">
+                <div class="relative flex-grow flex items-center justify-center map-container" id="mapCanvasArea" onmousedown="startPanMap(event)">
+                    
+                    <!-- ズーム操作用ボタンパネル -->
+                    <div class="absolute top-4 right-4 z-20 flex flex-col space-y-1 bg-white/90 border border-slate-300 p-1.5 rounded-xl shadow-lg backdrop-blur">
+                        <button onclick="zoomMap(1.2)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-700 text-xs" title="拡大"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                        <button onclick="resetZoom()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-700 text-xs" title="全体表示リセット"><i class="fa-solid fa-house"></i></button>
+                        <button onclick="zoomMap(0.8)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-700 text-xs" title="縮小"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                    </div>
+
+                    <!-- SVG全体をドラッグ＆ズームスライド移動させるラッパー -->
+                    <div id="svgWrapper" class="w-full h-full flex items-center justify-center origin-center select-none" style="transform: translate(0px, 0px) scale(1); transition: transform 0.05s ease-out;">
+                        <svg id="railwayMap" class="w-full h-full relative overflow-visible" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+                                </pattern>
+                            </defs>
+                            <!-- 背景画像・グリッドレイヤー -->
+                            <g id="bgLayer"></g>
+                            <g id="linePaths"></g>
+                            <g id="stationNodes"></g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. データテーブル一覧ビュー -->
+            <div id="tableViewContainer" class="hidden bg-slate-950 border border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-grow flex flex-col">
+                <div class="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                    <h2 class="font-bold text-sm text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-table text-indigo-400"></i>
+                        <span>登録駅データ管理テーブル</span>
+                    </h2>
+                    <span class="text-xs text-slate-400">各駅の坪単価・想定70㎡価格・座標の調整が可能です</span>
+                </div>
+                <div class="overflow-x-auto flex-grow">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="py-3 px-4 font-semibold">駅名</th>
+                                <th class="py-3 px-4 font-semibold">坪単価 (万円)</th>
+                                <th class="py-3 px-4 font-semibold">70㎡価格 (万円)</th>
+                                <th class="py-3 px-4 font-semibold">価格帯</th>
+                                <th class="py-3 px-4 font-semibold">所属路線</th>
+                                <th class="py-3 px-4 font-semibold">座標 (X, Y)</th>
+                                <th class="py-3 px-4 font-semibold text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. 統計グラフ分析ビュー -->
+            <div id="analyticsViewContainer" class="hidden bg-slate-950 border border-slate-800 rounded-2xl shadow-sm p-6 flex-grow flex flex-col space-y-6">
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <h2 class="font-bold text-sm text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-400"></i>
+                        <span>路線単価＆価格帯分布アナリティクス</span>
+                    </h2>
+                    <span class="text-xs text-slate-400">現在の全駅データを基にリアルタイム集計しています</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow items-center">
+                    <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center">
+                        <h3 class="text-xs font-semibold text-slate-300 mb-3">価格帯別 駅数シェア割合</h3>
+                        <div class="w-full h-64 relative">
+                            <canvas id="priceRangeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center">
+                        <h3 class="text-xs font-semibold text-slate-300 mb-3">路線別 平均坪単価比較</h3>
+                        <div class="w-full h-64 relative">
+                            <canvas id="lineAvgChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 駅追加・編集モーダル -->
+    <div id="stationModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col">
+            <div class="bg-slate-950 px-5 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 id="modalTitle" class="font-bold text-sm text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-train text-indigo-400"></i>
+                    <span>駅データの編集</span>
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="stationForm" onsubmit="saveStation(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="editIndex" value="-1">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">駅名</label>
+                    <input type="text" id="stationName" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">坪単価 (万円)</label>
+                        <input type="number" id="stationTsubo" required oninput="autoCalculatePrice(this.value)" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">70㎡価格 (自動算出)</label>
+                        <input type="number" id="stationPrice" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">価格帯区分</label>
+                        <select id="stationRange" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"></select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">所属路線</label>
+                        <select id="stationLine" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">路線図 X 座標</label>
+                        <input type="number" id="stationX" value="600" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">路線図 Y 座標</label>
+                        <input type="number" id="stationY" value="400" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white">
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-between items-center border-t border-slate-800">
+                    <button type="button" id="modalDeleteBtn" onclick="deleteStationFromModal()" class="hidden px-3 py-2 bg-rose-950/80 hover:bg-rose-900 text-rose-300 rounded-lg font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-trash"></i><span>削除</span>
+                    </button>
+                    <div class="flex space-x-2 ml-auto">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium transition">キャンセル</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow transition">保存する</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 路線管理モーダル -->
+    <div id="lineModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="bg-slate-950 px-5 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-route text-indigo-400"></i>
+                    <span>鉄道路線管理 (追加・色変更・削除)</span>
+                </h3>
+                <button onclick="closeLineModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 text-xs flex-grow">
+                <form id="lineAddForm" onsubmit="addLine(event)" class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-semibold text-slate-200">新規路線を追加</h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-slate-400 mb-1">路線名</label>
+                            <input type="text" id="newLineName" required placeholder="例: 銀座線" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">カラーコード</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="color" id="newLineColor" value="#f97316" class="w-8 h-8 rounded border-0 bg-transparent cursor-pointer">
+                                <input type="text" id="newLineColorText" value="#f97316" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
+                            </div>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-lg font-medium shadow transition">追加</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="space-y-2">
+                    <h4 class="font-semibold text-slate-300">登録済み路線一覧</h4>
+                    <div id="lineListContainer" class="space-y-2"></div>
+                </div>
+            </div>
+            <div class="bg-slate-950 px-5 py-3 border-t border-slate-800 flex justify-end">
+                <button onclick="closeLineModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium transition">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 凡例カラー設定モーダル -->
+    <div id="legendModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
+            <div class="bg-slate-950 px-5 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-palette text-indigo-400"></i>
+                    <span>価格帯区分およびヒートマップカラー設定</span>
+                </h3>
+                <button onclick="closeLegendModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-3 text-xs overflow-y-auto max-h-[60vh]">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-slate-400">価格帯の名称変更、追加、削除、およびヒートマップカラーの変更が可能です。</p>
+                    <button onclick="addPriceRangeConfig()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition flex items-center space-x-1 flex-shrink-0">
+                        <i class="fa-solid fa-plus"></i><span>新規追加</span>
+                    </button>
+                </div>
+                <div id="legendColorList" class="space-y-2.5"></div>
+            </div>
+            <div class="bg-slate-950 px-5 py-3 border-t border-slate-800 flex justify-between items-center">
+                <button onclick="resetLegendColors()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">デフォルトに戻す</button>
+                <button onclick="closeLegendModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition">完了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- フッター -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
+        &copy; 2026 首都圏鉄道路線図ヒートマップエディター. 社内資料 2026/6 版
+    </footer>
+
+    <!-- スクリプト部 -->
+    <script>
+        let linesData = [
+            { id: "chuo", name: "中央線", color: "#ea580c" },
+            { id: "keio", name: "京王線", color: "#be185d" },
+            { id: "seibu_shinjuku", name: "西武新宿線", color: "#0284c7" },
+            { id: "seibu_ikebukuro", name: "西武池袋線", color: "#65a30d" },
+            { id: "yamanote", name: "山手線", color: "#16a34a" },
+            { id: "other", name: "その他", color: "#9333ea" }
+        ];
+
+        let defaultPriceRanges = [
+            { name: '400万台', color: '#4ade80' },
+            { name: '500万台', color: '#accf34' },
+            { name: '600万台', color: '#facc15' },
+            { name: '700万台', color: '#fb923c' },
+            { name: '800～900万台', color: '#f87171' },
+            { name: '1000万以上', color: '#c084fc' }
+        ];
+
+        let priceRangesConfig = JSON.parse(JSON.stringify(defaultPriceRanges));
+
+        let bgImageUrl = "https://vladesite.github.io/market/Tokyo_Free.jpg";
+        let bgOpacity = 0.4;
+        let lineChartInstance = null;
+        let priceChartInstance = null;
+        let currentScale = 1;
+        let panX = 0;
+        let panY = 0;
+        let currentTab = 'map';
+
+        let stationsData = [
+            { name: "八王子", tsubo: 400, price: 8400, range: "400万台", line: "中央線", x: 170, y: 395 },
+            { name: "立川", tsubo: 480, price: 10100, range: "400万台", line: "中央線", x: 295, y: 395 },
+            { name: "吉祥寺", tsubo: 750, price: 15800, range: "700万台", line: "中央線", x: 445, y: 335 },
+            { name: "中野", tsubo: 850, price: 18000, range: "800～900万台", line: "中央線", x: 535, y: 305 },
+            { name: "新宿", tsubo: 1200, price: 25000, range: "1000万以上", line: "山手線", x: 595, y: 355 },
+            { name: "東京", tsubo: 1400, price: 29600, range: "1000万以上", line: "中央線", x: 795, y: 305 },
+            { name: "府中", tsubo: 440, price: 9300, range: "400万台", line: "京王線", x: 305, y: 465 },
+            { name: "明大前", tsubo: 650, price: 13700, range: "600万台", line: "京王線", x: 465, y: 415 },
+            { name: "渋谷", tsubo: 1300, price: 28000, range: "1000万以上", line: "山手線", x: 595, y: 455 },
+            { name: "高田馬場", tsubo: 900, price: 19000, range: "800～900万台", line: "山手線", x: 595, y: 255 },
+            { name: "石神井公園", tsubo: 600, price: 12700, range: "600万台", line: "西武池袋線", x: 335, y: 195 },
+            { name: "練馬", tsubo: 600, price: 12700, range: "600万台", line: "西武池袋線", x: 495, y: 225 },
+            { name: "池袋", tsubo: 1100, price: 23500, range: "1000万以上", line: "山手線", x: 535, y: 285 }
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadData();
+            updateLineSelects();
+            updateRangeSelects();
+            renderToolbarLegend();
+            renderApp();
+
+            const colorPicker = document.getElementById('newLineColor');
+            const colorText = document.getElementById('newLineColorText');
+            if (colorPicker && colorText) {
+                colorPicker.addEventListener('input', (e) => { colorText.value = e.target.value; });
+                colorText.addEventListener('input', (e) => { if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) colorPicker.value = e.target.value; });
+            }
+        });
+
+        async function loadData() {
+            const savedStations = localStorage.getItem('capital_stations_2026');
+            const savedLines = localStorage.getItem('capital_lines_2026');
+            const savedRangesConfig = localStorage.getItem('capital_price_ranges_config_2026');
+            const savedBg = localStorage.getItem('capital_bg_image_2026');
+
+            if (savedStations) { try { stationsData = JSON.parse(savedStations); } catch(e) {} }
+            if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
+
+            try {
+                const response = await fetch('https://vladesite.github.io/market/marketprice.json');
+                if (response.ok) {
+                    const remoteData = await response.json();
+                    if (!savedStations) {
+                        if (remoteData.stations && Array.isArray(remoteData.stations)) {
+                            stationsData = remoteData.stations;
+                        } else if (Array.isArray(remoteData)) {
+                            stationsData = remoteData;
+                        }
+                    }
+                    if (!savedLines && remoteData.lines && Array.isArray(remoteData.lines)) {
+                        linesData = remoteData.lines;
+                    }
+                }
+            } catch (err) {
+                console.log("リモートJSONデータの取得に失敗しました。ローカルデータを使用します。", err);
+            }
+
+            if (savedRangesConfig) { try { priceRangesConfig = JSON.parse(savedRangesConfig); } catch(e) {} }
+            if (savedBg) {
+                bgImageUrl = savedBg;
+                const removeBtn = document.getElementById('removeBgBtn');
+                const opacityCtrl = document.getElementById('opacityControl');
+                const bgFileName = document.getElementById('bgFileName');
+                if (removeBtn) removeBtn.classList.remove('hidden');
+                if (opacityCtrl) opacityCtrl.classList.remove('hidden');
+                if (bgFileName) bgFileName.textContent = "背景図面設定中 (変更)";
+            } else if (bgImageUrl) {
+                const removeBtn = document.getElementById('removeBgBtn');
+                const opacityCtrl = document.getElementById('opacityControl');
+                if (removeBtn) removeBtn.classList.remove('hidden');
+                if (opacityCtrl) opacityCtrl.classList.remove('hidden');
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('capital_stations_2026', JSON.stringify(stationsData));
+            localStorage.setItem('capital_lines_2026', JSON.stringify(linesData));
+            localStorage.setItem('capital_price_ranges_config_2026', JSON.stringify(priceRangesConfig));
+            if (bgImageUrl) {
+                localStorage.setItem('capital_bg_image_2026', bgImageUrl);
+            }
+        }
+
+        function resetData() {
+            if (confirm('路線・駅データおよび価格帯・色設定を初期状態にリセットしますか？')) {
+                localStorage.removeItem('capital_stations_2026');
+                localStorage.removeItem('capital_lines_2026');
+                localStorage.removeItem('capital_price_ranges_config_2026');
+                localStorage.removeItem('capital_bg_image_2026');
+                location.reload();
+            }
+        }
+
+        function handleBgImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                bgImageUrl = e.target.result;
+                saveData();
+                document.getElementById('removeBgBtn').classList.remove('hidden');
+                document.getElementById('opacityControl').classList.remove('hidden');
+                document.getElementById('bgFileName').textContent = file.name;
+                renderMap();
+                showToast("背景地図画像を読み込みました");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeBackgroundMap() {
+            bgImageUrl = null;
+            localStorage.removeItem('capital_bg_image_2026');
+            document.getElementById('removeBgBtn').classList.add('hidden');
+            document.getElementById('opacityControl').classList.add('hidden');
+            document.getElementById('bgFileName').textContent = "路線図画像をアップロード";
+            renderMap();
+            showToast("背景画像を削除しました");
+        }
+
+        function changeBgOpacity(val) {
+            bgOpacity = parseFloat(val);
+            const valLabel = document.getElementById('opacityVal');
+            if (valLabel) valLabel.textContent = bgOpacity.toFixed(2);
+            renderMap();
+        }
+
+        function updateLineSelects() {
+            const filterLineSelect = document.getElementById('filterLine');
+            const stationLineSelect = document.getElementById('stationLine');
+
+            if (filterLineSelect) {
+                const currentVal = filterLineSelect.value;
+                filterLineSelect.innerHTML = '<option value="">すべての路線</option>';
+                linesData.forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l.name;
+                    opt.textContent = l.name;
+                    if (l.name === currentVal) opt.selected = true;
+                    filterLineSelect.appendChild(opt);
+                });
+            }
+
+            if (stationLineSelect) {
+                const currentVal = stationLineSelect.value;
+                stationLineSelect.innerHTML = '';
+                linesData.forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l.name;
+                    opt.textContent = l.name;
+                    if (l.name === currentVal) opt.selected = true;
+                    stationLineSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function updateRangeSelects() {
+            const filterRangeSelect = document.getElementById('filterPriceRange');
+            const stationRangeSelect = document.getElementById('stationRange');
+
+            if (filterRangeSelect) {
+                const currentVal = filterRangeSelect.value;
+                filterRangeSelect.innerHTML = '<option value="">すべての価格帯</option>';
+                priceRangesConfig.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    if (r.name === currentVal) opt.selected = true;
+                    filterRangeSelect.appendChild(opt);
+                });
+            }
+
+            if (stationRangeSelect) {
+                const currentVal = stationRangeSelect.value;
+                stationRangeSelect.innerHTML = '';
+                priceRangesConfig.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    if (r.name === currentVal) opt.selected = true;
+                    stationRangeSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function renderToolbarLegend() {
+            const container = document.getElementById('toolbarLegendContainer');
+            if (!container) return;
+            container.innerHTML = '<span class="font-semibold text-slate-300 mr-1">凡例:</span>';
+            priceRangesConfig.forEach(r => {
+                const span = document.createElement('span');
+                span.className = "px-2.5 py-1 rounded-lg font-bold transition shadow-sm text-slate-900";
+                span.style.backgroundColor = r.color;
+                span.textContent = r.name;
+                container.appendChild(span);
+            });
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'text-indigo-400');
+                btn.classList.add('border-transparent', 'text-slate-400');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-400');
+                activeBtn.classList.add('border-indigo-500', 'text-indigo-400');
+            }
+
+            document.getElementById('mapViewContainer').classList.add('hidden');
+            document.getElementById('tableViewContainer').classList.add('hidden');
+            document.getElementById('analyticsViewContainer').classList.add('hidden');
+
+            if (tabId === 'table') {
+                document.getElementById('tableViewContainer').classList.remove('hidden');
+                renderTable();
+            } else if (tabId === 'analytics') {
+                document.getElementById('analyticsViewContainer').classList.remove('hidden');
+                renderCharts();
+            } else {
+                document.getElementById('mapViewContainer').classList.remove('hidden');
+                renderMap();
+            }
+        }
+
+        function renderApp() {
+            updateLineSelects();
+            updateRangeSelects();
+            renderToolbarLegend();
+            if (currentTab === 'table') {
+                renderTable();
+            } else if (currentTab === 'analytics') {
+                renderCharts();
+            } else {
+                renderMap();
+            }
+        }
+
+        function getLineColor(lineName) {
+            const found = linesData.find(l => l.name === lineName);
+            return found ? found.color : '#6366f1';
+        }
+
+        function getHexColor(range) {
+            const found = priceRangesConfig.find(r => r.name === range);
+            return found ? found.color : '#4ade80';
+        }
+
+        function autoCalculatePrice(tsuboVal) {
+            const tsubo = parseFloat(tsuboVal);
+            if (isNaN(tsubo)) return;
+            const priceInput = document.getElementById('stationPrice');
+            const rangeSelect = document.getElementById('stationRange');
+            if (!priceInput || !rangeSelect) return;
+
+            const calcPrice = Math.round(tsubo * 21.1);
+            priceInput.value = calcPrice;
+
+            if (priceRangesConfig.length > 0) {
+                if (tsubo < 450) rangeSelect.value = priceRangesConfig[0].name;
+                else if (tsubo < 550 && priceRangesConfig.length > 1) rangeSelect.value = priceRangesConfig[1].name;
+                else if (tsubo < 650 && priceRangesConfig.length > 2) rangeSelect.value = priceRangesConfig[2].name;
+                else if (tsubo < 780 && priceRangesConfig.length > 3) rangeSelect.value = priceRangesConfig[3].name;
+                else if (tsubo < 950 && priceRangesConfig.length > 4) rangeSelect.value = priceRangesConfig[4].name;
+                else rangeSelect.value = priceRangesConfig[priceRangesConfig.length - 1].name;
+            }
+        }
+
+        function renderMap() {
+            const keywordElem = document.getElementById('searchKeyword');
+            const filterLineElem = document.getElementById('filterLine');
+            const filterRangeElem = document.getElementById('filterPriceRange');
+            const keyword = keywordElem ? keywordElem.value.toLowerCase() : '';
+            const filterLine = filterLineElem ? filterLineElem.value : '';
+            const filterRange = filterRangeElem ? filterRangeElem.value : '';
+
+            const bgLayer = document.getElementById('bgLayer');
+            if (!bgLayer) return;
+            bgLayer.innerHTML = '';
+
+            if (bgImageUrl) {
+                const rectBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectBg.setAttribute('width', '1200');
+                rectBg.setAttribute('height', '800');
+                rectBg.setAttribute('fill', '#ffffff');
+                bgLayer.appendChild(rectBg);
+
+                const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                image.setAttribute('href', bgImageUrl);
+                image.setAttribute('width', '1200');
+                image.setAttribute('height', '800');
+                image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+                image.setAttribute('opacity', bgOpacity);
+                bgLayer.appendChild(image);
+            } else {
+                const rectGrid = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectGrid.setAttribute('width', '1200');
+                rectGrid.setAttribute('height', '800');
+                rectGrid.setAttribute('fill', 'url(#grid)');
+                bgLayer.appendChild(rectGrid);
+            }
+
+            const filteredStations = stationsData.filter(st => {
+                const matchKeyword = st.name.toLowerCase().includes(keyword);
+                const matchLine = !filterLine || st.line === filterLine;
+                const matchRange = !filterRange || st.range === filterRange;
+                return matchKeyword && matchLine && matchRange;
+            });
+
+            const pathsGroup = document.getElementById('linePaths');
+            pathsGroup.innerHTML = '';
+
+            const nodesGroup = document.getElementById('stationNodes');
+            nodesGroup.innerHTML = '';
+
+            filteredStations.forEach(st => {
+                const originalIndex = stationsData.findIndex(item => item === st);
+                const color = getHexColor(st.range);
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${st.x}, ${st.y})`);
+                g.setAttribute('class', 'cursor-pointer group');
+                
+                g.addEventListener('mousedown', (e) => startDrag(e, originalIndex));
+                g.addEventListener('click', (e) => {
+                    if (!isDraggingStation) openEditModal(originalIndex);
+                });
+
+                // 正六角形ノード
+                const radius = Math.max(38, Math.max(st.name.length * 6, 36));
+                const points = [];
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3;
+                    const px = radius * Math.cos(angle);
+                    const py = radius * Math.sin(angle);
+                    points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+                }
+
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', points.join(' '));
+                polygon.setAttribute('fill', color);
+                polygon.setAttribute('stroke', '#1e293b');
+                polygon.setAttribute('stroke-width', '1.5');
+                polygon.setAttribute('filter', 'drop-shadow(0px 2px 3px rgba(0,0,0,0.15))');
+                g.appendChild(polygon);
+
+                const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textName.setAttribute('x', '0');
+                textName.setAttribute('y', '-5');
+                textName.setAttribute('text-anchor', 'middle');
+                textName.setAttribute('fill', '#0f172a');
+                textName.setAttribute('font-size', '11px');
+                textName.setAttribute('font-weight', 'bold');
+                textName.textContent = st.name;
+                g.appendChild(textName);
+
+                const textPrice = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textPrice.setAttribute('x', '0');
+                textPrice.setAttribute('y', '11');
+                textPrice.setAttribute('text-anchor', 'middle');
+                textPrice.setAttribute('fill', '#0f172a');
+                textPrice.setAttribute('font-size', '12px');
+                textPrice.setAttribute('font-weight', '800');
+                textPrice.textContent = `${st.tsubo}万円`;
+                g.appendChild(textPrice);
+
+                nodesGroup.appendChild(g);
+            });
+        }
+
+        let isDraggingStation = false;
+
+        function startDrag(e, index) {
+            e.stopPropagation();
+            const draggingStationIndex = index;
+            isDraggingStation = false;
+
+            const svg = document.getElementById('railwayMap');
+            if (!svg) return;
+            
+            function onMouseMove(event) {
+                isDraggingStation = true;
+                const pt = svg.createSVGPoint();
+                pt.x = event.clientX;
+                pt.y = event.clientY;
+                const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+                
+                stationsData[draggingStationIndex].x = Math.round(Math.max(20, Math.min(1180, svgP.x)));
+                stationsData[draggingStationIndex].y = Math.round(Math.max(20, Math.min(780, svgP.y)));
+                renderMap();
+            }
+
+            function onMouseUp() {
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+                if (isDraggingStation) {
+                    saveData();
+                    showToast(`「${stationsData[draggingStationIndex].name}」の位置を更新しました`);
+                }
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        function zoomMap(factor) {
+            currentScale = Math.max(0.4, Math.min(4.0, currentScale * factor));
+            updateMapTransform();
+        }
+
+        function resetZoom() {
+            currentScale = 1;
+            panX = 0;
+            panY = 0;
+            updateMapTransform();
+        }
+
+        function updateMapTransform() {
+            const wrapper = document.getElementById('svgWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+            }
+        }
+
+        let isPanningMap = false;
+        let startPanClientX = 0;
+        let startPanClientY = 0;
+
+        function startPanMap(e) {
+            if (e.target.closest('g') || e.target.closest('button') || e.target.closest('div.absolute') || e.target.closest('input')) return;
+            isPanningMap = true;
+            startPanClientX = e.clientX - panX;
+            startPanClientY = e.clientY - panY;
+
+            function onMouseMove(event) {
+                if (!isPanningMap) return;
+                panX = event.clientX - startPanClientX;
+                panY = event.clientY - startPanClientY;
+                updateMapTransform();
+            }
+
+            function onMouseUp() {
+                isPanningMap = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        function renderTable() {
+            const keywordElem = document.getElementById('searchKeyword');
+            const filterLineElem = document.getElementById('filterLine');
+            const filterRangeElem = document.getElementById('filterPriceRange');
+            const keyword = keywordElem ? keywordElem.value.toLowerCase() : '';
+            const filterLine = filterLineElem ? filterLineElem.value : '';
+            const filterRange = filterRangeElem ? filterRangeElem.value : '';
+
+            const filtered = stationsData.filter(st => {
+                const matchKeyword = st.name.toLowerCase().includes(keyword);
+                const matchLine = !filterLine || st.line === filterLine;
+                const matchRange = !filterRange || st.range === filterRange;
+                return matchKeyword && matchLine && matchRange;
+            });
+
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">該当する駅データが見つかりません。</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(st => {
+                const originalIndex = stationsData.findIndex(item => item === st);
+                const lineColor = getLineColor(st.line);
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900 transition border-b border-slate-800/60";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-semibold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-train text-indigo-400 text-xs"></i>
+                        <span>${escapeHTML(st.name)}</span>
+                    </td>
+                    <td class="py-2.5 px-4 font-mono font-medium">${st.tsubo} 万円</td>
+                    <td class="py-2.5 px-4 font-mono font-medium">${st.price} 万円</td>
+                    <td class="py-2.5 px-4"><span class="px-2.5 py-1 text-xs font-bold rounded text-slate-900" style="background-color: ${getHexColor(st.range)}">${escapeHTML(st.range)}</span></td>
+                    <td class="py-2.5 px-4 flex items-center space-x-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${lineColor}"></span>
+                        <span class="text-slate-200">${escapeHTML(st.line)}</span>
+                    </td>
+                    <td class="py-2.5 px-4 font-mono text-slate-400">(${st.x}, ${st.y})</td>
+                    <td class="py-2.5 px-4 text-right space-x-2">
+                        <button onclick="openEditModal(${originalIndex})" class="text-slate-400 hover:text-indigo-400 transition p-1" title="編集"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteStation(${originalIndex})" class="text-slate-400 hover:text-rose-400 transition p-1" title="削除"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCharts() {
+            const ranges = priceRangesConfig.map(r => r.name);
+            const rangeCounts = ranges.map(r => stationsData.filter(s => s.range === r).length);
+            const rangeColorsList = priceRangesConfig.map(r => r.color);
+
+            if (priceChartInstance) priceChartInstance.destroy();
+            const priceCanvas = document.getElementById('priceRangeChart');
+            if (priceCanvas) {
+                const ctxPrice = priceCanvas.getContext('2d');
+                priceChartInstance = new Chart(ctxPrice, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ranges,
+                        datasets: [{
+                            data: rangeCounts,
+                            backgroundColor: rangeColorsList,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } }
+                    }
+                });
+            }
+
+            const lineNames = linesData.map(l => l.name);
+            const lineAvg = lineNames.map(lName => {
+                const filtered = stationsData.filter(s => s.line === lName);
+                if (filtered.length === 0) return 0;
+                return Math.round(filtered.reduce((acc, cur) => acc + Number(cur.tsubo), 0) / filtered.length);
+            });
+            const lineColors = linesData.map(l => l.color);
+
+            if (lineChartInstance) lineChartInstance.destroy();
+            const lineCanvas = document.getElementById('lineAvgChart');
+            if (lineCanvas) {
+                const ctxLine = lineCanvas.getContext('2d');
+                lineChartInstance = new Chart(ctxLine, {
+                    type: 'bar',
+                    data: {
+                        labels: lineNames,
+                        datasets: [{
+                            label: '平均坪単価 (万円)',
+                            data: lineAvg,
+                            backgroundColor: lineColors,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        }
+
+        function openAddModal() {
+            const modal = document.getElementById('stationModal');
+            if (!modal) return;
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-train text-indigo-400"></i><span>駅データを追加</span>';
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('stationForm').reset();
+            document.getElementById('modalDeleteBtn').classList.add('hidden');
+            document.getElementById('stationX').value = 600;
+            document.getElementById('stationY').value = 400;
+            modal.classList.remove('hidden');
+        }
+
+        function openEditModal(index) {
+            const modal = document.getElementById('stationModal');
+            if (!modal) return;
+            const st = stationsData[index];
+            if (!st) return;
+
+            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-train text-indigo-400"></i><span>「${escapeHTML(st.name)}」の編集</span>`;
+            document.getElementById('editIndex').value = index;
+            document.getElementById('stationName').value = st.name;
+            document.getElementById('stationTsubo').value = st.tsubo;
+            document.getElementById('stationPrice').value = st.price;
+            document.getElementById('stationRange').value = st.range;
+            document.getElementById('stationLine').value = st.line;
+            document.getElementById('stationX').value = st.x;
+            document.getElementById('stationY').value = st.y;
+            document.getElementById('modalDeleteBtn').classList.remove('hidden');
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('stationModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function saveStation(event) {
+            event.preventDefault();
+            const index = parseInt(document.getElementById('editIndex').value);
+            const name = document.getElementById('stationName').value.trim();
+            const tsubo = parseInt(document.getElementById('stationTsubo').value);
+            const price = parseInt(document.getElementById('stationPrice').value);
+            const range = document.getElementById('stationRange').value;
+            const line = document.getElementById('stationLine').value;
+            const x = parseInt(document.getElementById('stationX').value);
+            const y = parseInt(document.getElementById('stationY').value);
+
+            if (!name) return;
+
+            if (index === -1) {
+                stationsData.push({ name, tsubo, price, range, line, x, y });
+                showToast(`「${name}」を追加しました`);
+            } else {
+                stationsData[index] = { name, tsubo, price, range, line, x, y };
+                showToast(`「${name}」を更新しました`);
+            }
+
+            saveData();
+            closeModal();
+            renderApp();
+        }
+
+        function deleteStation(index) {
+            const name = stationsData[index].name;
+            if (confirm(`「${name}」の駅データを削除しますか？`)) {
+                stationsData.splice(index, 1);
+                saveData();
+                renderApp();
+                showToast(`「${name}」を削除しました`);
+            }
+        }
+
+        function deleteStationFromModal() {
+            const index = parseInt(document.getElementById('editIndex').value);
+            if (index >= 0 && index < stationsData.length) {
+                const name = stationsData[index].name;
+                if (confirm(`「${name}」の駅データを削除しますか？`)) {
+                    stationsData.splice(index, 1);
+                    saveData();
+                    closeModal();
+                    renderApp();
+                    showToast(`「${name}」を削除しました`);
+                }
+            }
+        }
+
+        function openLineModal() {
+            const modal = document.getElementById('lineModal');
+            if (modal) {
+                renderLineList();
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeLineModal() {
+            const modal = document.getElementById('lineModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openLegendModal() {
+            const modal = document.getElementById('legendModal');
+            if (modal) {
+                renderLegendColorList();
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeLegendModal() {
+            const modal = document.getElementById('legendModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function renderLegendColorList() {
+            const container = document.getElementById('legendColorList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            priceRangesConfig.forEach((rc, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 gap-3 shadow-inner";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2 flex-grow">
+                        <input type="color" value="${rc.color}" onchange="updatePriceRangeColor(${idx}, this.value)" class="w-9 h-9 rounded-lg border border-slate-700 bg-slate-900 cursor-pointer p-1 flex-shrink-0">
+                        <input type="text" value="${escapeHTML(rc.name)}" onchange="updatePriceRangeName(${idx}, this.value)" class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-white font-medium text-xs w-full">
+                    </div>
+                    <button onclick="deletePriceRange(${idx})" class="text-rose-400 hover:text-rose-300 p-2 transition flex-shrink-0" title="削除"><i class="fa-solid fa-trash"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updatePriceRangeColor(idx, newColor) {
+            priceRangesConfig[idx].color = newColor;
+            saveData();
+            renderApp();
+        }
+
+        function updatePriceRangeName(idx, newName) {
+            newName = newName.trim();
+            if (!newName) return;
+            const oldName = priceRangesConfig[idx].name;
+            priceRangesConfig[idx].name = newName;
+
+            stationsData.forEach(st => {
+                if (st.range === oldName) st.range = newName;
+            });
+
+            saveData();
+            renderApp();
+            showToast("価格帯名を更新しました");
+        }
+
+        function addPriceRangeConfig() {
+            const newName = "新価格帯";
+            const newColor = "#38bdf8";
+            if (priceRangesConfig.some(r => r.name === newName)) {
+                showToast("同名の価格帯が既に存在します", "error");
+                return;
+            }
+            priceRangesConfig.push({ name: newName, color: newColor });
+            saveData();
+            renderLegendColorList();
+            renderApp();
+            showToast("価格帯を追加しました");
+        }
+
+        function deletePriceRange(idx) {
+            if (priceRangesConfig.length <= 1) {
+                showToast("最低1つの価格帯が必要です", "error");
+                return;
+            }
+            const targetName = priceRangesConfig[idx].name;
+            const count = stationsData.filter(s => s.range === targetName).length;
+            if (count > 0) {
+                if (!confirm(`「${targetName}」に属する駅が ${count} 件あります。価格帯を削除しますか？（該当駅の価格帯は他の区分に変更してください）`)) return;
+            }
+            priceRangesConfig.splice(idx, 1);
+            saveData();
+            renderLegendColorList();
+            renderApp();
+            showToast("価格帯を削除しました");
+        }
+
+        function resetLegendColors() {
+            priceRangesConfig = JSON.parse(JSON.stringify(defaultPriceRanges));
+            saveData();
+            renderApp();
+            renderLegendColorList();
+            showToast("価格帯と色の設定をデフォルトにリセットしました");
+        }
+
+        function renderLineList() {
+            const container = document.getElementById('lineListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            linesData.forEach((l, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 gap-2";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2 flex-grow">
+                        <input type="color" value="${l.color}" onchange="updateLineColor(${idx}, this.value)" class="w-7 h-7 rounded border-0 bg-transparent cursor-pointer">
+                        <input type="text" value="${escapeHTML(l.name)}" onchange="updateLineName(${idx}, this.value)" class="bg-slate-950 border border-slate-700 px-2 py-1 rounded text-white text-xs w-full">
+                    </div>
+                    <button onclick="deleteLine(${idx})" class="text-rose-400 hover:text-rose-300 p-1.5 transition" title="路線を削除"><i class="fa-solid fa-trash"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addLine(event) {
+            event.preventDefault();
+            const nameElem = document.getElementById('newLineName');
+            const colorElem = document.getElementById('newLineColor');
+            if (!nameElem || !colorElem) return;
+            const name = nameElem.value.trim();
+            const color = colorElem.value;
+
+            if (!name) return;
+            if (linesData.some(l => l.name === name)) {
+                showToast("同名の路線が既に存在します", "error");
+                return;
+            }
+
+            linesData.push({ id: 'line_' + Date.now(), name, color });
+            saveData();
+            nameElem.value = "";
+            renderLineList();
+            renderApp();
+            showToast("路線を追加しました");
+        }
+
+        function updateLineName(idx, newName) {
+            newName = newName.trim();
+            if (!newName) return;
+            const oldName = linesData[idx].name;
+            linesData[idx].name = newName;
+            
+            stationsData.forEach(st => {
+                if (st.line === oldName) st.line = newName;
+            });
+
+            saveData();
+            renderApp();
+            showToast("路線名を更新しました");
+        }
+
+        function updateLineColor(idx, newColor) {
+            linesData[idx].color = newColor;
+            saveData();
+            renderApp();
+            showToast("路線カラーを更新しました");
+        }
+
+        function deleteLine(idx) {
+            const targetLine = linesData[idx].name;
+            const count = stationsData.filter(s => s.line === targetLine).length;
+            if (count > 0) {
+                if (!confirm(`「${targetLine}」には ${count} 件の所属駅があります。路線を削除しますか？（所属駅の路線は「その他」に変更されます）`)) return;
+                stationsData.forEach(s => {
+                    if (s.line === targetLine) s.line = "その他";
+                });
+            }
+            linesData.splice(idx, 1);
+            saveData();
+            renderLineList();
+            renderApp();
+            showToast("路線を削除しました");
+        }
+
+        function exportJSON() {
+            const exportObj = { lines: linesData, stations: stationsData, priceRanges: priceRangesConfig };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "capital_railway_heatmap_2026.json");
+            document.body.appendChild(dl);
+            dl.click();
+            dl.remove();
+            showToast("JSONファイルをエクスポートしました");
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.stations && Array.isArray(parsed.stations)) {
+                        stationsData = parsed.stations;
+                        if (parsed.lines && Array.isArray(parsed.lines)) linesData = parsed.lines;
+                        if (parsed.priceRanges && Array.isArray(parsed.priceRanges)) priceRangesConfig = parsed.priceRanges;
+                        saveData();
+                        renderApp();
+                        showToast("データを正常にインポートしました");
+                    } else if (Array.isArray(parsed)) {
+                        stationsData = parsed;
+                        saveData();
+                        renderApp();
+                        showToast("駅データを正常にインポートしました");
+                    }
+                } catch (err) {
+                    showToast("ファイルの読み込みに失敗しました", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgElem = document.getElementById('toastMessage');
+            const iconElem = document.getElementById('toastIcon');
+            if (!toast || !msgElem || !iconElem) return;
+            msgElem.textContent = message;
+            iconElem.className = type === 'error' ? "fa-solid fa-circle-exclamation text-rose-400" : "fa-solid fa-circle-check text-emerald-400";
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>'"\\]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '\\': '&#92;' }[tag] || tag));
+        }
+    </script>
+</body>
+</html>
