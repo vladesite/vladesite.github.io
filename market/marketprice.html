@@ -32,7 +32,7 @@
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-white flex items-center space-x-2">
                     <span>首都圏鉄道路線図ヒートマップエディター</span>
-                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">社内資料 2026/10月</span>
+                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">Pro 2026</span>
                 </h1>
                 <p class="text-xs text-slate-400">路線図自動リンク・駅レイアウト＆単価ヒートマップ統合管理</p>
             </div>
@@ -98,6 +98,14 @@
                     <select id="filterPriceRange" onchange="renderApp()" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-200">
                         <option value="">すべての価格帯</option>
                     </select>
+                    <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 space-x-0.5">
+                        <button id="displayTsuboBtn" onclick="setDisplayValueType('tsubo')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white shadow-sm">
+                            坪単価
+                        </button>
+                        <button id="displayPriceBtn" onclick="setDisplayValueType('price')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200">
+                            70㎡価格
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -203,12 +211,22 @@
 
             <!-- 3. 統計グラフ分析ビュー -->
             <div id="analyticsViewContainer" class="hidden bg-slate-950 border border-slate-800 rounded-2xl shadow-sm p-6 flex-grow flex flex-col space-y-6">
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                <div class="border-b border-slate-800 pb-3 flex flex-wrap justify-between items-center gap-3">
                     <h2 class="font-bold text-sm text-white flex items-center space-x-2">
                         <i class="fa-solid fa-chart-pie text-indigo-400"></i>
                         <span>路線単価＆価格帯分布アナリティクス</span>
                     </h2>
-                    <span class="text-xs text-slate-400">現在の全駅データを基にリアルタイム集計しています</span>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs text-slate-400">集計対象:</span>
+                        <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 space-x-0.5">
+                            <button id="analyticsTsuboBtn" onclick="setAnalyticsMetric('tsubo')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white shadow-sm">
+                                坪単価
+                            </button>
+                            <button id="analyticsPriceBtn" onclick="setAnalyticsMetric('price')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200">
+                                70㎡価格
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow items-center">
                     <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center">
@@ -218,7 +236,7 @@
                         </div>
                     </div>
                     <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center">
-                        <h3 class="text-xs font-semibold text-slate-300 mb-3">路線別 平均坪単価比較</h3>
+                        <h3 id="lineAvgChartTitle" class="text-xs font-semibold text-slate-300 mb-3">路線別 平均坪単価比較</h3>
                         <div class="w-full h-64 relative">
                             <canvas id="lineAvgChart"></canvas>
                         </div>
@@ -358,7 +376,7 @@
 
     <!-- フッター -->
     <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
-        &copy; 2026 首都圏鉄道路線図ヒートマップエディター @S.HIRAI All Rights Reserved.
+        &copy; 2026 首都圏鉄道路線図ヒートマップエディター Pro. All Rights Reserved.
     </footer>
 
     <!-- スクリプト部 -->
@@ -391,6 +409,8 @@
         let panX = 0;
         let panY = 0;
         let currentTab = 'map';
+        let displayValueType = 'tsubo'; // 'tsubo' または 'price' (70㎡価格)
+        let analyticsMetric = 'tsubo'; // 'tsubo' または 'price'
 
         // ソート状態の管理変数
         let sortKey = 'name';
@@ -993,12 +1013,21 @@
             }
 
             const lineNames = linesData.map(l => l.name);
+            const isPrice = analyticsMetric === 'price';
+            
+            // 坪単価または70㎡価格の平均値を集計
             const lineAvg = lineNames.map(lName => {
                 const filtered = stationsData.filter(s => s.line === lName);
                 if (filtered.length === 0) return 0;
-                return Math.round(filtered.reduce((acc, cur) => acc + Number(cur.tsubo), 0) / filtered.length);
+                const field = isPrice ? 'price' : 'tsubo';
+                return Math.round(filtered.reduce((acc, cur) => acc + Number(cur[field]), 0) / filtered.length);
             });
             const lineColors = linesData.map(l => l.color);
+
+            const titleElem = document.getElementById('lineAvgChartTitle');
+            if (titleElem) {
+                titleElem.textContent = isPrice ? '路線別 平均70㎡価格比較' : '路線別 平均坪単価比較';
+            }
 
             if (lineChartInstance) lineChartInstance.destroy();
             const lineCanvas = document.getElementById('lineAvgChart');
@@ -1009,7 +1038,7 @@
                     data: {
                         labels: lineNames,
                         datasets: [{
-                            label: '平均坪単価 (万円)',
+                            label: isPrice ? '平均70㎡価格 (万円)' : '平均坪単価 (万円)',
                             data: lineAvg,
                             backgroundColor: lineColors,
                             borderRadius: 4
@@ -1026,6 +1055,20 @@
                     }
                 });
             }
+        }
+
+        function setAnalyticsMetric(metric) {
+            analyticsMetric = metric;
+            const tsuboBtn = document.getElementById('analyticsTsuboBtn');
+            const priceBtn = document.getElementById('analyticsPriceBtn');
+            if (metric === 'tsubo') {
+                tsuboBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white shadow-sm";
+                priceBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200";
+            } else {
+                priceBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white shadow-sm";
+                tsuboBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200";
+            }
+            renderCharts();
         }
 
         function openAddModal() {
@@ -1151,17 +1194,129 @@
             if (!container) return;
             container.innerHTML = '';
 
-            priceRangesConfig.forEach((rc, idx) => {
+            priceRangesConfig.forEach((r, idx) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 gap-3 shadow-inner";
+                div.className = "flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 gap-2";
                 div.innerHTML = `
                     <div class="flex items-center space-x-2 flex-grow">
-                        <input type="color" value="${rc.color}" onchange="updatePriceRangeColor(${idx}, this.value)" class="w-9 h-9 rounded-lg border border-slate-700 bg-slate-900 cursor-pointer p-1 flex-shrink-0">
-                        <input type="text" value="${escapeHTML(rc.name)}" onchange="updatePriceRangeName(${idx}, this.value)" class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-white font-medium text-xs w-full">
+                        <input type="color" value="${r.color}" onchange="updatePriceRangeColor(${idx}, this.value)" class="w-7 h-7 rounded border-0 bg-transparent cursor-pointer">
+                        <input type="text" value="${escapeHTML(r.name)}" onchange="updatePriceRangeName(${idx}, this.value)" class="bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg text-white font-medium text-xs w-full">
                     </div>
-                    <button onclick="deletePriceRange(${idx})" class="text-rose-400 hover:text-rose-300 p-2 transition flex-shrink-0" title="削除"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="deletePriceRange(${idx})" class="text-rose-400 hover:text-rose-300 p-1.5 transition" title="価格帯を削除"><i class="fa-solid fa-trash"></i></button>
                 `;
                 container.appendChild(div);
+            });
+        }
+
+        function setDisplayValueType(type) {
+            displayValueType = type;
+            const tsuboBtn = document.getElementById('displayTsuboBtn');
+            const priceBtn = document.getElementById('displayPriceBtn');
+            if (type === 'tsubo') {
+                tsuboBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white shadow-sm";
+                priceBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200";
+            } else {
+                priceBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white shadow-sm";
+                tsuboBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-slate-200";
+            }
+            renderMap();
+        }
+
+        function renderMap() {
+            const keywordElem = document.getElementById('searchKeyword');
+            const filterLineElem = document.getElementById('filterLine');
+            const filterRangeElem = document.getElementById('filterPriceRange');
+            const keyword = keywordElem ? keywordElem.value.toLowerCase() : '';
+            const filterLine = filterLineElem ? filterLineElem.value : '';
+            const filterRange = filterRangeElem ? filterRangeElem.value : '';
+
+            const bgLayer = document.getElementById('bgLayer');
+            if (!bgLayer) return;
+            bgLayer.innerHTML = '';
+
+            if (bgImageUrl) {
+                const rectBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectBg.setAttribute('width', '1200');
+                rectBg.setAttribute('height', '800');
+                rectBg.setAttribute('fill', '#ffffff');
+                bgLayer.appendChild(rectBg);
+
+                const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                image.setAttribute('href', bgImageUrl);
+                image.setAttribute('width', '1200');
+                image.setAttribute('height', '800');
+                image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+                image.setAttribute('opacity', bgOpacity);
+                bgLayer.appendChild(image);
+            } else {
+                const rectGrid = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectGrid.setAttribute('width', '1200');
+                rectGrid.setAttribute('height', '800');
+                rectGrid.setAttribute('fill', 'url(#grid)');
+                bgLayer.appendChild(rectGrid);
+            }
+
+            const filteredStations = stationsData.filter(st => {
+                const matchKeyword = st.name.toLowerCase().includes(keyword);
+                const matchLine = !filterLine || st.line === filterLine;
+                const matchRange = !filterRange || st.range === filterRange;
+                return matchKeyword && matchLine && matchRange;
+            });
+
+            const nodesGroup = document.getElementById('stationNodes');
+            nodesGroup.innerHTML = '';
+
+            filteredStations.forEach(st => {
+                const originalIndex = stationsData.findIndex(item => item === st);
+                const color = getHexColor(st.range);
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${st.x}, ${st.y})`);
+                g.setAttribute('class', 'cursor-pointer group');
+                
+                g.addEventListener('mousedown', (e) => startDrag(e, originalIndex));
+                g.addEventListener('click', (e) => {
+                    if (!isDraggingStation) openEditModal(originalIndex);
+                });
+
+                const radius = Math.max(38, Math.max(st.name.length * 6, 36));
+                const points = [];
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3;
+                    const px = radius * Math.cos(angle);
+                    const py = radius * Math.sin(angle);
+                    points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+                }
+
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', points.join(' '));
+                polygon.setAttribute('fill', color);
+                polygon.setAttribute('stroke', '#1e293b');
+                polygon.setAttribute('stroke-width', '2');
+                polygon.setAttribute('filter', 'drop-shadow(0px 3px 4px rgba(0,0,0,0.25))');
+                g.appendChild(polygon);
+
+                const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textName.setAttribute('x', '0');
+                textName.setAttribute('y', '-5');
+                textName.setAttribute('text-anchor', 'middle');
+                textName.setAttribute('fill', '#0f172a');
+                textName.setAttribute('font-size', '11px');
+                textName.setAttribute('font-weight', 'bold');
+                textName.textContent = st.name;
+                g.appendChild(textName);
+
+                const textPrice = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textPrice.setAttribute('x', '0');
+                textPrice.setAttribute('y', '12');
+                textPrice.setAttribute('text-anchor', 'middle');
+                textPrice.setAttribute('fill', '#0f172a');
+                textPrice.setAttribute('font-size', displayValueType === 'price' ? '10px' : '12px');
+                textPrice.setAttribute('font-weight', '800');
+                textPrice.textContent = displayValueType === 'price' ? `${st.price}万` : `${st.tsubo}万`;
+                g.appendChild(textPrice);
+
+                nodesGroup.appendChild(g);
             });
         }
 
