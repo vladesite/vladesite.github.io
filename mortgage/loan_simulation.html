@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>住宅ローン試算・審査状況比較シミュレーター</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0284c7',
+              700: '#0369a1',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* テーブルレイアウトと高密度・折り返しスタイル */
+    .resizable-table {
+      table-layout: fixed;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .resizable-table th {
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #f8fafc;
+      text-align: center !important;
+    }
+
+    /* 列幅調整用のリサイザー */
+    .resizer {
+      position: absolute;
+      top: 0;
+      right: -3px;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      user-select: none;
+      z-index: 20;
+      touch-action: none;
+    }
+
+    .resizer:hover, .resizing {
+      background-color: #0284c7;
+      opacity: 0.8;
+    }
+
+    /* 行幅30%拡大 ＆ テキスト自動折り返し＆テーブル内はセンタリング */
+    .resizable-table th, .resizable-table td {
+      white-space: normal !important;
+      word-break: break-all !important;
+      overflow-wrap: anywhere !important;
+      vertical-align: middle;
+      text-align: center !important;
+      padding: 5.2px 3px !important;
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+
+    /* 横スクロール時に「金融機関名」（第1列）をFIX（Sticky固定） */
+    .resizable-table th:first-child,
+    .resizable-table td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+      background-color: #ffffff;
+      box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+      text-align: center !important;
+    }
+
+    .resizable-table th:first-child {
+      z-index: 25;
+      background-color: #f8fafc;
+    }
+
+    /* 入力フォームのフォントサイズ統一（0.75rem）＆センタリング */
+    .table-input {
+      width: 100%;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      padding: 1px 2px;
+      font-size: 0.75rem !important;
+      line-height: 1.2;
+      border-radius: 2px;
+      text-align: center !important;
+      transition: all 0.15s ease;
+    }
+    .table-input:hover {
+      border-color: #cbd5e1;
+    }
+    .table-input:focus {
+      background-color: #ffffff;
+      border-color: #0284c7;
+      outline: none;
+      box-shadow: 0 0 0 1px #0284c7;
+    }
+
+    /* 金利入力用の単位%付きコンテナ（センタリング配置） */
+    .rate-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .rate-input-wrapper input {
+      padding-right: 12px !important;
+      text-align: center !important;
+      font-size: 0.75rem !important;
+    }
+    .rate-input-wrapper .percent-symbol {
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.68rem;
+      color: #64748b;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    /* 優遇金利幅入力用の「▲」および「%」付きコンテナ（センタリング配置） */
+    .advantage-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .advantage-input-wrapper input {
+      padding-left: 10px !important;
+      padding-right: 12px !important;
+      text-align: center !important;
+      font-size: 0.75rem !important;
+    }
+    .advantage-input-wrapper .advantage-symbol {
+      position: absolute;
+      left: 1px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      color: #e11d48;
+      pointer-events: none;
+      font-weight: 700;
+    }
+    .advantage-input-wrapper .percent-symbol {
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      color: #e11d48;
+      pointer-events: none;
+      font-weight: 700;
+    }
+
+    /* 最大期間入力用の単位「年」付きコンテナ（センタリング配置） */
+    .year-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .year-input-wrapper input {
+      padding-right: 12px !important;
+      text-align: center !important;
+      font-size: 0.75rem !important;
+    }
+    .year-input-wrapper .year-symbol {
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.68rem;
+      color: #64748b;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    /* 印刷用スタイルの最適化 (A3サイズ＆左右パディングの極小化) */
+    @media print {
+      @page {
+        size: A3 landscape;
+        margin: 10mm;
+      }
+      body {
+        background-color: #fff !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .container, main {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .card-box {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin-bottom: 6px !important;
+      }
+      .resizable-table {
+        table-layout: auto !important;
+        width: 100% !important;
+      }
+      th, td {
+        padding: 3px 2px !important;
+        border: 0.5pt solid #64748b !important;
+        font-size: 8.5pt !important;
+        line-height: 1.4 !important;
+        text-align: center !important;
+        white-space: normal !important;
+        word-break: break-all !important;
+      }
+      .resizable-table th:first-child,
+      .resizable-table td:first-child {
+        position: static !important;
+        box-shadow: none !important;
+        text-align: center !important;
+      }
+      .resizer {
+        display: none !important;
+      }
+      
+      /* 印刷時のお客様条件入力項目（右揃え） */
+      #input-income, #input-amount, #input-years {
+        border: none !important;
+        background: transparent !important;
+        padding-right: 32px !important;
+        font-size: 11pt !important;
+        font-weight: 700 !important;
+        color: #000 !important;
+        text-align: right !important;
+      }
+
+      input {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        font-weight: 600 !important;
+        color: #000 !important;
+        text-align: center !important;
+        font-size: 8.5pt !important;
+      }
+
+      /* 印刷時「種別」「審査取扱い」列のパディングを極小にし、ドロップダウンの余白を削除 */
+      th:nth-child(2), td:nth-child(2),
+      th:nth-child(13), td:nth-child(13) {
+        padding: 2px 1px !important;
+        text-align: center !important;
+      }
+
+      select {
+        border: none !important;
+        background: transparent !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-weight: 600 !important;
+        color: #000 !important;
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 8.5pt !important;
+      }
+
+      .advantage-input-wrapper input {
+        color: #e11d48 !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+      }
+      .percent-symbol, .year-symbol, .advantage-symbol {
+        display: inline !important;
+      }
+      .print-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 8pt;
+        color: #64748b;
+        border-top: 0.5pt solid #cbd5e1;
+        padding-top: 4px;
+      }
+    }
+
+    /* カスタムスクロールバー */
+    .table-scroll::-webkit-scrollbar {
+      height: 8px;
+    }
+    .table-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-sky-50/40 text-slate-800 font-sans antialiased min-h-screen pb-10">
+
+  <!-- ヘッダー -->
+  <header class="bg-white border-b border-sky-100 sticky top-0 z-30 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+      <div class="flex items-center space-x-2.5">
+        <div class="bg-sky-500 text-white p-2 rounded-lg shadow-sm">
+          <i data-lucide="calculator" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">住宅ローン試算・審査状況比較シミュレーター</h1>
+          <p class="text-[11px] text-slate-500">金融機関別の金利・返済額シミュレーション＆審査適合性一覧</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button onclick="resetColumnWidths()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title="各列の幅をデフォルトに戻します">
+          <i data-lucide="move-horizontal" class="w-3.5 h-3.5"></i>
+          <span>列幅リセット</span>
+        </button>
+
+        <button onclick="exportJSON()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title="現在のデータ・設定をJSONで保存">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">JSON保存</span>
+        </button>
+
+        <label class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm cursor-pointer transition" title="保存したJSONファイルを読み込み">
+          <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">JSON読込</span>
+          <input type="file" id="import-file" accept=".json" onchange="importJSON(event)" class="hidden">
+        </label>
+
+        <button onclick="confirmResetData()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition" title="初期データに戻す">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>初期化</span>
+        </button>
+
+        <button onclick="window.print()" class="inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span>A3印刷・PDF出力</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 印刷用タイトルヘッダー -->
+  <div class="hidden print-only p-2 mb-2 border-b border-slate-300">
+    <div class="flex justify-between items-end">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900">住宅ローン審査取扱い・返済比較シート</h1>
+        <p class="text-[9px] text-slate-600">作成日時: <span id="print-date"></span></p>
+      </div>
+      <div class="text-right text-[9px]">
+        <p class="font-semibold text-slate-800">提案用シミュレーションデータ</p>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-3 sm:px-5 mt-3 space-y-3">
+
+    <!-- 顧客条件入力エリア -->
+    <section class="card-box bg-white rounded-xl shadow-sm border border-sky-100 p-3.5 transition-all">
+      <div class="flex items-center space-x-1.5 pb-2 mb-2.5 border-b border-slate-100">
+        <i data-lucide="user-check" class="w-4 h-4 text-sky-600"></i>
+        <h2 class="text-xs font-bold text-slate-800">お客様基本条件設定</h2>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- ご年収 -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">ご年収 (額面)</label>
+          <div class="relative rounded-lg shadow-sm">
+            <input type="number" id="input-income" value="800" min="10" step="10" oninput="onConditionChange()"
+              class="w-full pl-3 pr-16 py-1.5 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-600 text-xs font-bold">万円</div>
+          </div>
+        </div>
+
+        <!-- 借入希望額 -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">借入希望額</label>
+          <div class="relative rounded-lg shadow-sm">
+            <input type="number" id="input-amount" value="7000" min="10" step="50" oninput="onConditionChange()"
+              class="w-full pl-3 pr-16 py-1.5 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-600 text-xs font-bold">万円</div>
+          </div>
+        </div>
+
+        <!-- 借入希望期間 -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">借入希望期間</label>
+          <div class="relative rounded-lg shadow-sm">
+            <input type="number" id="input-years" value="35" min="1" max="50" oninput="onConditionChange()"
+              class="w-full pl-3 pr-14 py-1.5 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold">年</div>
+          </div>
+        </div>
+
+        <!-- ローン種別フィルター -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-1">表示フィルター</label>
+          <select id="input-type" onchange="onConditionChange()"
+            class="w-full py-1.5 px-2 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-semibold text-xs focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+            <option value="all">すべての金融機関を表示</option>
+            <option value="提携">提携ローンのみ</option>
+            <option value="非提携">非提携ローン（プロパー）のみ</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 比較テーブル -->
+    <section class="card-box bg-white rounded-xl shadow-sm border border-sky-100 p-3 overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 mb-2 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="building-2" class="w-4 h-4 text-sky-600"></i>
+          <h2 class="text-xs font-bold text-slate-800">金融機関別 返済・審査比較一覧</h2>
+          <span id="bank-count-badge" class="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-sky-50 text-sky-700 rounded-full border border-sky-100">0件</span>
+        </div>
+        <div class="no-print flex items-center space-x-2">
+          <span class="text-[11px] text-slate-400 hidden lg:inline">※ ヘッダーの境界線をドラッグして幅を調節可能です</span>
+          <button onclick="addRow()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>金融機関を追加</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 幅可変テーブル -->
+      <div class="table-scroll overflow-x-auto">
+        <table id="mortgage-table" class="resizable-table text-center">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-700 font-bold border-b border-slate-200">
+              <th data-col="0">金融機関名<div class="resizer"></div></th>
+              <th data-col="1">種別<div class="resizer"></div></th>
+              <th data-col="2">基準金利<div class="resizer"></div></th>
+              <th data-col="3" class="text-rose-600 font-bold">優遇金利幅<div class="resizer"></div></th>
+              <th data-col="4">上乗せ金利<div class="resizer"></div></th>
+              <th data-col="5" class="bg-sky-50/50 text-sky-900">適用金利<div class="resizer"></div></th>
+              <th data-col="6">審査金利<div class="resizer"></div></th>
+              <th data-col="7">最大期間<div class="resizer"></div></th>
+              <th data-col="8" class="bg-sky-50/50 text-sky-900">月々返済額<div class="resizer"></div></th>
+              <th data-col="9" class="bg-amber-50/60 text-amber-900">審査返済率<div class="resizer"></div></th>
+              <th data-col="10">がん団信・特約<div class="resizer"></div></th>
+              <th data-col="11">審査条件/比率上限<div class="resizer"></div></th>
+              <th data-col="12">審査取扱い<div class="resizer"></div></th>
+              <th data-col="13">備考<div class="resizer"></div></th>
+              <th data-col="14" class="no-print" style="width: 40px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="bank-table-body" class="divide-y divide-slate-200 text-slate-800">
+            <!-- Dynamic JS Injection -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 flex flex-wrap justify-between items-center gap-1.5">
+        <p>※ 「適用金利」＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利。「月々返済額」は元利均等返済計算。「審査返済率」＝ 審査金利での年間返済額 ÷ 年収 × 100</p>
+        <p class="no-print text-slate-400">※ 各列幅・入力データはブラウザに保持されます。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- システムダイアログ -->
+  <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-4 transform scale-95 transition-transform duration-200 mx-4" id="modal-box">
+      <h3 class="text-sm font-bold text-slate-900 mb-1.5" id="modal-title">確認</h3>
+      <p class="text-xs text-slate-600 mb-4" id="modal-message">本当に実行しますか？</p>
+      <div class="flex justify-end space-x-2">
+        <button id="modal-cancel-btn" onclick="closeModal()" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition">キャンセル</button>
+        <button id="modal-confirm-btn" class="px-3 py-1.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition">実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <footer class="mt-8 py-4 border-t border-slate-200 bg-white text-center text-[11px] text-slate-500 no-print">
+    <p>Copyright© 2026 SHUICH HIRAI All Right Reserved.</p>
+  </footer>
+
+  <!-- 印刷用フッター -->
+  <div class="hidden print-footer">
+    <p>Copyright© 2026 SHUICH HIRAI All Right Reserved.</p>
+  </div>
+
+  <script>
+    // Storage Keys
+    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v11';
+    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v11';
+    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v11';
+
+    // デフォルト列幅 (px)
+    const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 95, 80, 140, 150, 95, 170, 40];
+
+    // 初期データ (金利は小数点以下3桁で統一)
+    const initialBankData = [
+      { id: '1', name: '三菱UFJ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.380, addRate: 0.000, examRate: 4.000, maxYears: 40, cancerInsurance: '+0.1%(満51歳未満)', examCondition: '返済比率〜40%(最低年収200万)', status: '審査可能', memo: '手数料: 借入×2.2%。WEB金消手数料なし。ZEHで金利-0.1%' },
+      { id: '2', name: 'みずほ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.375, addRate: 0.000, examRate: 3.750, maxYears: 35, cancerInsurance: '全疾病100%(+0.5%)等', examCondition: '年収300万〜(35%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。最低年収300万以上。' },
+      { id: '3', name: '三井住友銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.475, addRate: 0.000, examRate: 3.800, maxYears: 40, cancerInsurance: '+0.1%(40歳未満がん)', examCondition: '年収300万〜(30%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。36年〜は金利+0.15%' },
+      { id: '4', name: 'りそな銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.370, addRate: 0.000, examRate: 3.500, maxYears: 40, cancerInsurance: '+0.1%(46歳未満 8大)', examCondition: '原則35%(属性で40%)', status: '審査可能', memo: '手数料: 借入×2.2%+5.5万。最低年収100万。ZEH-0.01%' },
+      { id: '5', name: '三井住友信託銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.400, addRate: 0.000, examRate: 3.750, maxYears: 40, cancerInsurance: '+0.19%(41歳未満)', examCondition: '年収400万未満30%/以上40%', status: '審査可能', memo: '保証料型・手数料型選択可。全国保証付は審査金利3.605%' },
+      { id: '6', name: 'ドコモSMTBネット銀行', type: '非提携', baseRate: 3.250, preferentialRate: 0.297, addRate: 0.000, examRate: 3.250, maxYears: 50, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '年収300万〜(25%〜35%)', status: '審査可能', memo: '手数料: 借入×2.2%。41〜50年借入は金利+0.15%〜+0.2%' },
+      { id: '7', name: 'ソニー銀行', type: '非提携', baseRate: 4.025, preferentialRate: 0.397, addRate: 0.000, examRate: 4.000, maxYears: 50, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '原則35%(最低年収400万)', status: '審査可能', memo: '自己資金10%以上で金利優遇あり。完済時85歳未満' },
+      { id: '8', name: 'SBI新生銀行', type: '非提携', baseRate: 2.650, preferentialRate: 0.420, addRate: 0.000, examRate: 3.500, maxYears: 50, cancerInsurance: '+0.1%(50歳未満)', examCondition: '一律40%(最低年収300万)', status: '審査可能', memo: '事務手数料定額/定率選択可。38年〜50年は金利+0.1%' }
+    ];
+
+    let bankData = [];
+    let columnWidths = [...defaultColumnWidths];
+
+    // LocalStorageへ保存
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(bankData));
+        const conditions = {
+          income: document.getElementById('input-income').value,
+          amount: document.getElementById('input-amount').value,
+          years: document.getElementById('input-years').value,
+          filterType: document.getElementById('input-type').value
+        };
+        localStorage.setItem(STORAGE_KEY_CONDITIONS, JSON.stringify(conditions));
+        localStorage.setItem(STORAGE_KEY_COL_WIDTHS, JSON.stringify(columnWidths));
+      } catch (e) {
+        console.error('Storage Save Error:', e);
+      }
+    }
+
+    // LocalStorageからの復元
+    function loadFromStorage() {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY_DATA);
+        bankData = savedData ? JSON.parse(savedData) : JSON.parse(JSON.stringify(initialBankData));
+
+        const savedConditions = localStorage.getItem(STORAGE_KEY_CONDITIONS);
+        if (savedConditions) {
+          const cond = JSON.parse(savedConditions);
+          if (cond.income !== undefined) document.getElementById('input-income').value = cond.income;
+          if (cond.amount !== undefined) document.getElementById('input-amount').value = cond.amount;
+          if (cond.years !== undefined) document.getElementById('input-years').value = cond.years;
+          if (cond.filterType !== undefined) document.getElementById('input-type').value = cond.filterType;
+        }
+
+        const savedWidths = localStorage.getItem(STORAGE_KEY_COL_WIDTHS);
+        if (savedWidths) {
+          columnWidths = JSON.parse(savedWidths);
+        }
+      } catch (e) {
+        console.error('Storage Load Error:', e);
+        bankData = JSON.parse(JSON.stringify(initialBankData));
+      }
+    }
+
+    // 元利均等返済計算 (円)
+    function calculateMonthlyPayment(principalYen, annualRatePercent, years) {
+      if (principalYen <= 0 || years <= 0) return 0;
+      if (annualRatePercent <= 0) {
+        return Math.round(principalYen / (years * 12));
+      }
+      const monthlyRate = (annualRatePercent / 100) / 12;
+      const numberOfPayments = years * 12;
+      const factor = Math.pow(1 + monthlyRate, numberOfPayments);
+      const monthlyPayment = (principalYen * monthlyRate * factor) / (factor - 1);
+      return Math.round(monthlyPayment);
+    }
+
+    // 列幅の適用
+    function applyColumnWidths() {
+      const thList = document.querySelectorAll('#mortgage-table th');
+      thList.forEach((th, idx) => {
+        if (columnWidths[idx]) {
+          th.style.width = `${columnWidths[idx]}px`;
+        }
+      });
+    }
+
+    // 列幅のドラッグサイズ変更ロジック
+    function initColumnResizer() {
+      const table = document.getElementById('mortgage-table');
+      const resizers = table.querySelectorAll('.resizer');
+
+      resizers.forEach((resizer) => {
+        let x = 0;
+        let w = 0;
+        let th = null;
+        let colIndex = -1;
+
+        const onMouseDown = (e) => {
+          e.preventDefault();
+          th = resizer.parentElement;
+          colIndex = parseInt(th.getAttribute('data-col'));
+          x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+          w = th.offsetWidth;
+
+          resizer.classList.add('resizing');
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          document.addEventListener('touchmove', onMouseMove);
+          document.addEventListener('touchend', onMouseUp);
+        };
+
+        const onMouseMove = (e) => {
+          if (!th) return;
+          const currentX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+          const dx = currentX - x;
+          const newWidth = Math.max(40, w + dx);
+          th.style.width = `${newWidth}px`;
+          columnWidths[colIndex] = newWidth;
+        };
+
+        const onMouseUp = () => {
+          if (resizer) resizer.classList.remove('resizing');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          document.removeEventListener('touchmove', onMouseMove);
+          document.removeEventListener('touchend', onMouseUp);
+          th = null;
+          saveToStorage();
+        };
+
+        resizer.addEventListener('mousedown', onMouseDown);
+        resizer.addEventListener('touchstart', onMouseDown, { passive: false });
+      });
+    }
+
+    // 列幅リセット
+    function resetColumnWidths() {
+      columnWidths = [...defaultColumnWidths];
+      applyColumnWidths();
+      saveToStorage();
+    }
+
+    // テーブルの表示レンダリング
+    function renderTable() {
+      const tbody = document.getElementById('bank-table-body');
+      tbody.innerHTML = '';
+
+      const filterType = document.getElementById('input-type').value;
+      const income = Math.max(0, parseFloat(document.getElementById('input-income').value) || 0);
+      const amount = Math.max(0, parseFloat(document.getElementById('input-amount').value) || 0);
+      const years = Math.max(1, parseFloat(document.getElementById('input-years').value) || 1);
+
+      const principalYen = amount * 10000;
+      let visibleCount = 0;
+
+      bankData.forEach((item, index) => {
+        if (filterType !== 'all' && item.type !== filterType) return;
+        visibleCount++;
+
+        const baseRate = parseFloat(item.baseRate) || 0;
+        const preferentialRate = parseFloat(item.preferentialRate) || 0; // 優遇金利幅
+        const addRate = parseFloat(item.addRate) || 0;
+        const examRate = parseFloat(item.examRate) || 0;
+        const maxYears = parseInt(item.maxYears) || 35;
+
+        // 適用金利 ＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利
+        const appliedRate = baseRate - preferentialRate + addRate;
+        const calcYears = Math.min(years, maxYears);
+
+        const monthlyPayment = calculateMonthlyPayment(principalYen, appliedRate, calcYears);
+        const examMonthlyPayment = calculateMonthlyPayment(principalYen, examRate, calcYears);
+        const examAnnualPayment = examMonthlyPayment * 12;
+        const incomeYen = income * 10000;
+        const examRatio = incomeYen > 0 ? ((examAnnualPayment / incomeYen) * 100).toFixed(2) : '0.00';
+
+        let statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        if (item.status === '審査未定') statusClass = 'bg-amber-50 text-amber-700 border-amber-200';
+        if (item.status === '審査不可') statusClass = 'bg-rose-50 text-rose-700 border-rose-200';
+
+        // 優遇金利幅および上乗せ金利が 0 または 0.000 の場合の表示文字列 ("----" 対応)
+        const prefDisplay = (preferentialRate === 0) ? '----' : preferentialRate.toFixed(3);
+        const addDisplay = (addRate === 0) ? '----' : addRate.toFixed(3);
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-sky-50/50 transition-colors text-center';
+        tr.innerHTML = `
+          <!-- 金融機関名 (Sticky列) -->
+          <td>
+            <input type="text" value="${escapeHtml(item.name)}" onchange="updateData(${index}, 'name', this.value)"
+              class="table-input font-bold text-slate-900 text-center">
+          </td>
+
+          <!-- 種別 -->
+          <td>
+            <select onchange="updateData(${index}, 'type', this.value)"
+              class="w-full bg-slate-100/80 border border-slate-200 rounded px-0.5 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-sky-500">
+              <option value="提携" ${item.type === '提携' ? 'selected' : ''}>提携</option>
+              <option value="非提携" ${item.type === '非提携' ? 'selected' : ''}>非提携</option>
+            </select>
+          </td>
+
+          <!-- 基準金利 (%) [小数点以下3桁・センタリング] -->
+          <td>
+            <div class="rate-input-wrapper">
+              <input type="number" step="0.001" value="${baseRate.toFixed(3)}" onchange="updateData(${index}, 'baseRate', parseFloat(this.value)||0)"
+                class="table-input">
+              <span class="percent-symbol">%</span>
+            </div>
+          </td>
+
+          <!-- 優遇金利幅 (%) [0の場合は----表示・赤字・太字・▲付き] -->
+          <td>
+            <div class="advantage-input-wrapper">
+              <span class="advantage-symbol">▲</span>
+              <input type="text" inputmode="decimal" value="${prefDisplay}" onchange="updateRateData(${index}, 'preferentialRate', this.value)"
+                class="table-input font-bold text-rose-600">
+              <span class="percent-symbol">%</span>
+            </div>
+          </td>
+
+          <!-- 上乗せ金利 (%) [0の場合は----表示] -->
+          <td>
+            <div class="rate-input-wrapper">
+              <input type="text" inputmode="decimal" value="${addDisplay}" onchange="updateRateData(${index}, 'addRate', this.value)"
+                class="table-input">
+              <span class="percent-symbol">%</span>
+            </div>
+          </td>
+
+          <!-- 適用金利 (自動計算・小数点以下3桁・センタリング) -->
+          <td class="font-bold text-sky-800 bg-sky-50/40">
+            ${appliedRate.toFixed(3)}%
+          </td>
+
+          <!-- 審査金利 (%) [小数点以下3桁・センタリング] -->
+          <td>
+            <div class="rate-input-wrapper">
+              <input type="number" step="0.001" value="${examRate.toFixed(3)}" onchange="updateData(${index}, 'examRate', parseFloat(this.value)||0)"
+                class="table-input">
+              <span class="percent-symbol">%</span>
+            </div>
+          </td>
+
+          <!-- 最大期間 (センタリング) -->
+          <td>
+            <div class="year-input-wrapper">
+              <input type="number" value="${maxYears}" onchange="updateData(${index}, 'maxYears', parseInt(this.value)||35)"
+                class="table-input">
+              <span class="year-symbol">年</span>
+            </div>
+          </td>
+
+          <!-- 月々返済額 (自動計算・センタリング) -->
+          <td class="font-bold text-slate-900 bg-sky-50/40">
+            ${monthlyPayment.toLocaleString()} <span class="text-[9px] font-normal text-slate-500">円</span>
+          </td>
+
+          <!-- 審査返済率 (自動計算・センタリング) -->
+          <td class="font-bold text-amber-900 bg-amber-50/40">
+            ${examRatio}%
+          </td>
+
+          <!-- がん団信・特約 (センタリング) -->
+          <td>
+            <input type="text" value="${escapeHtml(item.cancerInsurance)}" onchange="updateData(${index}, 'cancerInsurance', this.value)"
+              class="table-input">
+          </td>
+
+          <!-- 審査条件/比率上限 (センタリング) -->
+          <td>
+            <input type="text" value="${escapeHtml(item.examCondition)}" onchange="updateData(${index}, 'examCondition', this.value)"
+              class="table-input">
+          </td>
+
+          <!-- 審査取扱い (センタリング) -->
+          <td>
+            <select onchange="updateData(${index}, 'status', this.value)"
+              class="text-[11px] font-semibold px-1.5 py-0.5 rounded border ${statusClass} focus:outline-none text-center mx-auto">
+              <option value="審査可能" ${item.status === '審査可能' ? 'selected' : ''}>審査可能</option>
+              <option value="審査未定" ${item.status === '審査未定' ? 'selected' : ''}>審査未定</option>
+              <option value="審査不可" ${item.status === '審査不可' ? 'selected' : ''}>審査不可</option>
+            </select>
+          </td>
+
+          <!-- 備考 (センタリング) -->
+          <td>
+            <input type="text" value="${escapeHtml(item.memo)}" onchange="updateData(${index}, 'memo', this.value)"
+              class="table-input text-slate-600">
+          </td>
+
+          <!-- 操作 -->
+          <td class="text-center no-print">
+            <button onclick="confirmRemoveRow(${index})" class="text-slate-400 hover:text-rose-600 p-0.5 rounded hover:bg-slate-100 transition" title="この行を削除">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('bank-count-badge').innerText = `${visibleCount}件`;
+      applyColumnWidths();
+      lucide.createIcons();
+    }
+
+    // HTMLエスケープヘルパー
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 通常データ更新
+    function updateData(index, field, value) {
+      bankData[index][field] = value;
+      saveToStorage();
+      renderTable();
+    }
+
+    // 優遇金利幅・上乗せ金利専用の更新（"----"や空文字対応）
+    function updateRateData(index, field, value) {
+      const valStr = String(value).trim();
+      if (valStr === '' || valStr === '----' || isNaN(valStr)) {
+        bankData[index][field] = 0;
+      } else {
+        bankData[index][field] = parseFloat(valStr) || 0;
+      }
+      saveToStorage();
+      renderTable();
+    }
+
+    // 条件変更
+    function onConditionChange() {
+      saveToStorage();
+      renderTable();
+    }
+
+    // 新規行追加
+    function addRow() {
+      const newBank = {
+        id: Date.now().toString(),
+        name: '新規金融機関',
+        type: '提携',
+        baseRate: 3.375,
+        preferentialRate: 0.500,
+        addRate: 0.000,
+        examRate: 3.500,
+        maxYears: 35,
+        cancerInsurance: 'なし',
+        examCondition: '返済比率 35%以内',
+        status: '審査可能',
+        memo: ''
+      };
+      bankData.push(newBank);
+      saveToStorage();
+      renderTable();
+    }
+
+    // カスタムモーダルダイアログ
+    function showModal(title, message, onConfirm) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-message').innerText = message;
+      
+      const confirmBtn = document.getElementById('modal-confirm-btn');
+      confirmBtn.onclick = () => {
+        onConfirm();
+        closeModal();
+      };
+
+      const backdrop = document.getElementById('modal-backdrop');
+      const box = document.getElementById('modal-box');
+      backdrop.classList.remove('hidden');
+      setTimeout(() => {
+        backdrop.classList.remove('opacity-0');
+        box.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeModal() {
+      const backdrop = document.getElementById('modal-backdrop');
+      const box = document.getElementById('modal-box');
+      backdrop.classList.add('opacity-0');
+      box.classList.add('scale-95');
+      setTimeout(() => {
+        backdrop.classList.add('hidden');
+      }, 200);
+    }
+
+    // 行削除確認
+    function confirmRemoveRow(index) {
+      showModal('行の削除', `“${bankData[index].name}”を比較表から削除しますか？`, () => {
+        bankData.splice(index, 1);
+        saveToStorage();
+        renderTable();
+      });
+    }
+
+    // リセット確認
+    function confirmResetData() {
+      showModal('データの初期化', '全ての入力・編集データを初期状態に戻しますか？', () => {
+        bankData = JSON.parse(JSON.stringify(initialBankData));
+        columnWidths = [...defaultColumnWidths];
+        document.getElementById('input-income').value = 800;
+        document.getElementById('input-amount').value = 7000;
+        document.getElementById('input-years').value = 35;
+        document.getElementById('input-type').value = 'all';
+        saveToStorage();
+        renderTable();
+      });
+    }
+
+    // JSON エクスポート
+    function exportJSON() {
+      const exportObject = {
+        version: '3.5',
+        exportDate: new Date().toISOString(),
+        conditions: {
+          income: document.getElementById('input-income').value,
+          amount: document.getElementById('input-amount').value,
+          years: document.getElementById('input-years').value,
+          filterType: document.getElementById('input-type').value
+        },
+        columnWidths: columnWidths,
+        banks: bankData
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObject, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `住宅ローン比較設定_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // JSON インポート
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && imported.banks && Array.isArray(imported.banks)) {
+            bankData = imported.banks;
+            if (imported.columnWidths && Array.isArray(imported.columnWidths)) {
+              columnWidths = imported.columnWidths;
+            }
+            if (imported.conditions) {
+              if (imported.conditions.income !== undefined) document.getElementById('input-income').value = imported.conditions.income;
+              if (imported.conditions.amount !== undefined) document.getElementById('input-amount').value = imported.conditions.amount;
+              if (imported.conditions.years !== undefined) document.getElementById('input-years').value = imported.conditions.years;
+              if (imported.conditions.filterType !== undefined) document.getElementById('input-type').value = imported.conditions.filterType;
+            }
+            saveToStorage();
+            renderTable();
+            showModal('読み込み完了', 'JSONデータを正常に読み込みました。', () => {});
+          } else {
+            showModal('エラー', '有効なファイルフォーマットではありません。', () => {});
+          }
+        } catch (err) {
+          showModal('エラー', 'JSONファイルの解析に失敗しました: ' + err.message, () => {});
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // 初期化ロード
+    window.onload = function() {
+      const now = new Date();
+      document.getElementById('print-date').innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+      loadFromStorage();
+      initColumnResizer();
+      renderTable();
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
