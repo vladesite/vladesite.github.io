@@ -344,7 +344,7 @@
         </div>
         <div>
           <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">住宅ローン試算・審査状況比較シミュレーター</h1>
-          <p class="text-[11px] text-slate-500">金融機関別の金利・返済額シミュレーション＆審査一覧</p>
+          <p class="text-[11px] text-slate-500">金融機関別の金利・返済額シミュレーション＆審査適合性一覧</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-1.5">
@@ -520,9 +520,9 @@
 
   <script>
     // Storage Keys
-    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v11';
-    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v11';
-    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v11';
+    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v12';
+    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v12';
+    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v12';
 
     // デフォルト列幅 (px)
     const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 95, 80, 140, 150, 95, 170, 40];
@@ -559,8 +559,8 @@
       }
     }
 
-    // LocalStorageからの復元
-    function loadFromStorage() {
+    // LocalStorageからの復元（オフライン時などのバックアップ用）
+    function loadFromStorageLocally() {
       try {
         const savedData = localStorage.getItem(STORAGE_KEY_DATA);
         bankData = savedData ? JSON.parse(savedData) : JSON.parse(JSON.stringify(initialBankData));
@@ -939,7 +939,7 @@
     // JSON エクスポート
     function exportJSON() {
       const exportObject = {
-        version: '3.5',
+        version: '3.6',
         exportDate: new Date().toISOString(),
         conditions: {
           income: document.getElementById('input-income').value,
@@ -994,11 +994,43 @@
       event.target.value = '';
     }
 
-    // 初期化ロード
-    window.onload = function() {
+    // 初期化ロード（Webアクセス時に指定URLからJSONを初自動取得）
+    window.onload = async function() {
       const now = new Date();
       document.getElementById('print-date').innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
-      loadFromStorage();
+
+      // ローカルストレージにまだデータがない初回起動時のみ、指定URLからJSONを取得
+      if (!localStorage.getItem(STORAGE_KEY_DATA)) {
+        try {
+          const response = await fetch('https://vladesite.github.io/mortgage/mortgage_setting_update.json');
+          if (response.ok) {
+            const imported = await response.json();
+            if (imported && imported.banks && Array.isArray(imported.banks)) {
+              bankData = imported.banks;
+              if (imported.columnWidths && Array.isArray(imported.columnWidths)) {
+                columnWidths = imported.columnWidths;
+              }
+              if (imported.conditions) {
+                if (imported.conditions.income !== undefined) document.getElementById('input-income').value = imported.conditions.income;
+                if (imported.conditions.amount !== undefined) document.getElementById('input-amount').value = imported.conditions.amount;
+                if (imported.conditions.years !== undefined) document.getElementById('input-years').value = imported.conditions.years;
+                if (imported.conditions.filterType !== undefined) document.getElementById('input-type').value = imported.conditions.filterType;
+              }
+              saveToStorage();
+            } else {
+              loadFromStorageLocally();
+            }
+          } else {
+            loadFromStorageLocally();
+          }
+        } catch (err) {
+          console.warn('リモートJSONの取得に失敗しました。ローカルデータまたは初期データを使用します:', err);
+          loadFromStorageLocally();
+        }
+      } else {
+        loadFromStorageLocally();
+      }
+
       initColumnResizer();
       renderTable();
       lucide.createIcons();
