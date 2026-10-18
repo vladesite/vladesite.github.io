@@ -480,7 +480,7 @@
             if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
 
             try {
-                const response = await fetch('https://vladesite.github.io/market/heatmap_new.json');
+                const response = await fetch('https://raw.githubusercontent.com/vladesite/vladesite.github.io/refs/heads/main/market/marketprice.json');
                 if (response.ok) {
                     const remoteData = await response.json();
                     if (!savedStations) {
