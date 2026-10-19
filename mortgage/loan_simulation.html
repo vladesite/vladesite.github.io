@@ -67,7 +67,7 @@
       opacity: 0.8;
     }
 
-    /* 行幅30%拡大 ＆ テキスト自動折り返し＆テーブル内はセンタリング */
+    /* 行幅拡大 ＆ テキスト自動折り返し＆テーブル内はセンタリング */
     .resizable-table th, .resizable-table td {
       white-space: normal !important;
       word-break: break-all !important;
@@ -333,13 +333,13 @@
     }
   </style>
 </head>
-<body class="bg-sky-50/40 text-slate-800 font-sans antialiased min-h-screen pb-10">
+<body class="bg-gradient-to-br from-sky-50 via-teal-50/20 to-slate-50 text-slate-800 font-sans antialiased min-h-screen pb-10">
 
   <!-- ヘッダー -->
-  <header class="bg-white border-b border-sky-100 sticky top-0 z-30 shadow-sm no-print">
+  <header class="bg-white/90 backdrop-blur-md border-b border-sky-100 sticky top-0 z-30 shadow-sm no-print">
     <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
       <div class="flex items-center space-x-2.5">
-        <div class="bg-sky-500 text-white p-2 rounded-lg shadow-sm">
+        <div class="bg-gradient-to-tr from-sky-500 to-teal-500 text-white p-2 rounded-xl shadow-sm">
           <i data-lucide="calculator" class="w-5 h-5"></i>
         </div>
         <div>
@@ -392,49 +392,49 @@
 
   <main class="max-w-7xl mx-auto px-3 sm:px-5 mt-3 space-y-3">
 
-    <!-- 顧客条件入力エリア -->
-    <section class="card-box bg-white rounded-xl shadow-sm border border-sky-100 p-3.5 transition-all">
+    <!-- 顧客条件入力エリア (背景カラーを薄緑に指定) -->
+    <section class="card-box bg-white/90 backdrop-blur rounded-xl shadow-sm border border-teal-100 p-3.5 transition-all">
       <div class="flex items-center space-x-1.5 pb-2 mb-2.5 border-b border-slate-100">
-        <i data-lucide="user-check" class="w-4 h-4 text-sky-600"></i>
+        <i data-lucide="user-check" class="w-4 h-4 text-teal-600"></i>
         <h2 class="text-xs font-bold text-slate-800">お客様基本条件設定</h2>
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <!-- ご年収 -->
+        <!-- ご年収 (薄緑背景) -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">ご年収 (額面)</label>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1">ご年収 (額面)</label>
           <div class="relative rounded-lg shadow-sm">
             <input type="number" id="input-income" value="800" min="10" step="10" oninput="onConditionChange()"
-              class="w-full pl-3 pr-16 py-1.5 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+              class="w-full pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-600 text-xs font-bold">万円</div>
           </div>
         </div>
 
-        <!-- 借入希望額 -->
+        <!-- 借入希望額 (薄緑背景、10万円単位 step="10") -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">借入希望額</label>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望額 (10万単位)</label>
           <div class="relative rounded-lg shadow-sm">
-            <input type="number" id="input-amount" value="7000" min="10" step="50" oninput="onConditionChange()"
-              class="w-full pl-3 pr-16 py-1.5 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+            <input type="number" id="input-amount" value="7000" min="10" step="10" oninput="onConditionChange()"
+              class="w-full pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-600 text-xs font-bold">万円</div>
           </div>
         </div>
 
-        <!-- 借入希望期間 -->
+        <!-- 借入希望期間 (薄緑背景) -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">借入希望期間</label>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望期間</label>
           <div class="relative rounded-lg shadow-sm">
             <input type="number" id="input-years" value="35" min="1" max="50" oninput="onConditionChange()"
-              class="w-full pl-3 pr-14 py-1.5 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+              class="w-full pl-3 pr-14 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
             <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold">年</div>
           </div>
         </div>
 
         <!-- ローン種別フィルター -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">表示フィルター</label>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1">表示フィルター</label>
           <select id="input-type" onchange="onConditionChange()"
-            class="w-full py-1.5 px-2 bg-sky-50/30 border border-slate-200 rounded-lg text-slate-900 font-semibold text-xs focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
+            class="w-full py-1.5 px-2 bg-sky-50/50 border border-sky-200 rounded-lg text-slate-900 font-semibold text-xs focus:ring-1 focus:ring-sky-500 focus:bg-white focus:outline-none">
             <option value="all">すべての金融機関を表示</option>
             <option value="提携">提携ローンのみ</option>
             <option value="非提携">非提携ローン（プロパー）のみ</option>
@@ -444,7 +444,7 @@
     </section>
 
     <!-- 比較テーブル -->
-    <section class="card-box bg-white rounded-xl shadow-sm border border-sky-100 p-3 overflow-hidden">
+    <section class="card-box bg-white/90 backdrop-blur rounded-xl shadow-sm border border-sky-100 p-3 overflow-hidden">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 mb-2 border-b border-slate-100">
         <div class="flex items-center space-x-2">
           <i data-lucide="building-2" class="w-4 h-4 text-sky-600"></i>
@@ -510,19 +510,19 @@
 
   <!-- フッター -->
   <footer class="mt-8 py-4 border-t border-slate-200 bg-white text-center text-[11px] text-slate-500 no-print">
-    <p>Copyright© 2026 SHUICH HIRAI All Right Reserved.</p>
+    <p>Copyright© 2026 SHUICHI HIRAI All Right Reserved.</p>
   </footer>
 
   <!-- 印刷用フッター -->
   <div class="hidden print-footer">
-    <p>Copyright© 2026 SHUICH HIRAI All Right Reserved.</p>
+    <p>Copyright© 2026 SHUICHI HIRAI All Right Reserved.</p>
   </div>
 
   <script>
     // Storage Keys
-    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v12';
-    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v12';
-    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v12';
+    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v13';
+    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v13';
+    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v13';
 
     // デフォルト列幅 (px)
     const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 95, 80, 140, 150, 95, 170, 40];
@@ -700,6 +700,14 @@
         if (item.status === '審査未定') statusClass = 'bg-amber-50 text-amber-700 border-amber-200';
         if (item.status === '審査不可') statusClass = 'bg-rose-50 text-rose-700 border-rose-200';
 
+        // 種別が「非提携」の場合はピンク色の背景にする（指示対応）
+        let typeSelectClass = 'w-full border rounded px-0.5 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-sky-500 ';
+        if (item.type === '非提携') {
+          typeSelectClass += 'bg-pink-100 text-pink-900 border-pink-300 font-bold';
+        } else {
+          typeSelectClass += 'bg-slate-100/80 border-slate-200 text-slate-800';
+        }
+
         // 優遇金利幅および上乗せ金利が 0 または 0.000 の場合の表示文字列 ("----" 対応)
         const prefDisplay = (preferentialRate === 0) ? '----' : preferentialRate.toFixed(3);
         const addDisplay = (addRate === 0) ? '----' : addRate.toFixed(3);
@@ -713,10 +721,9 @@
               class="table-input font-bold text-slate-900 text-center">
           </td>
 
-          <!-- 種別 -->
+          <!-- 種別 (非提携の場合はピンク色) -->
           <td>
-            <select onchange="updateData(${index}, 'type', this.value)"
-              class="w-full bg-slate-100/80 border border-slate-200 rounded px-0.5 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-sky-500">
+            <select onchange="updateData(${index}, 'type', this.value)" class="${typeSelectClass}">
               <option value="提携" ${item.type === '提携' ? 'selected' : ''}>提携</option>
               <option value="非提携" ${item.type === '非提携' ? 'selected' : ''}>非提携</option>
             </select>
@@ -939,7 +946,7 @@
     // JSON エクスポート
     function exportJSON() {
       const exportObject = {
-        version: '3.6',
+        version: '3.7',
         exportDate: new Date().toISOString(),
         conditions: {
           income: document.getElementById('input-income').value,
