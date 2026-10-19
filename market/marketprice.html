@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首都圏鉄道路線図ヒートマップエディター</title>
-    <!-- Copyrihgt© SHUICHI HIRAI All Rights Reserved./JREAST&ITOCHU HOUSING CO., LTD.  -->
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -33,9 +32,9 @@
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-white flex items-center space-x-2">
                     <span>首都圏鉄道路線図ヒートマップエディター</span>
-                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">社内資料 2026/10月</span>
+                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">Pro 2026</span>
                 </h1>
-                <p class="text-xs text-slate-400">路線別・駅別単価ヒートマップ統合管理　※転用禁止</p>
+                <p class="text-xs text-slate-400">路線図自動リンク・駅レイアウト＆単価ヒートマップ統合管理</p>
             </div>
         </div>
         <div class="flex items-center space-x-2 flex-wrap gap-2">
@@ -377,7 +376,7 @@
 
     <!-- フッター -->
     <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
-        &copy; 2026 首都圏鉄道路線図ヒートマップエディター/ SHUICHI HIRAI All Rights Reserved.
+        &copy; 2026 首都圏鉄道路線図ヒートマップエディター Pro. All Rights Reserved.
     </footer>
 
     <!-- スクリプト部 -->
@@ -453,24 +452,6 @@
             }
         });
 
-        function handleWheelZoom(e) {
-            e.preventDefault();
-            const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-            const newScale = Math.max(0.4, Math.min(6.0, currentScale * zoomFactor));
-
-            if (newScale === currentScale) return;
-
-            const rect = e.currentTarget.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left - rect.width / 2;
-            const mouseY = e.clientY - rect.top - rect.height / 2;
-
-            panX = mouseX - (mouseX - panX) * (newScale / currentScale);
-            panY = mouseY - (mouseY - panY) * (newScale / currentScale);
-            currentScale = newScale;
-
-            updateMapTransform();
-        }
-
         async function loadData() {
             const savedStations = localStorage.getItem('capital_stations_2026_pro');
             const savedLines = localStorage.getItem('capital_lines_2026_pro');
@@ -479,27 +460,34 @@
 
             if (savedStations) { try { stationsData = JSON.parse(savedStations); } catch(e) {} }
             if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
+            if (savedRangesConfig) { try { priceRangesConfig = JSON.parse(savedRangesConfig); } catch(e) {} }
 
-            try {
-                const response = await fetch('https://vladesite.github.io/market/heatmap_new.json');
-                if (response.ok) {
-                    const remoteData = await response.json();
-                    if (!savedStations) {
-                        if (remoteData.stations && Array.isArray(remoteData.stations)) {
-                            stationsData = remoteData.stations;
-                        } else if (Array.isArray(remoteData)) {
-                            stationsData = remoteData;
+            // 保存データがない場合、指定されたWeb上のJSONファイルから初期データを取得する
+            if (!savedStations || !savedLines || !savedRangesConfig) {
+                try {
+                    const response = await fetch('https://vladesite.github.io/market/heatmap_new.json');
+                    if (response.ok) {
+                        const remoteData = await response.json();
+                        
+                        if (!savedStations) {
+                            if (remoteData.stations && Array.isArray(remoteData.stations)) {
+                                stationsData = remoteData.stations;
+                            } else if (Array.isArray(remoteData)) {
+                                stationsData = remoteData;
+                            }
+                        }
+                        if (!savedLines && remoteData.lines && Array.isArray(remoteData.lines)) {
+                            linesData = remoteData.lines;
+                        }
+                        if (!savedRangesConfig && remoteData.priceRanges && Array.isArray(remoteData.priceRanges)) {
+                            priceRangesConfig = remoteData.priceRanges;
                         }
                     }
-                    if (!savedLines && remoteData.lines && Array.isArray(remoteData.lines)) {
-                        linesData = remoteData.lines;
-                    }
+                } catch (err) {
+                    console.log("外部JSONファイルの読み込みに失敗したため、デフォルトの初期データを使用します。", err);
                 }
-            } catch (err) {
-                console.log("リモートJSONの取得に失敗しました。ローカルデータを使用します。", err);
             }
 
-            if (savedRangesConfig) { try { priceRangesConfig = JSON.parse(savedRangesConfig); } catch(e) {} }
             if (savedBg) {
                 bgImageUrl = savedBg;
                 const removeBtn = document.getElementById('removeBgBtn');
@@ -857,6 +845,12 @@
         function zoomMap(factor) {
             currentScale = Math.max(0.4, Math.min(4.0, currentScale * factor));
             updateMapTransform();
+        }
+
+        function handleWheelZoom(event) {
+            event.preventDefault();
+            const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
+            zoomMap(zoomFactor);
         }
 
         function resetZoom() {
@@ -1468,7 +1462,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "heatmap_new.json");
+            dl.setAttribute("download", "capital_railway_heatmap_2026_pro.json");
             document.body.appendChild(dl);
             dl.click();
             dl.remove();
