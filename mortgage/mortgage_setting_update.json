@@ -1,6 +1,6 @@
 {
-  "version": "3.5",
-  "exportDate": "2026-10-18T08:36:19.108Z",
+  "version": "3.6",
+  "exportDate": "2026-10-19T01:58:08.616Z",
   "conditions": {
     "income": "820",
     "amount": "7350",
@@ -181,7 +181,7 @@
     },
     {
       "id": "1792308402020",
-      "name": "SBIアルヒ",
+      "name": "SBIアルヒ(SBI保証)",
       "type": "非提携",
       "baseRate": 2.234,
       "preferentialRate": 0,
@@ -191,7 +191,7 @@
       "cancerInsurance": "全疾病付団信(50歳未満)",
       "examCondition": "返済比率 45%以上も可能かも。",
       "status": "審査可能",
-      "memo": "SET対応不可！SG保証。"
+      "memo": "年収の10倍まで可能。SET対応不可！SBI保証。"
     },
     {
       "id": "1792312052201",
@@ -203,7 +203,7 @@
       "examRate": 3.5,
       "maxYears": 50,
       "cancerInsurance": "+0.1%(51歳未満),+0.2%八大疾病特約",
-      "examCondition": "返済比率 35%以内",
+      "examCondition": "返済比率 40%以内",
       "status": "審査可能",
       "memo": "厳しい客向け。Web審査可能。手数料:借入×2.2%+5.5万"
     }
