@@ -121,8 +121,8 @@
                     </label>
                     <button id="removeBgBtn" onclick="removeBackgroundMap()" class="hidden text-rose-400 hover:text-rose-300 transition"><i class="fa-solid fa-trash"></i> 削除</button>
                     <div id="opacityControl" class="hidden flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-800">
-                        <span>透明度: <strong id="opacityVal" class="text-indigo-400 font-mono">0.40</strong></span>
-                        <input type="range" id="bgOpacityRange" min="0.05" max="1" step="0.05" value="0.4" oninput="changeBgOpacity(this.value)" class="w-24 accent-indigo-500 cursor-pointer">
+                        <span>透明度: <strong id="opacityVal" class="text-indigo-400 font-mono">0.80</strong></span>
+                        <input type="range" id="bgOpacityRange" min="0.05" max="1" step="0.05" value="0.8" oninput="changeBgOpacity(this.value)" class="w-24 accent-indigo-500 cursor-pointer">
                     </div>
                 </div>
 
@@ -403,7 +403,7 @@
         let priceRangesConfig = JSON.parse(JSON.stringify(defaultPriceRanges));
 
         let bgImageUrl = "https://vladesite.github.io/market/Tokyo_Free.jpg";
-        let bgOpacity = 0.8;
+        let bgOpacity = 0.4;
         let lineChartInstance = null;
         let priceChartInstance = null;
         let currentScale = 1;
