@@ -200,6 +200,11 @@
       font-weight: 500;
     }
 
+    /* 非表示用クラス (一般閲覧モード用) */
+    .col-hidden {
+      display: none !important;
+    }
+
     /* 印刷用スタイルの最適化 (A3サイズ＆左右パディングの極小化) */
     @media print {
       @page {
@@ -343,14 +348,20 @@
           <i data-lucide="calculator" class="w-5 h-5"></i>
         </div>
         <div>
-          <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">住宅ローン試算・審査状況比較シミュレーター（参考資料）</h1>
-          <p class="text-[11px] text-slate-500">金融機関別の金利・返済額シミュレーション＆審査内容一覧 ※無断転載・複製禁止</p>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">住宅ローン試算・審査状況比較シミュレーター</h1>
+          <p class="text-[11px] text-slate-500">金融機関別の金利・返済額シミュレーション＆審査適合性一覧</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-1.5">
+        <!-- 一般閲覧モード切替ボタン (審査項目非表示) -->
+        <button onclick="toggleExamColumns()" id="toggle-exam-btn" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title="一般ユーザーに見せない審査項目を一括非表示にします">
+          <i data-lucide="eye-off" class="w-3.5 id-icon text-slate-500"></i>
+          <span id="toggle-btn-text">一般閲覧モード（審査項目非表示）</span>
+        </button>
+
         <button onclick="resetColumnWidths()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title="各列の幅をデフォルトに戻します">
           <i data-lucide="move-horizontal" class="w-3.5 h-3.5"></i>
-          <span>列幅をリセット</span>
+          <span>列幅リセット</span>
         </button>
 
         <button onclick="exportJSON()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title="現在のデータ・設定をJSONで保存">
@@ -394,39 +405,49 @@
 
     <!-- 顧客条件入力エリア (背景カラーを薄緑に指定) -->
     <section class="card-box bg-white/90 backdrop-blur rounded-xl shadow-sm border border-teal-100 p-3.5 transition-all">
-      <div class="flex items-center space-x-1.5 pb-2 mb-2.5 border-b border-slate-100">
-        <i data-lucide="user-check" class="w-4 h-4 text-teal-600"></i>
-        <h2 class="text-xs font-bold text-slate-800">お客様基本条件設定</h2>
+      <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
+        <div class="flex items-center space-x-1.5">
+          <i data-lucide="user-check" class="w-4 h-4 text-teal-600"></i>
+          <h2 class="text-xs font-bold text-slate-800">お客様基本条件設定</h2>
+        </div>
+        <!-- 長期ローンシミュレーションへのリンクボタン -->
+        <a href="https://vladesite.github.io/mortgage/mortgage.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg transition shadow-sm">
+          <i data-lucide="external-link" class="w-3 h-3"></i>
+          <span>長期ローンシミュレーション</span>
+        </a>
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <!-- ご年収 (薄緑背景) -->
+        <!-- ご年収 (薄緑背景、幅60%) -->
         <div>
           <label class="block text-[11px] font-semibold text-slate-700 mb-1">ご年収 (額面)</label>
           <div class="relative rounded-lg shadow-sm">
             <input type="number" id="input-income" value="800" min="10" step="10" oninput="onConditionChange()"
-              class="w-full pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-600 text-xs font-bold">万円</div>
+              style="width: 60%;"
+              class="pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+            <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(60% + 4px);">万円</span>
           </div>
         </div>
 
-        <!-- 借入希望額 (薄緑背景、10万円単位 step="10") -->
+        <!-- 借入希望額 (薄緑背景、10万円単位 step="10"、幅60%) -->
         <div>
           <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望額 (10万単位)</label>
           <div class="relative rounded-lg shadow-sm">
             <input type="number" id="input-amount" value="7000" min="10" step="10" oninput="onConditionChange()"
-              class="w-full pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-600 text-xs font-bold">万円</div>
+              style="width: 60%;"
+              class="pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+            <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(60% + 4px);">万円</span>
           </div>
         </div>
 
-        <!-- 借入希望期間 (薄緑背景) -->
+        <!-- 借入希望期間 (薄緑背景、幅60%) -->
         <div>
           <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望期間</label>
           <div class="relative rounded-lg shadow-sm">
             <input type="number" id="input-years" value="35" min="1" max="50" oninput="onConditionChange()"
-              class="w-full pl-3 pr-14 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold">年</div>
+              style="width: 60%;"
+              class="pl-3 pr-14 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+            <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(60% + 4px);">年</span>
           </div>
         </div>
 
@@ -471,14 +492,14 @@
               <th data-col="3" class="text-rose-600 font-bold">優遇金利幅<div class="resizer"></div></th>
               <th data-col="4">上乗せ金利<div class="resizer"></div></th>
               <th data-col="5" class="bg-sky-50/50 text-sky-900">適用金利<div class="resizer"></div></th>
-              <th data-col="6">審査金利<div class="resizer"></div></th>
+              <th data-col="6" class="exam-col">審査金利<div class="resizer"></div></th>
               <th data-col="7">最大期間<div class="resizer"></div></th>
               <th data-col="8" class="bg-sky-50/50 text-sky-900">月々返済額<div class="resizer"></div></th>
-              <th data-col="9" class="bg-amber-50/60 text-amber-900">審査返済率<div class="resizer"></div></th>
+              <th data-col="9" class="bg-amber-50/60 text-amber-900 exam-col">審査返済率<div class="resizer"></div></th>
               <th data-col="10">がん団信・特約<div class="resizer"></div></th>
-              <th data-col="11">審査条件/比率上限<div class="resizer"></div></th>
-              <th data-col="12">審査取扱い<div class="resizer"></div></th>
-              <th data-col="13">備考<div class="resizer"></div></th>
+              <th data-col="11" class="exam-col">審査条件/比率上限<div class="resizer"></div></th>
+              <th data-col="12" class="exam-col">審査取扱い<div class="resizer"></div></th>
+              <th data-col="13" class="exam-col">備考<div class="resizer"></div></th>
               <th data-col="14" class="no-print" style="width: 40px;">操作</th>
             </tr>
           </thead>
@@ -489,7 +510,7 @@
       </div>
 
       <div class="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 flex flex-wrap justify-between items-center gap-1.5">
-        <p>※※ 「基準金利」は変動金利。「適用金利」＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利。「月々返済額」は元利均等返済計算。「審査返済率」＝ 審査金利での年間返済額 ÷ 年収 × 100</p>
+        <p>※ 「適用金利」＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利。「月々返済額」は元利均等返済計算。「審査返済率」＝ 審査金利での年間返済額 ÷ 年収 × 100</p>
         <p class="no-print text-slate-400">※ 各列幅・入力データはブラウザに保持されます。</p>
       </div>
     </section>
@@ -510,12 +531,12 @@
 
   <!-- フッター -->
   <footer class="mt-8 py-4 border-t border-slate-200 bg-white text-center text-[11px] text-slate-500 no-print">
-    <p>Copyright© 2026 SHUICHI HIRAI All Rights Reserved.</p>
+    <p>Copyright© 2026 SHUICHI HIRAI All Right Reserved.</p>
   </footer>
 
   <!-- 印刷用フッター -->
   <div class="hidden print-footer">
-    <p>Copyright© 2026 SHUICHI HIRAI All Rights Reserved.</p>
+    <p>Copyright© 2026 SHUICHI HIRAI All Right Reserved.</p>
   </div>
 
   <script>
@@ -541,6 +562,28 @@
 
     let bankData = [];
     let columnWidths = [...defaultColumnWidths];
+    let isExamColumnsHidden = false; // 一般閲覧モード（審査項目非表示）の状態管理
+
+    // 一般閲覧モード切替用関数
+    function toggleExamColumns() {
+      isExamColumnsHidden = !isExamColumnsHidden;
+      const examElements = document.querySelectorAll('.exam-col');
+      const btnText = document.getElementById('toggle-btn-text');
+      
+      examElements.forEach(el => {
+        if (isExamColumnsHidden) {
+          el.classList.add('col-hidden');
+        } else {
+          el.classList.remove('col-hidden');
+        }
+      });
+
+      if (isExamColumnsHidden) {
+        btnText.innerText = '一般閲覧モード解除（審査項目表示）';
+      } else {
+        btnText.innerText = '一般閲覧モード（審査項目非表示）';
+      }
+    }
 
     // LocalStorageへ保存
     function saveToStorage() {
@@ -712,6 +755,8 @@
         const prefDisplay = (preferentialRate === 0) ? '----' : preferentialRate.toFixed(3);
         const addDisplay = (addRate === 0) ? '----' : addRate.toFixed(3);
 
+        const hiddenClassAttr = isExamColumnsHidden ? 'col-hidden' : '';
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-sky-50/50 transition-colors text-center';
         tr.innerHTML = `
@@ -762,8 +807,8 @@
             ${appliedRate.toFixed(3)}%
           </td>
 
-          <!-- 審査金利 (%) [小数点以下3桁・センタリング] -->
-          <td>
+          <!-- 審査金利 (%) [非表示対象] -->
+          <td class="exam-col ${hiddenClassAttr}">
             <div class="rate-input-wrapper">
               <input type="number" step="0.001" value="${examRate.toFixed(3)}" onchange="updateData(${index}, 'examRate', parseFloat(this.value)||0)"
                 class="table-input">
@@ -785,8 +830,8 @@
             ${monthlyPayment.toLocaleString()} <span class="text-[9px] font-normal text-slate-500">円</span>
           </td>
 
-          <!-- 審査返済率 (自動計算・センタリング) -->
-          <td class="font-bold text-amber-900 bg-amber-50/40">
+          <!-- 審査返済率 [非表示対象] -->
+          <td class="font-bold text-amber-900 bg-amber-50/40 exam-col ${hiddenClassAttr}">
             ${examRatio}%
           </td>
 
@@ -796,14 +841,14 @@
               class="table-input">
           </td>
 
-          <!-- 審査条件/比率上限 (センタリング) -->
-          <td>
+          <!-- 審査条件/比率上限 [非表示対象] -->
+          <td class="exam-col ${hiddenClassAttr}">
             <input type="text" value="${escapeHtml(item.examCondition)}" onchange="updateData(${index}, 'examCondition', this.value)"
               class="table-input">
           </td>
 
-          <!-- 審査取扱い (センタリング) -->
-          <td>
+          <!-- 審査取扱い [非表示対象] -->
+          <td class="exam-col ${hiddenClassAttr}">
             <select onchange="updateData(${index}, 'status', this.value)"
               class="text-[11px] font-semibold px-1.5 py-0.5 rounded border ${statusClass} focus:outline-none text-center mx-auto">
               <option value="審査可能" ${item.status === '審査可能' ? 'selected' : ''}>審査可能</option>
@@ -812,8 +857,8 @@
             </select>
           </td>
 
-          <!-- 備考 (センタリング) -->
-          <td>
+          <!-- 備考 [非表示対象] -->
+          <td class="exam-col ${hiddenClassAttr}">
             <input type="text" value="${escapeHtml(item.memo)}" onchange="updateData(${index}, 'memo', this.value)"
               class="table-input text-slate-600">
           </td>
