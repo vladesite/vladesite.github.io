@@ -1,12 +1,31 @@
 {
   "version": "3.9",
-  "exportDate": "2026-10-23T05:18:47.215Z",
+  "exportDate": "2026-10-23T06:27:55.665Z",
   "conditions": {
     "income": "820",
     "amount": "7240",
     "years": "42",
     "filterType": "all"
   },
+  "columnKeys": [
+    "name",
+    "type",
+    "baseRate",
+    "preferentialRate",
+    "addRate",
+    "appliedRate",
+    "examRate",
+    "maxYears",
+    "examYears",
+    "monthlyPayment",
+    "examRatio",
+    "checkRatio",
+    "status",
+    "cancerInsurance",
+    "examCondition",
+    "memo",
+    "action"
+  ],
   "columnWidths": [
     140,
     75,
@@ -20,29 +39,10 @@
     80,
     77,
     95,
+    103,
     98,
     226,
-    175,
     312
-  ],
-  "columnOrder": [
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    14,
-    12,
-    13,
-    15,
-    16
   ],
   "banks": [
     {
