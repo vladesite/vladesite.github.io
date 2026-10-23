@@ -280,7 +280,7 @@
 
       /* 印刷時「種別」「審査取扱い」列のパディングを極小にし、ドロップダウンの余白を削除 */
       th:nth-child(2), td:nth-child(2),
-      th:nth-child(13), td:nth-child(13) {
+      th:nth-child(15), td:nth-child(15) {
         padding: 2px 1px !important;
         text-align: center !important;
       }
@@ -494,13 +494,15 @@
               <th data-col="5" class="bg-sky-50/50 text-sky-900">適用金利<div class="resizer"></div></th>
               <th data-col="6" class="exam-col">審査金利<div class="resizer"></div></th>
               <th data-col="7">最大期間<div class="resizer"></div></th>
-              <th data-col="8" class="bg-sky-50/50 text-sky-900">月々返済額<div class="resizer"></div></th>
-              <th data-col="9" class="bg-amber-50/60 text-amber-900 exam-col">審査返済率<div class="resizer"></div></th>
-              <th data-col="10">がん団信・特約<div class="resizer"></div></th>
-              <th data-col="11" class="exam-col">審査条件/比率上限<div class="resizer"></div></th>
-              <th data-col="12" class="exam-col">審査取扱い<div class="resizer"></div></th>
-              <th data-col="13" class="exam-col">備考<div class="resizer"></div></th>
-              <th data-col="14" class="no-print" style="width: 40px;">操作</th>
+              <th data-col="8" class="exam-col">審査用返済期間<div class="resizer"></div></th>
+              <th data-col="9" class="bg-sky-50/50 text-sky-900">月々返済額<div class="resizer"></div></th>
+              <th data-col="10" class="bg-amber-50/60 text-amber-900 exam-col">審査返済率<div class="resizer"></div></th>
+              <th data-col="11" class="exam-col">返済率チェック<div class="resizer"></div></th>
+              <th data-col="12">がん団信・特約<div class="resizer"></div></th>
+              <th data-col="13" class="exam-col">審査条件/比率上限<div class="resizer"></div></th>
+              <th data-col="14" class="exam-col">審査取扱い<div class="resizer"></div></th>
+              <th data-col="15" class="exam-col">備考<div class="resizer"></div></th>
+              <th data-col="16" class="no-print" style="width: 40px;">操作</th>
             </tr>
           </thead>
           <tbody id="bank-table-body" class="divide-y divide-slate-200 text-slate-800">
@@ -541,23 +543,23 @@
 
   <script>
     // Storage Keys
-    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v13';
-    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v13';
-    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v13';
+    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v14';
+    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v14';
+    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v14';
 
-    // デフォルト列幅 (px)
-    const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 95, 80, 140, 150, 95, 170, 40];
+    // デフォルト列幅 (px) (17列分)
+    const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 75, 95, 80, 85, 140, 150, 95, 170, 40];
 
-    // 初期データ (金利は小数点以下3桁で統一)
+    // 初期データ (金利は小数点以下3桁で統一, examYears, checkRatio追加)
     const initialBankData = [
-      { id: '1', name: '三菱UFJ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.380, addRate: 0.000, examRate: 4.000, maxYears: 40, cancerInsurance: '+0.1%(満51歳未満)', examCondition: '返済比率〜40%(最低年収200万)', status: '審査可能', memo: '手数料: 借入×2.2%。WEB金消手数料なし。ZEHで金利-0.1%' },
-      { id: '2', name: 'みずほ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.375, addRate: 0.000, examRate: 3.750, maxYears: 35, cancerInsurance: '全疾病100%(+0.5%)等', examCondition: '年収300万〜(35%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。最低年収300万以上。' },
-      { id: '3', name: '三井住友銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.475, addRate: 0.000, examRate: 3.800, maxYears: 40, cancerInsurance: '+0.1%(40歳未満がん)', examCondition: '年収300万〜(30%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。36年〜は金利+0.15%' },
-      { id: '4', name: 'りそな銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.370, addRate: 0.000, examRate: 3.500, maxYears: 40, cancerInsurance: '+0.1%(46歳未満 8大)', examCondition: '原則35%(属性で40%)', status: '審査可能', memo: '手数料: 借入×2.2%+5.5万。最低年収100万。ZEH-0.01%' },
-      { id: '5', name: '三井住友信託銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.400, addRate: 0.000, examRate: 3.750, maxYears: 40, cancerInsurance: '+0.19%(41歳未満)', examCondition: '年収400万未満30%/以上40%', status: '審査可能', memo: '保証料型・手数料型選択可。全国保証付は審査金利3.605%' },
-      { id: '6', name: 'ドコモSMTBネット銀行', type: '非提携', baseRate: 3.250, preferentialRate: 0.297, addRate: 0.000, examRate: 3.250, maxYears: 50, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '年収300万〜(25%〜35%)', status: '審査可能', memo: '手数料: 借入×2.2%。41〜50年借入は金利+0.15%〜+0.2%' },
-      { id: '7', name: 'ソニー銀行', type: '非提携', baseRate: 4.025, preferentialRate: 0.397, addRate: 0.000, examRate: 4.000, maxYears: 50, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '原則35%(最低年収400万)', status: '審査可能', memo: '自己資金10%以上で金利優遇あり。完済時85歳未満' },
-      { id: '8', name: 'SBI新生銀行', type: '非提携', baseRate: 2.650, preferentialRate: 0.420, addRate: 0.000, examRate: 3.500, maxYears: 50, cancerInsurance: '+0.1%(50歳未満)', examCondition: '一律40%(最低年収300万)', status: '審査可能', memo: '事務手数料定額/定率選択可。38年〜50年は金利+0.1%' }
+      { id: '1', name: '三菱UFJ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.380, addRate: 0.000, examRate: 4.000, maxYears: 40, examYears: 35, checkRatio: 40.0, cancerInsurance: '+0.1%(満51歳未満)', examCondition: '返済比率〜40%(最低年収200万)', status: '審査可能', memo: '手数料: 借入×2.2%。WEB金消手数料なし。ZEHで金利-0.1%' },
+      { id: '2', name: 'みずほ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.375, addRate: 0.000, examRate: 3.750, maxYears: 35, examYears: 35, checkRatio: 40.0, cancerInsurance: '全疾病100%(+0.5%)等', examCondition: '年収300万〜(35%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。最低年収300万以上。' },
+      { id: '3', name: '三井住友銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.475, addRate: 0.000, examRate: 3.800, maxYears: 40, examYears: 35, checkRatio: 40.0, cancerInsurance: '+0.1%(40歳未満がん)', examCondition: '年収300万〜(30%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。36年〜は金利+0.15%' },
+      { id: '4', name: 'りそな銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.370, addRate: 0.000, examRate: 3.500, maxYears: 40, examYears: 35, checkRatio: 35.0, cancerInsurance: '+0.1%(46歳未満 8大)', examCondition: '原則35%(属性で40%)', status: '審査可能', memo: '手数料: 借入×2.2%+5.5万。最低年収100万。ZEH-0.01%' },
+      { id: '5', name: '三井住友信託銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.400, addRate: 0.000, examRate: 3.750, maxYears: 40, examYears: 35, checkRatio: 40.0, cancerInsurance: '+0.19%(41歳未満)', examCondition: '年収400万未満30%/以上40%', status: '審査可能', memo: '保証料型・手数料型選択可。全国保証付は審査金利3.605%' },
+      { id: '6', name: 'ドコモSMTBネット銀行', type: '非提携', baseRate: 3.250, preferentialRate: 0.297, addRate: 0.000, examRate: 3.250, maxYears: 50, examYears: 35, checkRatio: 35.0, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '年収300万〜(25%〜35%)', status: '審査可能', memo: '手数料: 借入×2.2%。41〜50年借入は金利+0.15%〜+0.2%' },
+      { id: '7', name: 'ソニー銀行', type: '非提携', baseRate: 4.025, preferentialRate: 0.397, addRate: 0.000, examRate: 4.000, maxYears: 50, examYears: 35, checkRatio: 35.0, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '原則35%(最低年収400万)', status: '審査可能', memo: '自己資金10%以上で金利優遇あり。完済時85歳未満' },
+      { id: '8', name: 'SBI新生銀行', type: '非提携', baseRate: 2.650, preferentialRate: 0.420, addRate: 0.000, examRate: 3.500, maxYears: 50, examYears: 35, checkRatio: 40.0, cancerInsurance: '+0.1%(50歳未満)', examCondition: '一律40%(最低年収300万)', status: '審査可能', memo: '事務手数料定額/定率選択可。38年〜50年は金利+0.1%' }
     ];
 
     let bankData = [];
@@ -728,22 +730,48 @@
         const addRate = parseFloat(item.addRate) || 0;
         const examRate = parseFloat(item.examRate) || 0;
         const maxYears = parseInt(item.maxYears) || 35;
+        // 審査用返済期間（未入力の場合は借入希望期間をデフォルトとする）
+        const examYearsVal = (item.examYears !== undefined && item.examYears !== null && !isNaN(item.examYears)) ? parseInt(item.examYears) : years;
+        const checkRatioVal = (item.checkRatio !== undefined && item.checkRatio !== null && !isNaN(item.checkRatio)) ? parseFloat(item.checkRatio) : 35.0;
 
         // 適用金利 ＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利
         const appliedRate = baseRate - preferentialRate + addRate;
         const calcYears = Math.min(years, maxYears);
 
         const monthlyPayment = calculateMonthlyPayment(principalYen, appliedRate, calcYears);
-        const examMonthlyPayment = calculateMonthlyPayment(principalYen, examRate, calcYears);
+        
+        // 審査返済率は「審査金利」と「審査用返済期間」で計算
+        const examMonthlyPayment = calculateMonthlyPayment(principalYen, examRate, examYearsVal);
         const examAnnualPayment = examMonthlyPayment * 12;
         const incomeYen = income * 10000;
         const examRatio = incomeYen > 0 ? ((examAnnualPayment / incomeYen) * 100).toFixed(2) : '0.00';
+
+        // 審査取扱い（審査返済率と返済率チェックに基づく自動判定ロジック）
+        // 審査返済率が返済率チェックよりプラス5.0%未満 -> 審査未定
+        // プラス5.0%以上 -> 審査不可
+        // それ以外（以下） -> 審査可能
+        const numExamRatio = parseFloat(examRatio);
+        let autoStatus = '審査可能';
+        if (numExamRatio > checkRatioVal) {
+          if (numExamRatio < checkRatioVal + 5.0) {
+            autoStatus = '審査未定';
+          } else {
+            autoStatus = '審査不可';
+          }
+        }
+
+        // ユーザーが明示的にプルダウン変更していない、または条件変更時に自動適用
+        const conditionSignature = `${income}_${amount}_${years}_${examRate}_${examYearsVal}_${checkRatioVal}`;
+        if (!item.status || item._lastSig !== conditionSignature) {
+          item.status = autoStatus;
+          item._lastSig = conditionSignature;
+        }
 
         let statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
         if (item.status === '審査未定') statusClass = 'bg-amber-50 text-amber-700 border-amber-200';
         if (item.status === '審査不可') statusClass = 'bg-rose-50 text-rose-700 border-rose-200';
 
-        // 種別が「非提携」の場合はピンク色の背景にする（指示対応）
+        // 種別が「非提携」の場合はピンク色の背景にする
         let typeSelectClass = 'w-full border rounded px-0.5 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-sky-500 ';
         if (item.type === '非提携') {
           typeSelectClass += 'bg-pink-100 text-pink-900 border-pink-300 font-bold';
@@ -774,7 +802,7 @@
             </select>
           </td>
 
-          <!-- 基準金利 (%) [小数点以下3桁・センタリング] -->
+          <!-- 基準金利 (%) -->
           <td>
             <div class="rate-input-wrapper">
               <input type="number" step="0.001" value="${baseRate.toFixed(3)}" onchange="updateData(${index}, 'baseRate', parseFloat(this.value)||0)"
@@ -783,7 +811,7 @@
             </div>
           </td>
 
-          <!-- 優遇金利幅 (%) [0の場合は----表示・赤字・太字・▲付き] -->
+          <!-- 優遇金利幅 (%) -->
           <td>
             <div class="advantage-input-wrapper">
               <span class="advantage-symbol">▲</span>
@@ -793,7 +821,7 @@
             </div>
           </td>
 
-          <!-- 上乗せ金利 (%) [0の場合は----表示] -->
+          <!-- 上乗せ金利 (%) -->
           <td>
             <div class="rate-input-wrapper">
               <input type="text" inputmode="decimal" value="${addDisplay}" onchange="updateRateData(${index}, 'addRate', this.value)"
@@ -802,7 +830,7 @@
             </div>
           </td>
 
-          <!-- 適用金利 (自動計算・小数点以下3桁・センタリング) -->
+          <!-- 適用金利 -->
           <td class="font-bold text-sky-800 bg-sky-50/40">
             ${appliedRate.toFixed(3)}%
           </td>
@@ -816,7 +844,7 @@
             </div>
           </td>
 
-          <!-- 最大期間 (センタリング) -->
+          <!-- 最大期間 -->
           <td>
             <div class="year-input-wrapper">
               <input type="number" value="${maxYears}" onchange="updateData(${index}, 'maxYears', parseInt(this.value)||35)"
@@ -825,7 +853,16 @@
             </div>
           </td>
 
-          <!-- 月々返済額 (自動計算・センタリング) -->
+          <!-- 審査用返済期間 [非表示対象] -->
+          <td class="exam-col ${hiddenClassAttr}">
+            <div class="year-input-wrapper">
+              <input type="number" value="${examYearsVal}" onchange="updateData(${index}, 'examYears', parseInt(this.value)||35)"
+                class="table-input">
+              <span class="year-symbol">年</span>
+            </div>
+          </td>
+
+          <!-- 月々返済額 -->
           <td class="font-bold text-slate-900 bg-sky-50/40">
             ${monthlyPayment.toLocaleString()} <span class="text-[9px] font-normal text-slate-500">円</span>
           </td>
@@ -835,7 +872,16 @@
             ${examRatio}%
           </td>
 
-          <!-- がん団信・特約 (センタリング) -->
+          <!-- 返済率チェック [非表示対象] -->
+          <td class="exam-col ${hiddenClassAttr}">
+            <div class="rate-input-wrapper">
+              <input type="number" step="0.1" value="${checkRatioVal.toFixed(1)}" onchange="updateData(${index}, 'checkRatio', parseFloat(this.value)||0)"
+                class="table-input">
+              <span class="percent-symbol">%</span>
+            </div>
+          </td>
+
+          <!-- がん団信・特約 -->
           <td>
             <input type="text" value="${escapeHtml(item.cancerInsurance)}" onchange="updateData(${index}, 'cancerInsurance', this.value)"
               class="table-input">
@@ -849,7 +895,7 @@
 
           <!-- 審査取扱い [非表示対象] -->
           <td class="exam-col ${hiddenClassAttr}">
-            <select onchange="updateData(${index}, 'status', this.value)"
+            <select onchange="updateStatusManual(${index}, this.value)"
               class="text-[11px] font-semibold px-1.5 py-0.5 rounded border ${statusClass} focus:outline-none text-center mx-auto">
               <option value="審査可能" ${item.status === '審査可能' ? 'selected' : ''}>審査可能</option>
               <option value="審査未定" ${item.status === '審査未定' ? 'selected' : ''}>審査未定</option>
@@ -896,6 +942,14 @@
       renderTable();
     }
 
+    // プルダウンでの手動ステータス変更時（自動上書きシグネチャを無効化して保持）
+    function updateStatusManual(index, value) {
+      bankData[index].status = value;
+      bankData[index]._lastSig = 'manual_' + Date.now();
+      saveToStorage();
+      renderTable();
+    }
+
     // 優遇金利幅・上乗せ金利専用の更新（"----"や空文字対応）
     function updateRateData(index, field, value) {
       const valStr = String(value).trim();
@@ -925,6 +979,8 @@
         addRate: 0.000,
         examRate: 3.500,
         maxYears: 35,
+        examYears: 35,
+        checkRatio: 35.0,
         cancerInsurance: 'なし',
         examCondition: '返済比率 35%以内',
         status: '審査可能',
@@ -991,7 +1047,7 @@
     // JSON エクスポート
     function exportJSON() {
       const exportObject = {
-        version: '3.7',
+        version: '3.8',
         exportDate: new Date().toISOString(),
         conditions: {
           income: document.getElementById('input-income').value,
