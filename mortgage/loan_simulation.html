@@ -47,6 +47,10 @@
       -webkit-user-select: none;
       background-color: #f8fafc;
       text-align: center !important;
+      cursor: grab;
+    }
+    .resizable-table th:active {
+      cursor: grabbing;
     }
 
     /* 列幅調整用のリサイザー */
@@ -278,13 +282,6 @@
         font-size: 8.5pt !important;
       }
 
-      /* 印刷時「種別」「審査取扱い」列のパディングを極小にし、ドロップダウンの余白を削除 */
-      th:nth-child(2), td:nth-child(2),
-      th:nth-child(15), td:nth-child(15) {
-        padding: 2px 1px !important;
-        text-align: center !important;
-      }
-
       select {
         border: none !important;
         background: transparent !important;
@@ -473,7 +470,7 @@
           <span id="bank-count-badge" class="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-sky-50 text-sky-700 rounded-full border border-sky-100">0件</span>
         </div>
         <div class="no-print flex items-center space-x-2">
-          <span class="text-[11px] text-slate-400 hidden lg:inline">※ ヘッダーの境界線をドラッグして幅を調節可能です</span>
+          <span class="text-[11px] text-slate-400 hidden lg:inline">※ ヘッダーをドラッグ＆ドロップして列の順序を変更、境界線ドラッグで幅を調節可能です</span>
           <button onclick="addRow()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>金融機関を追加</span>
@@ -485,24 +482,8 @@
       <div class="table-scroll overflow-x-auto">
         <table id="mortgage-table" class="resizable-table text-center">
           <thead>
-            <tr class="bg-slate-100/90 text-slate-700 font-bold border-b border-slate-200">
-              <th data-col="0">金融機関名<div class="resizer"></div></th>
-              <th data-col="1">種別<div class="resizer"></div></th>
-              <th data-col="2">基準金利<div class="resizer"></div></th>
-              <th data-col="3" class="text-rose-600 font-bold">優遇金利幅<div class="resizer"></div></th>
-              <th data-col="4">上乗せ金利<div class="resizer"></div></th>
-              <th data-col="5" class="bg-sky-50/50 text-sky-900">適用金利<div class="resizer"></div></th>
-              <th data-col="6" class="exam-col">審査金利<div class="resizer"></div></th>
-              <th data-col="7">最大期間<div class="resizer"></div></th>
-              <th data-col="8" class="exam-col">審査用返済期間<div class="resizer"></div></th>
-              <th data-col="9" class="bg-sky-50/50 text-sky-900">月々返済額<div class="resizer"></div></th>
-              <th data-col="10" class="bg-amber-50/60 text-amber-900 exam-col">審査返済率<div class="resizer"></div></th>
-              <th data-col="11" class="exam-col">返済率チェック<div class="resizer"></div></th>
-              <th data-col="12">がん団信・特約<div class="resizer"></div></th>
-              <th data-col="13" class="exam-col">審査条件/比率上限<div class="resizer"></div></th>
-              <th data-col="14" class="exam-col">審査取扱い<div class="resizer"></div></th>
-              <th data-col="15" class="exam-col">備考<div class="resizer"></div></th>
-              <th data-col="16" class="no-print" style="width: 40px;">操作</th>
+            <tr id="table-header-row" class="bg-slate-100/90 text-slate-700 font-bold border-b border-slate-200">
+              <!-- Dynamic JS Injection based on columnOrder -->
             </tr>
           </thead>
           <tbody id="bank-table-body" class="divide-y divide-slate-200 text-slate-800">
@@ -543,14 +524,18 @@
 
   <script>
     // Storage Keys
-    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v14';
-    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v14';
-    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v14';
+    const STORAGE_KEY_DATA = 'mortgage_simulator_banks_v15';
+    const STORAGE_KEY_CONDITIONS = 'mortgage_simulator_conditions_v15';
+    const STORAGE_KEY_COL_WIDTHS = 'mortgage_simulator_col_widths_v15';
+    const STORAGE_KEY_COL_ORDER = 'mortgage_simulator_col_order_v15';
 
     // デフォルト列幅 (px) (17列分)
     const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 75, 95, 80, 85, 140, 150, 95, 170, 40];
+    
+    // 列のデフォルト並び順 (0〜16)
+    let columnOrder = Array.from({length: 17}, (_, i) => i);
 
-    // 初期データ (金利は小数点以下3桁で統一, examYears, checkRatio追加)
+    // 初期データ (金利は小数点以下3桁で統一)
     const initialBankData = [
       { id: '1', name: '三菱UFJ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.380, addRate: 0.000, examRate: 4.000, maxYears: 40, examYears: 35, checkRatio: 40.0, cancerInsurance: '+0.1%(満51歳未満)', examCondition: '返済比率〜40%(最低年収200万)', status: '審査可能', memo: '手数料: 借入×2.2%。WEB金消手数料なし。ZEHで金利-0.1%' },
       { id: '2', name: 'みずほ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.375, addRate: 0.000, examRate: 3.750, maxYears: 35, examYears: 35, checkRatio: 40.0, cancerInsurance: '全疾病100%(+0.5%)等', examCondition: '年収300万〜(35%〜45%)', status: '審査可能', memo: '手数料: 借入×2.2%。最低年収300万以上。' },
@@ -565,6 +550,7 @@
     let bankData = [];
     let columnWidths = [...defaultColumnWidths];
     let isExamColumnsHidden = false; // 一般閲覧モード（審査項目非表示）の状態管理
+    let draggedColIndex = null;
 
     // 一般閲覧モード切替用関数
     function toggleExamColumns() {
@@ -599,12 +585,13 @@
         };
         localStorage.setItem(STORAGE_KEY_CONDITIONS, JSON.stringify(conditions));
         localStorage.setItem(STORAGE_KEY_COL_WIDTHS, JSON.stringify(columnWidths));
+        localStorage.setItem(STORAGE_KEY_COL_ORDER, JSON.stringify(columnOrder));
       } catch (e) {
         console.error('Storage Save Error:', e);
       }
     }
 
-    // LocalStorageからの復元（オフライン時などのバックアップ用）
+    // LocalStorageからの復元
     function loadFromStorageLocally() {
       try {
         const savedData = localStorage.getItem(STORAGE_KEY_DATA);
@@ -622,6 +609,11 @@
         const savedWidths = localStorage.getItem(STORAGE_KEY_COL_WIDTHS);
         if (savedWidths) {
           columnWidths = JSON.parse(savedWidths);
+        }
+
+        const savedOrder = localStorage.getItem(STORAGE_KEY_COL_ORDER);
+        if (savedOrder) {
+          columnOrder = JSON.parse(savedOrder);
         }
       } catch (e) {
         console.error('Storage Load Error:', e);
@@ -683,7 +675,13 @@
           const dx = currentX - x;
           const newWidth = Math.max(40, w + dx);
           th.style.width = `${newWidth}px`;
-          columnWidths[colIndex] = newWidth;
+          
+          // columnOrder 上のインデックスに対応する columnWidths を更新
+          const thElements = Array.from(table.querySelectorAll('th'));
+          const currentRenderIdx = thElements.indexOf(th);
+          if (currentRenderIdx !== -1) {
+            columnWidths[currentRenderIdx] = newWidth;
+          }
         };
 
         const onMouseUp = () => {
@@ -701,17 +699,96 @@
       });
     }
 
+    // 列のドラッグ＆ドロップ並び替えロジック
+    function initColumnDragDrop() {
+      const thList = document.querySelectorAll('#mortgage-table thead th');
+
+      thList.forEach((th) => {
+        if (th.classList.contains('no-print')) return; // 操作列はドラッグ対象外
+
+        th.setAttribute('draggable', 'true');
+
+        th.addEventListener('dragstart', (e) => {
+          draggedColIndex = parseInt(th.getAttribute('data-col'));
+          e.dataTransfer.effectAllowed = 'move';
+          th.classList.add('opacity-50');
+        });
+
+        th.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        });
+
+        th.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const targetColIndex = parseInt(th.getAttribute('data-col'));
+          if (draggedColIndex === null || draggedColIndex === targetColIndex) return;
+
+          const fromPos = columnOrder.indexOf(draggedColIndex);
+          const toPos = columnOrder.indexOf(targetColIndex);
+
+          if (fromPos !== -1 && toPos !== -1) {
+            const moved = columnOrder.splice(fromPos, 1)[0];
+            columnOrder.splice(toPos, 0, moved);
+
+            const movedWidth = columnWidths.splice(fromPos, 1)[0];
+            columnWidths.splice(toPos, 0, movedWidth);
+
+            saveToStorage();
+            renderTable();
+          }
+        });
+
+        th.addEventListener('dragend', () => {
+          thList.forEach(h => h.classList.remove('opacity-50'));
+          draggedColIndex = null;
+        });
+      });
+    }
+
     // 列幅リセット
     function resetColumnWidths() {
       columnWidths = [...defaultColumnWidths];
+      columnOrder = Array.from({length: 17}, (_, i) => i);
       applyColumnWidths();
       saveToStorage();
+      renderTable();
     }
 
     // テーブルの表示レンダリング
     function renderTable() {
+      const theadRow = document.getElementById('table-header-row');
       const tbody = document.getElementById('bank-table-body');
+      theadRow.innerHTML = '';
       tbody.innerHTML = '';
+
+      // 全ヘッダーの定義マップ
+      const headerHtmls = {
+        0: `<th data-col="0">金融機関名<div class="resizer"></div></th>`,
+        1: `<th data-col="1">種別<div class="resizer"></div></th>`,
+        2: `<th data-col="2">基準金利<div class="resizer"></div></th>`,
+        3: `<th data-col="3" class="text-rose-600 font-bold">優遇金利幅<div class="resizer"></div></th>`,
+        4: `<th data-col="4">上乗せ金利<div class="resizer"></div></th>`,
+        5: `<th data-col="5" class="bg-sky-50/50 text-sky-900">適用金利<div class="resizer"></div></th>`,
+        6: `<th data-col="6" class="exam-col">審査金利<div class="resizer"></div></th>`,
+        7: `<th data-col="7">最大期間<div class="resizer"></div></th>`,
+        8: `<th data-col="8" class="exam-col">審査用返済期間<div class="resizer"></div></th>`,
+        9: `<th data-col="9" class="bg-sky-50/50 text-sky-900">月々返済額<div class="resizer"></div></th>`,
+        10: `<th data-col="10" class="bg-amber-50/60 text-amber-900 exam-col">審査返済率<div class="resizer"></div></th>`,
+        11: `<th data-col="11" class="exam-col">返済率チェック<div class="resizer"></div></th>`,
+        12: `<th data-col="12">がん団信・特約<div class="resizer"></div></th>`,
+        13: `<th data-col="13" class="exam-col">審査条件/比率上限<div class="resizer"></div></th>`,
+        14: `<th data-col="14" class="exam-col">審査取扱い<div class="resizer"></div></th>`,
+        15: `<th data-col="15" class="exam-col">備考<div class="resizer"></div></th>`,
+        16: `<th data-col="16" class="no-print" style="width: 40px;">操作</th>`
+      };
+
+      // ヘッダーを columnOrder に従って描画
+      let headerHtml = '';
+      columnOrder.forEach(colId => {
+        headerHtml += headerHtmls[colId];
+      });
+      theadRow.innerHTML = headerHtml;
 
       const filterType = document.getElementById('input-type').value;
       const income = Math.max(0, parseFloat(document.getElementById('input-income').value) || 0);
@@ -726,41 +803,37 @@
         visibleCount++;
 
         const baseRate = parseFloat(item.baseRate) || 0;
-        const preferentialRate = parseFloat(item.preferentialRate) || 0; // 優遇金利幅
+        const preferentialRate = parseFloat(item.preferentialRate) || 0;
         const addRate = parseFloat(item.addRate) || 0;
         const examRate = parseFloat(item.examRate) || 0;
         const maxYears = parseInt(item.maxYears) || 35;
-        // 審査用返済期間（未入力の場合は借入希望期間をデフォルトとする）
         const examYearsVal = (item.examYears !== undefined && item.examYears !== null && !isNaN(item.examYears)) ? parseInt(item.examYears) : years;
         const checkRatioVal = (item.checkRatio !== undefined && item.checkRatio !== null && !isNaN(item.checkRatio)) ? parseFloat(item.checkRatio) : 35.0;
 
-        // 適用金利 ＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利
         const appliedRate = baseRate - preferentialRate + addRate;
         const calcYears = Math.min(years, maxYears);
 
         const monthlyPayment = calculateMonthlyPayment(principalYen, appliedRate, calcYears);
-        
-        // 審査返済率は「審査金利」と「審査用返済期間」で計算
         const examMonthlyPayment = calculateMonthlyPayment(principalYen, examRate, examYearsVal);
         const examAnnualPayment = examMonthlyPayment * 12;
         const incomeYen = income * 10000;
         const examRatio = incomeYen > 0 ? ((examAnnualPayment / incomeYen) * 100).toFixed(2) : '0.00';
 
-        // 審査取扱い（審査返済率と返済率チェックに基づく自動判定ロジック）
-        // 審査返済率が返済率チェックよりプラス5.0%未満 -> 審査未定
+        // 自動判定ロジック:
+        // 「審査返済率」が「返済率チェック」よりプラス5.0%未満 -> 審査未定
         // プラス5.0%以上 -> 審査不可
         // それ以外（以下） -> 審査可能
         const numExamRatio = parseFloat(examRatio);
+        const diff = numExamRatio - checkRatioVal;
         let autoStatus = '審査可能';
-        if (numExamRatio > checkRatioVal) {
-          if (numExamRatio < checkRatioVal + 5.0) {
+        if (diff > 0) {
+          if (diff < 5.0) {
             autoStatus = '審査未定';
           } else {
             autoStatus = '審査不可';
           }
         }
 
-        // ユーザーが明示的にプルダウン変更していない、または条件変更時に自動適用
         const conditionSignature = `${income}_${amount}_${years}_${examRate}_${examYearsVal}_${checkRatioVal}`;
         if (!item.status || item._lastSig !== conditionSignature) {
           item.status = autoStatus;
@@ -771,7 +844,6 @@
         if (item.status === '審査未定') statusClass = 'bg-amber-50 text-amber-700 border-amber-200';
         if (item.status === '審査不可') statusClass = 'bg-rose-50 text-rose-700 border-rose-200';
 
-        // 種別が「非提携」の場合はピンク色の背景にする
         let typeSelectClass = 'w-full border rounded px-0.5 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-sky-500 ';
         if (item.type === '非提携') {
           typeSelectClass += 'bg-pink-100 text-pink-900 border-pink-300 font-bold';
@@ -779,148 +851,47 @@
           typeSelectClass += 'bg-slate-100/80 border-slate-200 text-slate-800';
         }
 
-        // 優遇金利幅および上乗せ金利が 0 または 0.000 の場合の表示文字列 ("----" 対応)
         const prefDisplay = (preferentialRate === 0) ? '----' : preferentialRate.toFixed(3);
         const addDisplay = (addRate === 0) ? '----' : addRate.toFixed(3);
-
         const hiddenClassAttr = isExamColumnsHidden ? 'col-hidden' : '';
+
+        // 各セルのHTMLマップ
+        const cellHtmls = {
+          0: `<td><input type="text" value="${escapeHtml(item.name)}" onchange="updateData(${index}, 'name', this.value)" class="table-input font-bold text-slate-900 text-center"></td>`,
+          1: `<td><select onchange="updateData(${index}, 'type', this.value)" class="${typeSelectClass}"><option value="提携" ${item.type === '提携' ? 'selected' : ''}>提携</option><option value="非提携" ${item.type === '非提携' ? 'selected' : ''}>非提携</option></select></td>`,
+          2: `<td><div class="rate-input-wrapper"><input type="number" step="0.001" value="${baseRate.toFixed(3)}" onchange="updateData(${index}, 'baseRate', parseFloat(this.value)||0)" class="table-input"><span class="percent-symbol">%</span></div></td>`,
+          3: `<td><div class="advantage-input-wrapper"><span class="advantage-symbol">▲</span><input type="text" inputmode="decimal" value="${prefDisplay}" onchange="updateRateData(${index}, 'preferentialRate', this.value)" class="table-input font-bold text-rose-600"><span class="percent-symbol">%</span></div></td>`,
+          4: `<td><div class="rate-input-wrapper"><input type="text" inputmode="decimal" value="${addDisplay}" onchange="updateRateData(${index}, 'addRate', this.value)" class="table-input"><span class="percent-symbol">%</span></div></td>`,
+          5: `<td class="font-bold text-sky-800 bg-sky-50/40">${appliedRate.toFixed(3)}%</td>`,
+          6: `<td class="exam-col ${hiddenClassAttr}"><div class="rate-input-wrapper"><input type="number" step="0.001" value="${examRate.toFixed(3)}" onchange="updateData(${index}, 'examRate', parseFloat(this.value)||0)" class="table-input"><span class="percent-symbol">%</span></div></td>`,
+          7: `<td><div class="year-input-wrapper"><input type="number" value="${maxYears}" onchange="updateData(${index}, 'maxYears', parseInt(this.value)||35)" class="table-input"><span class="year-symbol">年</span></div></td>`,
+          8: `<td class="exam-col ${hiddenClassAttr}"><div class="year-input-wrapper"><input type="number" value="${examYearsVal}" onchange="updateData(${index}, 'examYears', parseInt(this.value)||35)" class="table-input"><span class="year-symbol">年</span></div></td>`,
+          9: `<td class="font-bold text-slate-900 bg-sky-50/40">${monthlyPayment.toLocaleString()} <span class="text-[9px] font-normal text-slate-500">円</span></td>`,
+          10: `<td class="font-bold text-amber-900 bg-amber-50/40 exam-col ${hiddenClassAttr}">${examRatio}%</td>`,
+          11: `<td class="exam-col ${hiddenClassAttr}"><div class="rate-input-wrapper"><input type="number" step="0.1" value="${checkRatioVal.toFixed(1)}" onchange="updateData(${index}, 'checkRatio', parseFloat(this.value)||0)" class="table-input"><span class="percent-symbol">%</span></div></td>`,
+          12: `<td><input type="text" value="${escapeHtml(item.cancerInsurance)}" onchange="updateData(${index}, 'cancerInsurance', this.value)" class="table-input"></td>`,
+          13: `<td class="exam-col ${hiddenClassAttr}"><input type="text" value="${escapeHtml(item.examCondition)}" onchange="updateData(${index}, 'examCondition', this.value)" class="table-input"></td>`,
+          14: `<td class="exam-col ${hiddenClassAttr}"><select onchange="updateStatusManual(${index}, this.value)" class="text-[11px] font-semibold px-1.5 py-0.5 rounded border ${statusClass} focus:outline-none text-center mx-auto"><option value="審査可能" ${item.status === '審査可能' ? 'selected' : ''}>審査可能</option><option value="審査未定" ${item.status === '審査未定' ? 'selected' : ''}>審査未定</option><option value="審査不可" ${item.status === '審査不可' ? 'selected' : ''}>審査不可</option></select></td>`,
+          15: `<td class="exam-col ${hiddenClassAttr}"><input type="text" value="${escapeHtml(item.memo)}" onchange="updateData(${index}, 'memo', this.value)" class="table-input text-slate-600"></td>`,
+          16: `<td class="text-center no-print"><button onclick="confirmRemoveRow(${index})" class="text-slate-400 hover:text-rose-600 p-0.5 rounded hover:bg-slate-100 transition" title="この行を削除"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td>`
+        };
+
+        // columnOrder に従ってセルを結合
+        let rowHtml = '';
+        columnOrder.forEach(colId => {
+          rowHtml += cellHtmls[colId];
+        });
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-sky-50/50 transition-colors text-center';
-        tr.innerHTML = `
-          <!-- 金融機関名 (Sticky列) -->
-          <td>
-            <input type="text" value="${escapeHtml(item.name)}" onchange="updateData(${index}, 'name', this.value)"
-              class="table-input font-bold text-slate-900 text-center">
-          </td>
-
-          <!-- 種別 (非提携の場合はピンク色) -->
-          <td>
-            <select onchange="updateData(${index}, 'type', this.value)" class="${typeSelectClass}">
-              <option value="提携" ${item.type === '提携' ? 'selected' : ''}>提携</option>
-              <option value="非提携" ${item.type === '非提携' ? 'selected' : ''}>非提携</option>
-            </select>
-          </td>
-
-          <!-- 基準金利 (%) -->
-          <td>
-            <div class="rate-input-wrapper">
-              <input type="number" step="0.001" value="${baseRate.toFixed(3)}" onchange="updateData(${index}, 'baseRate', parseFloat(this.value)||0)"
-                class="table-input">
-              <span class="percent-symbol">%</span>
-            </div>
-          </td>
-
-          <!-- 優遇金利幅 (%) -->
-          <td>
-            <div class="advantage-input-wrapper">
-              <span class="advantage-symbol">▲</span>
-              <input type="text" inputmode="decimal" value="${prefDisplay}" onchange="updateRateData(${index}, 'preferentialRate', this.value)"
-                class="table-input font-bold text-rose-600">
-              <span class="percent-symbol">%</span>
-            </div>
-          </td>
-
-          <!-- 上乗せ金利 (%) -->
-          <td>
-            <div class="rate-input-wrapper">
-              <input type="text" inputmode="decimal" value="${addDisplay}" onchange="updateRateData(${index}, 'addRate', this.value)"
-                class="table-input">
-              <span class="percent-symbol">%</span>
-            </div>
-          </td>
-
-          <!-- 適用金利 -->
-          <td class="font-bold text-sky-800 bg-sky-50/40">
-            ${appliedRate.toFixed(3)}%
-          </td>
-
-          <!-- 審査金利 (%) [非表示対象] -->
-          <td class="exam-col ${hiddenClassAttr}">
-            <div class="rate-input-wrapper">
-              <input type="number" step="0.001" value="${examRate.toFixed(3)}" onchange="updateData(${index}, 'examRate', parseFloat(this.value)||0)"
-                class="table-input">
-              <span class="percent-symbol">%</span>
-            </div>
-          </td>
-
-          <!-- 最大期間 -->
-          <td>
-            <div class="year-input-wrapper">
-              <input type="number" value="${maxYears}" onchange="updateData(${index}, 'maxYears', parseInt(this.value)||35)"
-                class="table-input">
-              <span class="year-symbol">年</span>
-            </div>
-          </td>
-
-          <!-- 審査用返済期間 [非表示対象] -->
-          <td class="exam-col ${hiddenClassAttr}">
-            <div class="year-input-wrapper">
-              <input type="number" value="${examYearsVal}" onchange="updateData(${index}, 'examYears', parseInt(this.value)||35)"
-                class="table-input">
-              <span class="year-symbol">年</span>
-            </div>
-          </td>
-
-          <!-- 月々返済額 -->
-          <td class="font-bold text-slate-900 bg-sky-50/40">
-            ${monthlyPayment.toLocaleString()} <span class="text-[9px] font-normal text-slate-500">円</span>
-          </td>
-
-          <!-- 審査返済率 [非表示対象] -->
-          <td class="font-bold text-amber-900 bg-amber-50/40 exam-col ${hiddenClassAttr}">
-            ${examRatio}%
-          </td>
-
-          <!-- 返済率チェック [非表示対象] -->
-          <td class="exam-col ${hiddenClassAttr}">
-            <div class="rate-input-wrapper">
-              <input type="number" step="0.1" value="${checkRatioVal.toFixed(1)}" onchange="updateData(${index}, 'checkRatio', parseFloat(this.value)||0)"
-                class="table-input">
-              <span class="percent-symbol">%</span>
-            </div>
-          </td>
-
-          <!-- がん団信・特約 -->
-          <td>
-            <input type="text" value="${escapeHtml(item.cancerInsurance)}" onchange="updateData(${index}, 'cancerInsurance', this.value)"
-              class="table-input">
-          </td>
-
-          <!-- 審査条件/比率上限 [非表示対象] -->
-          <td class="exam-col ${hiddenClassAttr}">
-            <input type="text" value="${escapeHtml(item.examCondition)}" onchange="updateData(${index}, 'examCondition', this.value)"
-              class="table-input">
-          </td>
-
-          <!-- 審査取扱い [非表示対象] -->
-          <td class="exam-col ${hiddenClassAttr}">
-            <select onchange="updateStatusManual(${index}, this.value)"
-              class="text-[11px] font-semibold px-1.5 py-0.5 rounded border ${statusClass} focus:outline-none text-center mx-auto">
-              <option value="審査可能" ${item.status === '審査可能' ? 'selected' : ''}>審査可能</option>
-              <option value="審査未定" ${item.status === '審査未定' ? 'selected' : ''}>審査未定</option>
-              <option value="審査不可" ${item.status === '審査不可' ? 'selected' : ''}>審査不可</option>
-            </select>
-          </td>
-
-          <!-- 備考 [非表示対象] -->
-          <td class="exam-col ${hiddenClassAttr}">
-            <input type="text" value="${escapeHtml(item.memo)}" onchange="updateData(${index}, 'memo', this.value)"
-              class="table-input text-slate-600">
-          </td>
-
-          <!-- 操作 -->
-          <td class="text-center no-print">
-            <button onclick="confirmRemoveRow(${index})" class="text-slate-400 hover:text-rose-600 p-0.5 rounded hover:bg-slate-100 transition" title="この行を削除">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            </button>
-          </td>
-        `;
+        tr.innerHTML = rowHtml;
         tbody.appendChild(tr);
       });
 
       document.getElementById('bank-count-badge').innerText = `${visibleCount}件`;
       applyColumnWidths();
+      initColumnResizer();
+      initColumnDragDrop();
       lucide.createIcons();
     }
 
@@ -942,7 +913,7 @@
       renderTable();
     }
 
-    // プルダウンでの手動ステータス変更時（自動上書きシグネチャを無効化して保持）
+    // プルダウンでの手動ステータス変更時
     function updateStatusManual(index, value) {
       bankData[index].status = value;
       bankData[index]._lastSig = 'manual_' + Date.now();
@@ -950,7 +921,7 @@
       renderTable();
     }
 
-    // 優遇金利幅・上乗せ金利専用の更新（"----"や空文字対応）
+    // 優遇金利幅・上乗せ金利専用の更新
     function updateRateData(index, field, value) {
       const valStr = String(value).trim();
       if (valStr === '' || valStr === '----' || isNaN(valStr)) {
@@ -1035,6 +1006,7 @@
       showModal('データの初期化', '全ての入力・編集データを初期状態に戻しますか？', () => {
         bankData = JSON.parse(JSON.stringify(initialBankData));
         columnWidths = [...defaultColumnWidths];
+        columnOrder = Array.from({length: 17}, (_, i) => i);
         document.getElementById('input-income').value = 800;
         document.getElementById('input-amount').value = 7000;
         document.getElementById('input-years').value = 35;
@@ -1047,7 +1019,7 @@
     // JSON エクスポート
     function exportJSON() {
       const exportObject = {
-        version: '3.8',
+        version: '3.9',
         exportDate: new Date().toISOString(),
         conditions: {
           income: document.getElementById('input-income').value,
@@ -1056,6 +1028,7 @@
           filterType: document.getElementById('input-type').value
         },
         columnWidths: columnWidths,
+        columnOrder: columnOrder,
         banks: bankData
       };
 
@@ -1082,6 +1055,9 @@
             if (imported.columnWidths && Array.isArray(imported.columnWidths)) {
               columnWidths = imported.columnWidths;
             }
+            if (imported.columnOrder && Array.isArray(imported.columnOrder)) {
+              columnOrder = imported.columnOrder;
+            }
             if (imported.conditions) {
               if (imported.conditions.income !== undefined) document.getElementById('input-income').value = imported.conditions.income;
               if (imported.conditions.amount !== undefined) document.getElementById('input-amount').value = imported.conditions.amount;
@@ -1102,12 +1078,11 @@
       event.target.value = '';
     }
 
-    // 初期化ロード（Webアクセス時に指定URLからJSONを初自動取得）
+    // 初期化ロード
     window.onload = async function() {
       const now = new Date();
       document.getElementById('print-date').innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
 
-      // ローカルストレージにまだデータがない初回起動時のみ、指定URLからJSONを取得
       if (!localStorage.getItem(STORAGE_KEY_DATA)) {
         try {
           const response = await fetch('https://vladesite.github.io/mortgage/mortgage_setting_update.json');
@@ -1117,6 +1092,9 @@
               bankData = imported.banks;
               if (imported.columnWidths && Array.isArray(imported.columnWidths)) {
                 columnWidths = imported.columnWidths;
+              }
+              if (imported.columnOrder && Array.isArray(imported.columnOrder)) {
+                columnOrder = imported.columnOrder;
               }
               if (imported.conditions) {
                 if (imported.conditions.income !== undefined) document.getElementById('input-income').value = imported.conditions.income;
@@ -1139,9 +1117,7 @@
         loadFromStorageLocally();
       }
 
-      initColumnResizer();
       renderTable();
-      lucide.createIcons();
     };
   </script>
 </body>
