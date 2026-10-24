@@ -1,6 +1,6 @@
 {
   "version": "3.9",
-  "exportDate": "2026-10-24T03:28:19.088Z",
+  "exportDate": "2026-10-24T03:38:57.944Z",
   "conditions": {
     "income": "820",
     "amount": "7240",
@@ -40,7 +40,7 @@
     77,
     95,
     103,
-    98,
+    237,
     226,
     312
   ],
@@ -56,32 +56,14 @@
       "maxYears": 40,
       "cancerInsurance": "+0.1%(満51歳未満)",
       "examCondition": "一律40%(最低年収200万)",
-      "status": "審査未定",
+      "status": "審査可能",
       "memo": "ZEHで金利-0.1%。手数料: 借入×2.2%。WEB金消手数料なし。",
       "examYears": 40,
       "examCheckRate": 40,
       "examLimit": 40,
-      "_lastSig": "820_7240_41_4_40_40",
+      "_lastSig": "820_7240_42_4_40_40",
       "checkRatio": 40,
       "isManualStatus": true
-    },
-    {
-      "id": "3",
-      "name": "三井住友銀行",
-      "type": "提携",
-      "baseRate": 3.375,
-      "preferentialRate": 1,
-      "addRate": 0,
-      "examRate": 3.8,
-      "maxYears": 40,
-      "cancerInsurance": "+0.1%(40歳未満がん)",
-      "examCondition": "年収300万〜(30%〜45%)",
-      "status": "審査可能",
-      "memo": "36年〜は金利+0.15%。手数料: 借入×2.2%。",
-      "examYears": 40,
-      "examLimit": 45,
-      "_lastSig": "820_7240_41_3.8_40_45",
-      "checkRatio": 45
     },
     {
       "id": "2",
@@ -98,7 +80,25 @@
       "memo": "手数料: 借入×2.2%。最低年収300万以上。",
       "examYears": 35,
       "examLimit": 45,
-      "_lastSig": "820_7240_41_3.75_35_45",
+      "_lastSig": "820_7240_42_3.75_35_45",
+      "checkRatio": 45
+    },
+    {
+      "id": "3",
+      "name": "三井住友銀行",
+      "type": "提携",
+      "baseRate": 3.375,
+      "preferentialRate": 1,
+      "addRate": 0,
+      "examRate": 3.8,
+      "maxYears": 40,
+      "cancerInsurance": "+0.1%(40歳未満がん)",
+      "examCondition": "年収300万〜(30%〜45%)",
+      "status": "審査可能",
+      "memo": "36年〜は金利+0.15%。手数料: 借入×2.2%。",
+      "examYears": 40,
+      "examLimit": 45,
+      "_lastSig": "820_7240_42_3.8_40_45",
       "checkRatio": 45
     },
     {
@@ -116,7 +116,7 @@
       "memo": "ZEH-0.01%。手数料: 借入×2.2%+5.5万。最低年収100万。",
       "examYears": 40,
       "examLimit": 40,
-      "_lastSig": "820_7240_41_3.5_40_40",
+      "_lastSig": "820_7240_42_3.5_40_40",
       "checkRatio": 40
     },
     {
@@ -134,7 +134,7 @@
       "memo": "完済時81歳未満。全国保証付は審査金利3.605%",
       "examYears": 35,
       "examLimit": 40,
-      "_lastSig": "820_7240_41_3.75_35_40",
+      "_lastSig": "820_7240_42_3.75_35_40",
       "checkRatio": 40
     },
     {
@@ -151,7 +151,7 @@
       "status": "審査未定",
       "memo": "41〜50年借入は金利+0.15%〜+0.2%。手数料: 借入×2.2%。",
       "examYears": 35,
-      "_lastSig": "820_7240_41_3.25_35_40",
+      "_lastSig": "820_7240_42_3.25_35_40",
       "checkRatio": 40
     },
     {
@@ -168,7 +168,7 @@
       "status": "審査不可",
       "memo": "完済時85歳未満。自己資金10%以上で金利優遇あり。",
       "examYears": 42,
-      "_lastSig": "820_7240_41_4_42_35"
+      "_lastSig": "820_7240_42_4_42_35"
     },
     {
       "id": "8",
@@ -185,7 +185,7 @@
       "memo": "38年〜50年は金利+0.1%。事務手数料定額/定率選択可。",
       "examYears": 42,
       "examLimit": 40,
-      "_lastSig": "820_7240_41_3.5_42_40",
+      "_lastSig": "820_7240_42_3.5_42_40",
       "checkRatio": 40
     },
     {
@@ -203,7 +203,7 @@
       "memo": "完済時82歳未満。契約・派遣社員可能",
       "examYears": 40,
       "examLimit": 45,
-      "_lastSig": "820_7240_41_3.5_40_45",
+      "_lastSig": "820_7240_42_3.5_40_45",
       "checkRatio": 45
     },
     {
@@ -221,8 +221,24 @@
       "memo": "契約・派遣社員可能。",
       "examYears": 42,
       "examLimit": 45,
-      "_lastSig": "820_7240_41_3.5_42_45",
+      "_lastSig": "820_7240_42_3.5_42_45",
       "checkRatio": 45
+    },
+    {
+      "id": "1792811484336",
+      "name": "楽天銀行",
+      "type": "提携",
+      "baseRate": 2.397,
+      "preferentialRate": 1,
+      "addRate": 0,
+      "examRate": 4.452,
+      "maxYears": 50,
+      "examYears": 42,
+      "checkRatio": 35,
+      "cancerInsurance": "がん50%+就業保障基本付帯（50歳未満）",
+      "examCondition": "返済比率 35%以内※上場企業と一般では優遇が違う　",
+      "status": "審査不可",
+      "memo": "借入条件関係なく、事務手数料が一律33万"
     },
     {
       "id": "1792308182842",
@@ -239,7 +255,7 @@
       "memo": "契約・派遣社員可能。永住権無し△。",
       "examYears": 40,
       "examLimit": 50,
-      "_lastSig": "820_7240_41_4.025_40_50",
+      "_lastSig": "820_7240_42_4.025_40_50",
       "checkRatio": 50
     },
     {
@@ -257,7 +273,7 @@
       "memo": "年収の10倍まで可能。SET対応不可！SBI保証。",
       "examYears": 40,
       "examLimit": 45,
-      "_lastSig": "820_7240_41_4_40_45",
+      "_lastSig": "820_7240_42_4_40_45",
       "checkRatio": 45
     },
     {
@@ -275,7 +291,7 @@
       "memo": "厳しい客向け。Web審査可能。手数料:借入×2.2%+5.5万",
       "examYears": 42,
       "examLimit": 40,
-      "_lastSig": "820_7240_41_3.5_42_40",
+      "_lastSig": "820_7240_42_3.5_42_40",
       "checkRatio": 40
     }
   ]
