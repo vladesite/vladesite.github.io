@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QNQPQ1SSRX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-QNQPQ1SSRX');
-</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>住宅ローン試算・審査状況比較シミュレーター</title>
@@ -62,6 +53,17 @@
       cursor: grabbing;
     }
     .resizable-table th.dragging {
+      opacity: 0.4;
+      background-color: #e0f2fe;
+    }
+
+    .resizable-table tr {
+      cursor: grab;
+    }
+    .resizable-table tr:active {
+      cursor: grabbing;
+    }
+    .resizable-table tr.dragging-row {
       opacity: 0.4;
       background-color: #e0f2fe;
     }
@@ -495,7 +497,7 @@
           <span id="bank-count-badge" class="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-sky-50 text-sky-700 rounded-full border border-sky-100">0件</span>
         </div>
         <div class="no-print flex items-center space-x-2">
-          <span class="text-[11px] text-slate-400 hidden lg:inline">※ ヘッダーの項目をドラッグして並び替え可能です。境界線ドラッグで幅調節も可能です。</span>
+          <span class="text-[11px] text-slate-400 hidden lg:inline">※ ヘッダー項目や行をドラッグして並び替え可能です。境界線ドラッグで幅調節も可能です。</span>
           <button onclick="addRow()" class="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>金融機関を追加</span>
@@ -923,10 +925,9 @@
           }
         }
 
-        const conditionSignature = `${income}_${amount}_${years}_${examRate}_${examYearsVal}_${checkRatioVal}`;
-        if (!item.status || item._lastSig !== conditionSignature) {
+        // 手動変更されていない場合のみ自動判定を適用する
+        if (!item.isManualStatus) {
           item.status = autoStatus;
-          item._lastSig = conditionSignature;
         }
 
         let statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -937,6 +938,36 @@
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-sky-50/50 transition-colors text-center';
+        tr.setAttribute('draggable', 'true');
+        tr.setAttribute('data-index', index);
+
+        // 行のドラッグ＆ドロップ並び替えイベント
+        tr.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', index);
+          tr.classList.add('dragging-row');
+        });
+
+        tr.addEventListener('dragend', () => {
+          tr.classList.remove('dragging-row');
+        });
+
+        tr.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+
+        tr.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+          const toIdx = index;
+
+          if (isNaN(fromIdx) || fromIdx === toIdx) return;
+
+          const movedItem = bankData.splice(fromIdx, 1)[0];
+          bankData.splice(toIdx, 0, movedItem);
+
+          saveToStorage();
+          renderTable();
+        });
 
         // 登録されている columnKeys の順番に沿ってセルを構築
         columnKeys.forEach((key) => {
@@ -987,10 +1018,10 @@
       renderTable();
     }
 
-    // プルダウンでの手動ステータス変更時
+    // プルダウンでの手動ステータス変更時（手動フラグを立てて自動計算式を無視する）
     function updateStatusManual(index, value) {
       bankData[index].status = value;
-      bankData[index]._lastSig = 'manual_' + Date.now();
+      bankData[index].isManualStatus = true;
       saveToStorage();
       renderTable();
     }
@@ -1029,6 +1060,7 @@
         cancerInsurance: 'なし',
         examCondition: '返済比率 35%以内',
         status: '審査可能',
+        isManualStatus: false,
         memo: ''
       };
       bankData.push(newBank);
