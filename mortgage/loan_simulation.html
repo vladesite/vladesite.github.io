@@ -848,7 +848,7 @@
           </div>`;
         case 'examYears':
           return `<div class="year-input-wrapper">
-            <input type="number" value="${examYearsVal}" onchange="updateData(${index}, 'examYears', parseInt(this.value)||35)" class="table-input">
+            <input type="number" value="${examYearsVal}" onchange="updateExamYearsManual(${index}, parseInt(this.value)||35)" class="table-input">
             <span class="year-symbol">年</span>
           </div>`;
         case 'monthlyPayment':
@@ -903,7 +903,14 @@
         const addRate = parseFloat(item.addRate) || 0;
         const examRate = parseFloat(item.examRate) || 0;
         const maxYears = parseInt(item.maxYears) || 35;
-        const examYearsVal = (item.examYears !== undefined && item.examYears !== null && !isNaN(item.examYears)) ? parseInt(item.examYears) : years;
+        
+        // 「借入希望期間」かつ「最大期間」を自動入力（手動変更されていない場合のみ）
+        const autoExamYears = Math.min(years, maxYears);
+        if (!item.isManualExamYears) {
+          item.examYears = autoExamYears;
+        }
+        const examYearsVal = (item.examYears !== undefined && item.examYears !== null && !isNaN(item.examYears)) ? parseInt(item.examYears) : autoExamYears;
+
         const checkRatioVal = (item.checkRatio !== undefined && item.checkRatio !== null && !isNaN(item.checkRatio)) ? parseFloat(item.checkRatio) : 35.0;
 
         const appliedRate = baseRate - preferentialRate + addRate;
@@ -1018,6 +1025,14 @@
       renderTable();
     }
 
+    // 審査用返済期間の手動変更時（手動フラグを立てて自動連動を解除する）
+    function updateExamYearsManual(index, value) {
+      bankData[index].examYears = value;
+      bankData[index].isManualExamYears = true;
+      saveToStorage();
+      renderTable();
+    }
+
     // プルダウンでの手動ステータス変更時（手動フラグを立てて自動計算式を無視する）
     function updateStatusManual(index, value) {
       bankData[index].status = value;
@@ -1056,6 +1071,7 @@
         examRate: 3.500,
         maxYears: 35,
         examYears: 35,
+        isManualExamYears: false,
         checkRatio: 35.0,
         cancerInsurance: 'なし',
         examCondition: '返済比率 35%以内',
