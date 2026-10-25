@@ -1,19 +1,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QNQPQ1SSRX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-QNQPQ1SSRX');
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首都圏鉄道路線図ヒートマップエディター</title>
-    <!-- Copyright©　2026 SHUICHI HIRAI/JR EAST&ITOCHU HOUSING.CO., LTD. -->
+    <!-- Copyright© 2026 SHUICHI HIRAI/JR EAST&ITOCHU HOUSING.CO., LTD. -->
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -42,9 +33,9 @@
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-white flex items-center space-x-2">
                     <span>首都圏鉄道路線図ヒートマップエディター</span>
-                    <span class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">社内資料 2026/10月</span>
+                    <span id="docDateDisplay" class="text-xs px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">社内資料 2026/10月</span>
                 </h1>
-                <p class="text-xs text-slate-400">路線図自動リンク・駅別＆単価ヒートマップ統合管理　※無断転載・複製禁止</p>
+                <p class="text-xs text-slate-400">路線図自動リンク・駅別＆単価ヒートマップ統合管理</p>
             </div>
         </div>
         <div class="flex items-center space-x-2 flex-wrap gap-2">
@@ -462,11 +453,42 @@
             }
         });
 
+        // 出力日時からヘッダーの「社内資料 ○○年○月」を更新する関数
+        function updateHeaderDate(exportDateStr) {
+            if (!exportDateStr) return;
+            const elem = document.getElementById('docDateDisplay');
+            if (!elem) return;
+
+            // "2026年10月25日..." や "2026/10/25..." から年と月を取得する
+            let year = "", month = "";
+            const matchJP = exportDateStr.match(/(\d{4})年\s*(\d{1,2})月/);
+            const matchSlash = exportDateStr.match(/(\d{4})\/(\d{1,2})/);
+
+            if (matchJP) {
+                year = matchJP[1];
+                month = matchJP[2];
+            } else if (matchSlash) {
+                year = matchSlash[1];
+                month = matchSlash[2];
+            }
+
+            if (year && month) {
+                elem.textContent = `社内資料 ${year}年${month}月`;
+                localStorage.setItem('capital_export_date_display_2026', `社内資料 ${year}年${month}月`);
+            }
+        }
+
         async function loadData() {
             const savedStations = localStorage.getItem('capital_stations_2026_pro');
             const savedLines = localStorage.getItem('capital_lines_2026_pro');
             const savedRangesConfig = localStorage.getItem('capital_price_ranges_config_2026_pro');
             const savedBg = localStorage.getItem('capital_bg_image_2026_pro');
+            const savedDateDisplay = localStorage.getItem('capital_export_date_display_2026');
+
+            if (savedDateDisplay) {
+                const elem = document.getElementById('docDateDisplay');
+                if (elem) elem.textContent = savedDateDisplay;
+            }
 
             if (savedStations) { try { stationsData = JSON.parse(savedStations); } catch(e) {} }
             if (savedLines) { try { linesData = JSON.parse(savedLines); } catch(e) {} }
@@ -479,6 +501,10 @@
                     if (response.ok) {
                         const remoteData = await response.json();
                         
+                        if (remoteData.exportDate) {
+                            updateHeaderDate(remoteData.exportDate);
+                        }
+
                         if (!savedStations) {
                             if (remoteData.stations && Array.isArray(remoteData.stations)) {
                                 stationsData = remoteData.stations;
@@ -529,6 +555,7 @@
                 localStorage.removeItem('capital_lines_2026_pro');
                 localStorage.removeItem('capital_price_ranges_config_2026_pro');
                 localStorage.removeItem('capital_bg_image_2026_pro');
+                localStorage.removeItem('capital_export_date_display_2026');
                 location.reload();
             }
         }
@@ -706,104 +733,6 @@
                 else if (tsubo < 950 && priceRangesConfig.length > 4) rangeSelect.value = priceRangesConfig[4].name;
                 else rangeSelect.value = priceRangesConfig[priceRangesConfig.length - 1].name;
             }
-        }
-
-        function renderMap() {
-            const keywordElem = document.getElementById('searchKeyword');
-            const filterLineElem = document.getElementById('filterLine');
-            const filterRangeElem = document.getElementById('filterPriceRange');
-            const keyword = keywordElem ? keywordElem.value.toLowerCase() : '';
-            const filterLine = filterLineElem ? filterLineElem.value : '';
-            const filterRange = filterRangeElem ? filterRangeElem.value : '';
-
-            const bgLayer = document.getElementById('bgLayer');
-            if (!bgLayer) return;
-            bgLayer.innerHTML = '';
-
-            if (bgImageUrl) {
-                const rectBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rectBg.setAttribute('width', '1200');
-                rectBg.setAttribute('height', '800');
-                rectBg.setAttribute('fill', '#ffffff');
-                bgLayer.appendChild(rectBg);
-
-                const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-                image.setAttribute('href', bgImageUrl);
-                image.setAttribute('width', '1200');
-                image.setAttribute('height', '800');
-                image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-                image.setAttribute('opacity', bgOpacity);
-                bgLayer.appendChild(image);
-            } else {
-                const rectGrid = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rectGrid.setAttribute('width', '1200');
-                rectGrid.setAttribute('height', '800');
-                rectGrid.setAttribute('fill', 'url(#grid)');
-                bgLayer.appendChild(rectGrid);
-            }
-
-            const filteredStations = stationsData.filter(st => {
-                const matchKeyword = st.name.toLowerCase().includes(keyword);
-                const matchLine = !filterLine || st.line === filterLine;
-                const matchRange = !filterRange || st.range === filterRange;
-                return matchKeyword && matchLine && matchRange;
-            });
-
-            const nodesGroup = document.getElementById('stationNodes');
-            nodesGroup.innerHTML = '';
-
-            filteredStations.forEach(st => {
-                const originalIndex = stationsData.findIndex(item => item === st);
-                const color = getHexColor(st.range);
-
-                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('transform', `translate(${st.x}, ${st.y})`);
-                g.setAttribute('class', 'cursor-pointer group');
-                
-                g.addEventListener('mousedown', (e) => startDrag(e, originalIndex));
-                g.addEventListener('click', (e) => {
-                    if (!isDraggingStation) openEditModal(originalIndex);
-                });
-
-                const radius = Math.max(38, Math.max(st.name.length * 6, 36));
-                const points = [];
-                for (let i = 0; i < 6; i++) {
-                    const angle = (i * Math.PI) / 3;
-                    const px = radius * Math.cos(angle);
-                    const py = radius * Math.sin(angle);
-                    points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
-                }
-
-                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                polygon.setAttribute('points', points.join(' '));
-                polygon.setAttribute('fill', color);
-                polygon.setAttribute('stroke', '#1e293b');
-                polygon.setAttribute('stroke-width', '2');
-                polygon.setAttribute('filter', 'drop-shadow(0px 3px 4px rgba(0,0,0,0.25))');
-                g.appendChild(polygon);
-
-                const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                textName.setAttribute('x', '0');
-                textName.setAttribute('y', '-5');
-                textName.setAttribute('text-anchor', 'middle');
-                textName.setAttribute('fill', '#0f172a');
-                textName.setAttribute('font-size', '11px');
-                textName.setAttribute('font-weight', 'bold');
-                textName.textContent = st.name;
-                g.appendChild(textName);
-
-                const textPrice = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                textPrice.setAttribute('x', '0');
-                textPrice.setAttribute('y', '12');
-                textPrice.setAttribute('text-anchor', 'middle');
-                textPrice.setAttribute('fill', '#0f172a');
-                textPrice.setAttribute('font-size', '12px');
-                textPrice.setAttribute('font-weight', '800');
-                textPrice.textContent = `${st.tsubo}万`;
-                g.appendChild(textPrice);
-
-                nodesGroup.appendChild(g);
-            });
         }
 
         let isDraggingStation = false;
@@ -1466,9 +1395,28 @@
             renderApp();
             showToast("路線を削除しました");
         }
-/*
+
         function exportJSON() {
-            const exportObj = { lines: linesData, stations: stationsData, priceRanges: priceRangesConfig };
+            const now = new Date();
+            const options = {
+                timeZone: 'Asia/Tokyo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const formatter = new Intl.DateTimeFormat('ja-JP', options);
+            const parts = formatter.formatToParts(now);
+            const p = {};
+            parts.forEach(part => { p[part.type] = part.value; });
+            
+            const exportDateStr = `${p.year}年${p.month}月${p.day}日 ${p.hour}:${p.minute}:${p.second} (東京)`;
+            updateHeaderDate(exportDateStr);
+
+            const exportObj = { exportDate: exportDateStr, lines: linesData, stations: stationsData, priceRanges: priceRangesConfig };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
@@ -1478,46 +1426,7 @@
             dl.remove();
             showToast("JSONファイルをエクスポートしました");
         }
-*/
 
-    function exportJSON() {
-    // 日本時間（東京）のフォーマット作成
-    const now = new Date();
-    const options = {
-        timeZone: 'Asia/Tokyo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-    const formatter = new Intl.DateTimeFormat('ja-JP', options);
-    const parts = formatter.formatToParts(now);
-    
-    const p = {};
-    parts.forEach(part => { p[part.type] = part.value; });
-    
-    // 「年月日：時間（東京）」形式の文字列を生成
-    const exportDateStr = `${p.year}年${p.month}月${p.day}日 ${p.hour}:${p.minute}:${p.second} (東京)`;
-
-    const exportObj = {
-        exportDate: exportDateStr, // 出力日時を追加
-        lines: linesData,
-        stations: stationsData,
-        priceRanges: priceRangesConfig
-    };
-
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
-    const dl = document.createElement('a');
-    dl.setAttribute("href", dataStr);
-    dl.setAttribute("download", "heatmap_new.json");
-    document.body.appendChild(dl);
-    dl.click();
-    dl.remove();
-    showToast("JSONファイルをエクスポートしました");
-}
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1525,6 +1434,9 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
+                    if (parsed.exportDate) {
+                        updateHeaderDate(parsed.exportDate);
+                    }
                     if (parsed.stations && Array.isArray(parsed.stations)) {
                         stationsData = parsed.stations;
                         if (parsed.lines && Array.isArray(parsed.lines)) linesData = parsed.lines;
