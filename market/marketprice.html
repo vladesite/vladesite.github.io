@@ -1466,7 +1466,7 @@
             renderApp();
             showToast("路線を削除しました");
         }
-
+/*
         function exportJSON() {
             const exportObj = { lines: linesData, stations: stationsData, priceRanges: priceRangesConfig };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
@@ -1478,7 +1478,46 @@
             dl.remove();
             showToast("JSONファイルをエクスポートしました");
         }
+*/
 
+    function exportJSON() {
+    // 日本時間（東京）のフォーマット作成
+    const now = new Date();
+    const options = {
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    };
+    const formatter = new Intl.DateTimeFormat('ja-JP', options);
+    const parts = formatter.formatToParts(now);
+    
+    const p = {};
+    parts.forEach(part => { p[part.type] = part.value; });
+    
+    // 「年月日：時間（東京）」形式の文字列を生成
+    const exportDateStr = `${p.year}年${p.month}月${p.day}日 ${p.hour}:${p.minute}:${p.second} (東京)`;
+
+    const exportObj = {
+        exportDate: exportDateStr, // 出力日時を追加
+        lines: linesData,
+        stations: stationsData,
+        priceRanges: priceRangesConfig
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+    const dl = document.createElement('a');
+    dl.setAttribute("href", dataStr);
+    dl.setAttribute("download", "heatmap_new.json");
+    document.body.appendChild(dl);
+    dl.click();
+    dl.remove();
+    showToast("JSONファイルをエクスポートしました");
+}
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
