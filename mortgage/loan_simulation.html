@@ -109,6 +109,11 @@
       line-height: 1.35;
     }
 
+    /* 適用金利・月々返済額のフォントサイズ1px拡大用クラス */
+    .font-plus-1px {
+      font-size: calc(0.75rem + 1px) !important;
+    }
+
     /* 横スクロール時に「金融機関名」（第1列）をFIX（Sticky固定） */
     .resizable-table th:first-child,
     .resizable-table td:first-child {
@@ -161,13 +166,14 @@
       width: 100%;
     }
     .rate-input-wrapper input {
-      padding-right: 28px !important;
+      padding-left: 2px !important;
+      padding-right: 14px !important;
       text-align: center !important;
       font-size: 0.75rem !important;
     }
     .rate-input-wrapper .percent-symbol {
       position: absolute;
-      right: 16px;
+      right: 4px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 0.68rem;
@@ -185,8 +191,8 @@
       width: 100%;
     }
     .advantage-input-wrapper input {
-      padding-left: 10px !important;
-      padding-right: 28px !important;
+      padding-left: 12px !important;
+      padding-right: 14px !important;
       text-align: center !important;
       font-size: 0.75rem !important;
     }
@@ -202,7 +208,7 @@
     }
     .advantage-input-wrapper .percent-symbol {
       position: absolute;
-      right: 16px;
+      right: 4px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 0.75rem;
@@ -220,13 +226,14 @@
       width: 100%;
     }
     .year-input-wrapper input {
-      padding-right: 12px !important;
+      padding-left: 2px !important;
+      padding-right: 14px !important;
       text-align: center !important;
       font-size: 0.75rem !important;
     }
     .year-input-wrapper .year-symbol {
       position: absolute;
-      right: 2px;
+      right: 4px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 0.68rem;
@@ -408,7 +415,10 @@
             <i data-lucide="calculator" class="w-5 h-5"></i>
           </div>
           <div>
-            <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">住宅ローン試算・審査状況比較シミュレーター</h1>
+            <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight flex items-center gap-2">
+              住宅ローン試算・審査状況比較シミュレーター
+              <span class="text-xs font-bold text-white bg-rose-600 px-2 py-0.5 rounded shadow-sm">参考資料</span>
+            </h1>
             <p class="text-[11px] text-slate-500">金融機関別の金利・返済額シミュレーション＆審査内容一覧</p>
           </div>
         </div>
@@ -483,9 +493,9 @@
             <label class="block text-[11px] font-semibold text-slate-700 mb-1">ご年収 (額面)</label>
             <div class="relative rounded-lg shadow-sm">
               <input type="number" id="input-income" v-model.number="conditions.income" min="10" step="10" @input="onConditionChange"
-                style="width: 60%;"
-                class="pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(60% + 4px);">万円</span>
+                style="width: 90%;"
+                class="pl-1 pr-10 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(90% + 4px);">万円</span>
             </div>
           </div>
 
@@ -494,9 +504,9 @@
             <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望額 (10万単位)</label>
             <div class="relative rounded-lg shadow-sm">
               <input type="number" id="input-amount" v-model.number="conditions.amount" min="10" step="10" @input="onConditionChange"
-                style="width: 60%;"
-                class="pl-3 pr-16 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(60% + 4px);">万円</span>
+                style="width: 90%;"
+                class="pl-1 pr-10 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(90% + 4px);">万円</span>
             </div>
           </div>
 
@@ -505,9 +515,9 @@
             <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望期間</label>
             <div class="relative rounded-lg shadow-sm">
               <input type="number" id="input-years" v-model.number="conditions.years" min="1" max="50" @input="onConditionChange"
-                style="width: 60%;"
-                class="pl-3 pr-14 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(60% + 4px);">年</span>
+                style="width: 90%;"
+                class="pl-1 pr-8 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(90% + 4px);">年</span>
             </div>
           </div>
 
@@ -553,7 +563,7 @@
                 <th v-for="(key, idx) in columnKeys" :key="key" :data-key="key" :style="{ width: columnWidths[idx] + 'px' }"
                     :class="{
                       'text-rose-600 font-bold': key === 'preferentialRate',
-                      'bg-sky-50/50 text-sky-900': ['appliedRate', 'monthlyPayment'].includes(key),
+                      'bg-sky-50/50 text-sky-900 font-plus-1px': ['appliedRate', 'monthlyPayment'].includes(key),
                       'exam-col': ['examRate', 'examYears', 'examRatio', 'checkRatio', 'examCondition', 'status', 'memo'].includes(key),
                       'col-hidden': isExamColumnsHidden && ['examRate', 'examYears', 'examRatio', 'checkRatio', 'examCondition', 'status', 'memo'].includes(key),
                       'no-print': key === 'action'
@@ -611,7 +621,7 @@
                     </div>
                   </td>
                   <!-- 適用金利 (計算値・小数点以下3桁固定表示) -->
-                  <td v-else-if="key === 'appliedRate'" class="font-bold text-sky-800 bg-sky-50/40">
+                  <td v-else-if="key === 'appliedRate'" class="font-bold text-sky-800 bg-sky-50/40 font-plus-1px">
                     {{ calculateAppliedRate(item).toFixed(3) }}%
                   </td>
                   <!-- 審査金利 (小数点以下3桁固定表示) -->
@@ -636,7 +646,7 @@
                     </div>
                   </td>
                   <!-- 月々返済額 -->
-                  <td v-else-if="key === 'monthlyPayment'" class="font-bold text-sky-800 bg-sky-50/40">
+                  <td v-else-if="key === 'monthlyPayment'" class="font-bold text-sky-800 bg-sky-50/40 font-plus-1px">
                     {{ calculateMonthlyPaymentVal(item).toLocaleString() }} <span class="text-[9px] font-normal text-slate-500">円</span>
                   </td>
                   <!-- 審査返済率 -->
