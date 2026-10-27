@@ -1,6 +1,6 @@
 {
   "version": "4.0-vue",
-  "exportDate": "2026-10-27T03:41:13.768Z",
+  "exportDate": "2026-10-27T06:46:35.267Z",
   "conditions": {
     "income": 960,
     "amount": 8370,
@@ -195,7 +195,7 @@
       "baseRate": 3.125,
       "preferentialRate": 2.175,
       "addRate": 0,
-      "examRate": 3.5,
+      "examRate": 3.75,
       "maxYears": 40,
       "cancerInsurance": "がん50%基本付帯(50歳未満),+0.2%がん(50歳未満)",
       "examCondition": "返済比率45%以内（上場企業）",
