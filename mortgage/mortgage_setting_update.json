@@ -62,8 +62,7 @@
       "examCheckRate": 40,
       "examLimit": 40,
       "_lastSig": "820_7240_42_4_40_40",
-      "checkRatio": 40,
-      "isManualStatus": true
+      "checkRatio": 40
     },
     {
       "id": "2",
