@@ -39,6 +39,10 @@
             </div>
         </div>
         <div class="flex items-center space-x-2 flex-wrap gap-2">
+            <button onclick="printMapA3()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 shadow" title="A3サイズで印刷/PDF保存（別タブ）">
+                <i class="fa-solid fa-print"></i>
+                <span>印刷・PDF</span>
+            </button>
             <button onclick="openLineModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 shadow">
                 <i class="fa-solid fa-route"></i>
                 <span>路線管理</span>
@@ -1471,6 +1475,137 @@
 
         function escapeHTML(str) {
             return String(str).replace(/[&<>'"\\]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '\\': '&#92;' }[tag] || tag));
+        }
+
+        // --- A3印刷・PDF出力機能（新規追加） ---
+        function printMapA3() {
+            // 凡例カラー一覧表のHTML生成
+            let legendListHtml = '<div style="display: flex; flex-direction: column; gap: 6px;">';
+            priceRangesConfig.forEach(r => {
+                legendListHtml += `
+                    <div style="display: flex; align-items: center; font-size: 12px; font-weight: bold; font-family: sans-serif; color: #0f172a;">
+                        <span style="display: inline-block; width: 22px; height: 16px; background-color: ${r.color}; border: 1px solid #1e293b; margin-right: 8px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);"></span>
+                        <span>${escapeHTML(r.name)}</span>
+                    </div>
+                `;
+            });
+            legendListHtml += '</div>';
+
+            // 現在のマップSVGのクローン作成（ズーム・移動値を初期化して全体表示）
+            const svgElem = document.getElementById('railwayMap');
+            if (!svgElem) return;
+            
+            const svgClone = svgElem.cloneNode(true);
+            const svgWrapperInClone = svgClone.querySelector('#svgWrapper');
+            if (svgWrapperInClone) {
+                svgWrapperInClone.style.transform = 'translate(0px, 0px) scale(1)';
+            }
+
+            // 新規タブで印刷用画面を起動
+            const printWin = window.open('', '_blank');
+            if (!printWin) {
+                showToast("ポップアップがブロックされました。別タブを開く許可をしてください。", "error");
+                return;
+            }
+
+            printWin.document.write(`
+                <!DOCTYPE html>
+                <html lang="ja">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>首都圏 駅別価格ヒートマップ 社内資料</title>
+                    <style>
+                        @page {
+                            size: A3 landscape;
+                            margin: 8mm;
+                        }
+                        * {
+                            box-sizing: border-box;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+                            background-color: #ffffff;
+                            color: #000000;
+                            width: 100vw;
+                            height: 100vh;
+                            overflow: hidden;
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        .header-title {
+                            text-align: center;
+                            font-size: 24px;
+                            font-weight: 800;
+                            padding: 8px 0 12px 0;
+                            letter-spacing: 2px;
+                            color: #0f172a;
+                            border-bottom: 2px solid #0f172a;
+                            margin-bottom: 8px;
+                        }
+                        .map-wrapper {
+                            position: relative;
+                            flex-grow: 1;
+                            width: 100%;
+                            height: calc(100vh - 65px);
+                            border: 1px solid #cbd5e1;
+                            overflow: hidden;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            background-color: #ffffff;
+                        }
+                        .legend-overlay {
+                            position: absolute;
+                            top: 16px;
+                            left: 16px;
+                            z-index: 100;
+                            background: rgba(255, 255, 255, 0.94);
+                            border: 2px solid #1e293b;
+                            padding: 12px 16px;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                            min-width: 150px;
+                        }
+                        .legend-title {
+                            font-size: 13px;
+                            font-weight: 800;
+                            color: #0f172a;
+                            margin-bottom: 8px;
+                            border-bottom: 1.5px solid #64748b;
+                            padding-bottom: 4px;
+                        }
+                        svg {
+                            width: 100%;
+                            height: 100%;
+                            max-width: 100%;
+                            max-height: 100%;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header-title">首都圏 駅別価格ヒートマップ 社内資料</div>
+                    <div class="map-wrapper">
+                        <div class="legend-overlay">
+                            <div class="legend-title">凡例の一覧表</div>
+                            ${legendListHtml}
+                        </div>
+                        ${svgClone.outerHTML}
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
         }
     </script>
 </body>
