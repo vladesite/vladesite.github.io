@@ -1,6 +1,6 @@
 {
   "version": "4.0-vue",
-  "exportDate": "2026-10-27T06:46:35.267Z",
+  "exportDate": "2026-11-02T06:38:10.238Z",
   "conditions": {
     "income": 960,
     "amount": 8370,
@@ -141,7 +141,7 @@
       "name": "ドコモSMTBネット銀行",
       "type": "提携",
       "baseRate": 4.025,
-      "preferentialRate": 2.425,
+      "preferentialRate": 2.326,
       "addRate": 0,
       "examRate": 3.25,
       "maxYears": 50,
@@ -157,7 +157,7 @@
       "id": "7",
       "name": "ソニー銀行",
       "type": "提携",
-      "baseRate": 2.307,
+      "baseRate": 3.257,
       "preferentialRate": 1.05,
       "addRate": 0,
       "examRate": 4,
