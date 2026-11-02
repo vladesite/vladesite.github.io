@@ -1,6 +1,6 @@
 {
   "version": "4.0-vue",
-  "exportDate": "2026-11-02T06:38:10.238Z",
+  "exportDate": "2026-11-02T06:57:59.212Z",
   "conditions": {
     "income": 960,
     "amount": 8370,
@@ -164,11 +164,11 @@
       "maxYears": 50,
       "cancerInsurance": "がん50%基本付帯(50歳未満),+0.2%3大疾病(50歳未満)",
       "examCondition": "原則35%(最低年収400万)",
-      "status": "審査不可",
+      "status": "審査未定",
       "memo": "完済時85歳未満。自己資金10%以上で金利優遇あり。",
       "examYears": 43,
       "_lastSig": "820_7240_42_4_42_35",
-      "checkRatio": 35
+      "checkRatio": 40
     },
     {
       "id": "8",
