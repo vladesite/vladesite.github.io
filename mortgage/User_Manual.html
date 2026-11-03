@@ -1,0 +1,820 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>操作マニュアル＆設計書</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+	/* Paint a complete callout box on every PDF page fragment. */
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+/*
+ * Toggles and callouts hold arbitrary content, so they can easily be taller
+ * than a page. They must stay breakable: avoiding breaks inside them makes
+ * Chromium push the whole block onto the next page, which leaves the previous
+ * page mostly empty before every long toggle.
+ */
+details,
+aside {
+	margin: 1.25em 0;
+}
+
+/* Keep a toggle's title on the same page as the start of its content. */
+summary {
+	page-break-after: avoid;
+	break-after: avoid;
+}
+
+/*
+ * Toggle headings render as <h1/h2/h3 style="display:inline-block"> inside
+ * <summary>. Without this reset, the heading's margin-top pushes it below the
+ * ::marker (▼), so the triangle and the title appear on separate lines.
+ */
+summary h1,
+summary h2,
+summary h3,
+summary h4 {
+	margin-top: 0;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="40d9d076-6c3b-80e0-bbce-d96380df80ba" class="page sans"><header><h1 class="page-title" dir="auto">操作マニュアル＆設計書</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="40d9d076-6c3b-8029-9c28-eca3cfd28d91" class="" dir="auto">金融系システムエンジニアリングマネージャーの立場より、ご提示いただいたWebプログラム（SPA）およびJSONデータを基に、担当者向け「操作マニュアル」<strong>ならびに管理者・エンジニア向け</strong>「システム設計書」を作成しました。</p><p id="40d9d076-6c3b-805c-88e2-c6fb1e2ec7f6" class="" dir="auto">📆作成日：2026/11/03   © 2026 SHUICH HIRAI@vladesite😝 All Rights Reserved.</p><hr id="40d9d076-6c3b-80c2-8390-f895cde3c423" dir="auto"/><h1 id="40d9d076-6c3b-8093-b2c6-db6289252932" class="" dir="auto">住宅ローン試算・審査状況比較シミュレーター：顧客向け操作マニュアル</h1><h2 id="40d9d076-6c3b-8006-aa45-de1e1871186d" class="" dir="auto">1. はじめに</h2><p id="40d9d076-6c3b-806e-8dcd-d9c6bbeadf6c" class="" dir="auto">本マニュアルは、お客様の年収・年齢条件に基づき、複数の金融機関における住宅ローンの金利、返済期間、月々返済額、および審査適合性を一括でシミュレーション・比較するためのWebアプリケーションの操作手順を解説するものです。</p><hr id="40d9d076-6c3b-80a3-994e-c14ca03bc5df" dir="auto"/><h2 id="40d9d076-6c3b-80e7-b9d9-ceee1389bc55" class="" dir="auto">2. 画面構成と基本操作</h2><h3 id="40d9d076-6c3b-8074-9548-cada3d1c4305" class="" dir="auto">① お客様基本条件設定エリア</h3><p id="40d9d076-6c3b-8039-8021-e65dfd707756" class="" dir="auto">画面上部の「お客様基本条件設定」カードにて、以下のベース条件を入力・変更します。数値の変更はリアルタイムに下部の比較テーブルへ反映されます。</p><ul id="40d9d076-6c3b-8020-898b-f3acf5b5fbcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ご年収 (額面)</strong>: 額面の年収を万円単位で入力します。</li></ul><ul id="40d9d076-6c3b-805a-8961-ca422b48aa8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>借入希望額</strong>: ご希望の借入金額を万円単位で入力します。</li></ul><ul id="40d9d076-6c3b-80ff-9d42-d22167a5ed95" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>年齢 (実行時)</strong>: ローン実行時のご年齢（歳）を入力します。完済時年齢や返済期間の自動計算の基準となります。</li></ul><ul id="40d9d076-6c3b-80fd-b0fe-e8b12816e4a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>表示フィルター</strong>: すべての金融機関を表示するか、「提携」ローン、「非提携」ローン（プロパー）のみに絞り込むかを選択できます。</li></ul><h3 id="40d9d076-6c3b-8087-8163-cca4d38f6584" class="" dir="auto">② 金融機関別 返済・審査比較一覧テーブル</h3><p id="40d9d076-6c3b-808d-94d0-f648a8ec2b7a" class="" dir="auto">複数の金融機関の条件が一覧化されています。各列の主な機能は以下の通りです。</p><ul id="40d9d076-6c3b-806f-8026-e5ceb7544e4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>金融機関名 / 種別</strong>: 提携・非提携の種別や銀行名を確認・変更できます。</li></ul><ul id="40d9d076-6c3b-8090-96b6-c0ee9e2a1c55" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>金利関連項目（基準金利・優遇金利・上乗せ金利・適用金利）</strong>: 小数点以下3桁まで正確に表示・入力されます。適用金利は <code>基準金利 － 優遇金利 ＋ 上乗せ金利</code> で自動計算されます。</li></ul><ul id="40d9d076-6c3b-80aa-88f0-ebe3c166840b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>返済期間 / 完済時年齢</strong>: 「年齢（実行時）」と金融機関の「最大期間」から逆算された最適な返済期間が自動入力されます。必要に応じて手動での変更も可能です。</li></ul><ul id="40d9d076-6c3b-809e-971e-e9625be82539" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>月々返済額</strong>: 借入希望額、適用金利、返済期間を基に算出した毎月の返済額（元利均等返済方式）が表示されます。</li></ul><ul id="40d9d076-6c3b-809d-b9d6-df68893feb90" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>審査取扱いステータス</strong>: ご年収に対する返済比率と各行の「返済率上限」を照らし合わせ、「審査可能」「審査未定」「審査不可」が自動判定されます（手動変更も可能）。</li></ul><ul id="40d9d076-6c3b-80da-9258-ecc1de6f4cd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>テーブルのカスタマイズ</strong>:</li></ul><ul id="40d9d076-6c3b-8065-9cbd-da6f13d06cca" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>列の並び替え</strong>: ヘッダーをドラッグ＆ドロップすることで、列の順序を自由に変更できます。</li></ul><ul id="40d9d076-6c3b-80d6-a74e-c6dbdb6f9bac" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>列幅の調整</strong>: ヘッダーの右端をマウスでドラッグして幅を調整できます。</li></ul><ul id="40d9d076-6c3b-8055-88c7-fcc9d89d2429" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>行の並び替え・追加・削除</strong>: 行のドラッグによる並び替えや、「金融機関を追加」ボタンによる新規行追加、不要な行の削除が可能です。</li></ul><h3 id="40d9d076-6c3b-8087-8694-fa347bec1b87" class="" dir="auto">③ 一般閲覧モード（審査項目非表示機能）</h3><ul id="40d9d076-6c3b-8036-bc82-e9d023720f04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">画面右上の「一般閲覧モード（審査項目非表示）」ボタンをクリックすると、お客様へ提示する際に非表示にしたい審査金利や審査用期間、審査比率などの機密・内部審査項目を一括で非表示に切り替えることができます。</li></ul><hr id="40d9d076-6c3b-809f-beca-c718771ee244" dir="auto"/><h2 id="40d9d076-6c3b-809a-9c23-d83ee7c52487" class="" dir="auto">3. データの保存・読込・初期化</h2><ul id="40d9d076-6c3b-8006-a9d1-d270125ebe87" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>JSON保存</strong>: 現在の入力内容やカスタマイズしたテーブル設定をJSONファイルとしてダウンロードできます。物件名・お客様名・作成日（CV町屋_○○様_2026-11-03）等、適当な名前で保存してください。</li></ul><ul id="40d9d076-6c3b-80ee-b9c4-f962c1a0a9b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>JSON読込</strong>: 以前保存したJSONファイルをアップロードすることで、前回のシミュレーション状態（お客様内容、金利、表示順番など）を復元できます。</li></ul><ul id="40d9d076-6c3b-8063-b17e-c1e1901c65b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>初期化</strong>: 「初期化」ボタンを押すことで、初期状態のデータにリセットできます。</li></ul><ul id="40d9d076-6c3b-8015-9f72-dcd3208d3ccf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ブラウザ自動保存</strong>: 入力したデータはブラウザ（localStorage）に常時自動保存されるため、ページを再読み込みしても内容が保持されます。</li></ul><hr id="40d9d076-6c3b-8048-973b-c30a3e657556" dir="auto"/><h2 id="40d9d076-6c3b-8077-a5fd-d51c452e318f" class="" dir="auto">4. 印刷・PDF出力機能</h2><ul id="40d9d076-6c3b-807d-89b1-e3fb9823925d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">画面右上の「A3印刷・PDF出力」ボタンをクリックすると、A3横サイズの印刷プレビューが起動します。</li></ul><ul id="40d9d076-6c3b-80c9-8b94-e919919294c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">お客様への提案資料として、上部の<strong>「一般閲覧モード」</strong>を押していただくと、最適なレイアウト（余白の最適化、不要なUIボタンの非表示、フッターの著作権表示等）で綺麗に出力・PDF化が可能です。</li></ul><hr id="40d9d076-6c3b-80d1-938f-f5bc3e50db29" dir="auto"/><h2 id="40d9d076-6c3b-8070-aebb-f1ce3b13a04a" class="" dir="auto">5. よくあるご質問（Q&amp;A） - 顧客向け</h2><h3 id="40d9d076-6c3b-80c9-a95a-cc9f9092797d" class="" dir="auto">Q1. 入力した数値が変わると返済額はすぐに再計算されますか？</h3><ul id="40d9d076-6c3b-80b9-a3fe-d01151cd4a05" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: はい。年収、借入希望額、年齢、各金利、返済期間などの数値を変更すると、デバウンスやリアクティブバインディングにより即座に月々返済額および審査比率が再計算されます。</li></ul><h3 id="40d9d076-6c3b-8095-8320-c9ec0a54a385" class="" dir="auto">Q2. 「一般閲覧モード」にすると、どの項目が隠れますか？</h3><ul id="40d9d076-6c3b-80d6-bebe-f2f83b3ed06a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: 審査金利、審査用返済期間、審査返済率、返済率上限、審査条件、審査取扱いステータス、備考などの内部審査用カラムがすべて非表示となり、お客様への分かりやすい返済額・金利比較表としてスッキリ表示されます。</li></ul><h3 id="40d9d076-6c3b-80d9-bab7-f22a98bf60c9" class="" dir="auto">Q3. 年齢を変えると「返済期間」はどうなりますか？</h3><ul id="40d9d076-6c3b-80ac-a203-fe36f46f04cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: 各金融機関が定める「最大期間」と、「完済時年齢（デフォルト80歳等） － 実行時年齢」を比較し、より短い（安全な）期間が自動的に返済期間として設定されます。もちろん手動で短く変更することも可能です。</li></ul><h3 id="40d9d076-6c3b-8085-8600-d21d1a4ef6ee" class="" dir="auto">Q4. 画面を閉じたりブラウザを更新したりしても、入力したデータは消えませんか？</h3><ul id="40d9d076-6c3b-8065-90e1-ee6fafaaf359" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: 消えません。ブラウザのローカルストレージに自動保存されているため、次回のアクセス時にも直前の状態から作業を継続できます。</li></ul><h3 id="40d9d076-6c3b-80be-bf2b-e5e2348aa226" class="" dir="auto">Q5. 独自の金融機関を追加してシミュレーションすることはできますか？</h3><ul id="40d9d076-6c3b-8080-8418-cc972223d398" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: はい可能です。テーブル上部の「金融機関を追加」ボタンをクリックすることで、任意の金融機関行が追加され、金利や特約、メモなどを自由に入力できます。</li></ul><h3 id="40d9d076-6c3b-8032-8155-c0f27f464cec" class="" dir="auto">Q6. A3印刷時にボタンや不要なメニューが印刷されて見づらくなることはありませんか？</h3><ul id="40d9d076-6c3b-8053-8801-cb7f889de6bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: ございません。印刷用の専用CSSメディアクエリ（<code>@media print</code>）を実装しているため、操作ボタンやヘッダーのナビゲーションなどは自動的に非表示になり、A3横サイズに最適化された表形式で印刷・PDF出力されます。※A4横サイズにする場合は、印刷時にA3⇒A4に縮小してください。</li></ul><hr id="40d9d076-6c3b-8040-b6b0-f3bbaebb6dca" dir="auto"/><hr id="40d9d076-6c3b-8033-8576-e3d7df6ea0d4" dir="auto"/><h1 id="40d9d076-6c3b-8022-9680-c3b517e6d4a3" class="" dir="auto">住宅ローン試算・審査状況比較シミュレーター：システム設計書（管理者・エンジニア向け）</h1><h2 id="40d9d076-6c3b-80fc-9fb0-fd492be1df16" class="" dir="auto">1. システム概要</h2><p id="40d9d076-6c3b-80a8-bf85-d5a2113b6afe" class="" dir="auto">本システムは、クライアントサイド（ブラウザ）完結型のシングルページアプリケーション（SPA）です。Node.jsやNext.jsなどを使用していないため、外部サーバーへのDB通信を伴わず、Vue.js 3のリアクティブ機構を利用して動的な住宅ローン金利計算、返済シミュレーション、および金融機関別の審査判定を高速に実行しています。 Writen by S.Hirai</p><hr id="40d9d076-6c3b-8031-960e-c2826fe3d480" dir="auto"/><h2 id="40d9d076-6c3b-80fe-90d9-dc62ad1f0ffc" class="" dir="auto">2. 技術スタック</h2><ul id="40d9d076-6c3b-80c9-80ff-ece0e992a261" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>プログラミング言語: </strong>HTML5,CSS3,Javascript (ECMAScript), <strong>J</strong>SON: Ver:<code>4.0-vue</code> </li></ul><ul id="40d9d076-6c3b-805b-b9c8-e54ffb62f369" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>開発ツール・周辺環境</strong>: Visual Studio Code(Ver:<code>1.144</code>),Git/GitHub</li></ul><ul id="40d9d076-6c3b-80f9-81fe-e64cb5a8e85c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>フロントエンドフレームワーク</strong>: Vue.js 3 (Composition API / CDN版)</li></ul><ul id="40d9d076-6c3b-8072-821c-c7e3150b5f3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>スタイリング</strong>: Tailwind CSS (CDN版)</li></ul><ul id="40d9d076-6c3b-8040-8e23-fc9af2c5672e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>アイコンライブラリ</strong>: Lucide Icons</li></ul><ul id="40d9d076-6c3b-80c5-bcd5-f38d0d940018" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>データ永続化</strong>: HTML5 Web Storage API (<code>localStorage</code>)</li></ul><ul id="40d9d076-6c3b-8049-b6cf-e2ec135c1595" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ファイル入出力</strong>: Native File API (JSON Export/Import)</li></ul><ul id="40d9d076-6c3b-80a0-9e5c-dc07bebf126f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>印刷対応</strong>: CSS Paged Media / A3 Landscape Print Media Queries</li></ul><hr id="40d9d076-6c3b-80b0-8fda-e0aa93de40df" dir="auto"/><h2 id="40d9d076-6c3b-80ae-a246-e00457a1591f" class="" dir="auto">3. データ構造（状態管理スキーマ）</h2><h3 id="40d9d076-6c3b-8044-a464-e0a601911177" class="" dir="auto">① グローバル条件オブジェクト (<code>conditions</code>)</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="40d9d076-6c3b-800e-84d9-e4ba4526f64c" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;income&quot;: 930,         // ご年収 (万円)
+  &quot;amount&quot;: 8160,        // 借入希望額 (万円)
+  &quot;age&quot;: 37,             // 実行時年齢 (歳)
+  &quot;filterType&quot;: &quot;all&quot;    // 表示フィルター (&quot;all&quot; | &quot;提携&quot; | &quot;非提携&quot;)
+}</code></pre><h3 id="40d9d076-6c3b-8006-89b6-f5e2c2e6f464" class="" dir="auto">② 金融機関エンティティモデル (<code>banks</code>)</h3><pre id="40d9d076-6c3b-80ce-a4dd-f71c8d27a02d" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;id&quot;: &quot;1&quot;,
+  &quot;name&quot;: &quot;三菱UFJ銀行&quot;,
+  &quot;type&quot;: &quot;提携&quot;,
+  &quot;baseRate&quot;: 3.375,           // 基準金利 (%) [小数点以下3桁]
+  &quot;preferentialRate&quot;: 2.180,   // 優遇金利幅 (%) [小数点以下3桁]
+  &quot;addRate&quot;: 0.000,            // 上乗せ金利 (%) [小数点以下3桁]
+  &quot;examRate&quot;: 4.000,           // 審査金利 (%) [小数点以下3桁]
+  &quot;maxYears&quot;: 40,              // 最大借入期間 (年)
+  &quot;completionAge&quot;: 79,         // 完済時年齢 (歳)
+  &quot;repaymentYears&quot;: 40,        // 返済期間 (年)
+  &quot;isManualRepaymentYears&quot;: false,
+  &quot;examYears&quot;: 40,             // 審査用返済期間 (年)
+  &quot;checkRatio&quot;: 40.0,          // 返済率上限 (%)
+  &quot;cancerInsurance&quot;: &quot;+0.3%7大疾病...&quot;,
+  &quot;examCondition&quot;: &quot;一律40%(最低年収200万)&quot;,
+  &quot;status&quot;: &quot;審査未定&quot;,        // &quot;審査可能&quot; | &quot;審査未定&quot; | &quot;審査不可&quot;
+  &quot;memo&quot;: &quot;備考テキスト&quot;
+}</code></pre><hr id="40d9d076-6c3b-809b-8fee-e06989cc5f70" dir="auto"/><h2 id="40d9d076-6c3b-80e9-8d61-d1fde821dfd4" class="" dir="auto">4. 主要なビジネスロジック・計算仕様</h2><h3 id="40d9d076-6c3b-80ae-9e44-c2610f58e35c" class="" dir="auto">① 適用金利の算出</h3><figure id="40d9d076-6c3b-80b5-bacb-cdb0cdcb9da4" class="equation" data-notion-equation="\text{AppliedRate} = \text{BaseRate} - \text{PreferentialRate} + \text{AddRate}" dir="auto"><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">AppliedRate</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">BaseRate</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">PreferentialRate</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">AddRate</span></span></span></span></span></span></div></figure><ul id="40d9d076-6c3b-8068-95da-cf7d6a7f0e79" class="bulleted-list" dir="auto"><li style="list-style-type:disc">すべての金利項目は <code>toFixed(3)</code> により小数点以下3桁の精度を担保。</li></ul><h3 id="40d9d076-6c3b-80dd-bf80-c6c3e004d05d" class="" dir="auto">② 返済期間の自動算出ロジック</h3><p id="40d9d076-6c3b-80f2-8ba2-c99b6cdac45c" class="" dir="auto">各行の返済期間（<code>repaymentYears</code>）は、以下のアルゴリズムで導出される。</p><figure id="40d9d076-6c3b-8037-bb16-da2790a6c79f" class="equation" data-notion-equation="\text{AutoYears} = \min\left(\text{maxYears}, \max(1, \text{completionAge} - \text{age})\right)" dir="auto"><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">AutoYears</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">min</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">(</span><span class="mord text"><span class="mord">maxYears</span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">max</span><span class="mopen">(</span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord">completionAge</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord text"><span class="mord">age</span></span><span class="mclose">)</span><span class="mclose delimcenter" style="top:0em;">)</span></span></span></span></span></span></div></figure><ul id="40d9d076-6c3b-8029-a5b4-d0eca70808a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ユーザーが手動で上書きした場合は <code>isManualRepaymentYears = true</code> となり、自動計算値への追従を停止して入力値を保持。</li></ul><h3 id="40d9d076-6c3b-8063-bb20-fcece1f92580" class="" dir="auto">③ 月々返済額の計算（元利均等返済方式）</h3><p id="40d9d076-6c3b-806a-acec-c37b4ef6a26b" class="" dir="auto">元金 <span data-notion-inline-equation="P" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span></span></span></span></span>、月利 <span data-notion-inline-equation="r" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span></span>（年利÷12÷100）、総返済回数 <span data-notion-inline-equation="n" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></span>（返済期間×12）とした場合、月々返済額 <span data-notion-inline-equation="M" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span></span> は以下の数式で算出される。</p><figure id="40d9d076-6c3b-80db-a253-f8ca75ddb653" class="equation" data-notion-equation="M = \frac{P \cdot r \cdot (1 + r)^n}{(1 + r)^n - 1}" dir="auto"><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.363em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.5904em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></div></figure><ul id="40d9d076-6c3b-80ca-b670-fc5cc318a2f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><span data-notion-inline-equation="r = 0" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></span> の場合は単純平均 <span data-notion-inline-equation="\frac{P}{n}" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2173em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8723em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">P</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span> を適用。結果は四捨五入して整数（円単位）で表示。</li></ul><h3 id="40d9d076-6c3b-80f4-868d-c8d62de1678c" class="" dir="auto">④ 審査返済率とステータスの自動判定</h3><ol type="1" id="40d9d076-6c3b-8009-ad41-f6d58339428a" class="numbered-list" start="1" dir="auto"><li><strong>審査年間返済額の算出</strong>: 審査金利（<code>examRate</code>）と審査用返済期間（<code>examYears</code>）を基に月々返済額を算出し、12倍して年間返済額とする。</li></ol><ol type="1" id="40d9d076-6c3b-802f-ad89-c6ae098c4afc" class="numbered-list" start="2" dir="auto"><li><strong>審査返済率の計算</strong>:</li></ol><figure id="40d9d076-6c3b-806c-b68e-c378385b14e2" class="equation" data-notion-equation="\text{ExamRatio} = \left(\frac{\text{審査年間返済額}}{\text{年間収入 (income} \times 10000\text{)}}\right) \times 100" dir="auto"><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">ExamRatio</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4em;vertical-align:-0.95em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord cjk_fallback">年間収入</span><span class="mord"> (income</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">10000</span><span class="mord text"><span class="mord">)</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord cjk_fallback">審査年間返済額</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">100</span></span></span></span></span></div></figure><ol type="1" id="40d9d076-6c3b-80c7-9385-d066707337c8" class="numbered-list" start="1" dir="auto"><li><strong>ステータス自動判定</strong>:</li></ol><ul id="40d9d076-6c3b-808b-93fa-e04a8dca7116" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><span data-notion-inline-equation="\text{ExamRatio} \le \text{checkRatio}" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord text"><span class="mord">ExamRatio</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">checkRatio</span></span></span></span></span></span> → <strong>「審査可能」</strong></li></ul><ul id="40d9d076-6c3b-807c-baf8-d714b2ae5366" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><span data-notion-inline-equation="\text{checkRatio} &lt; \text{ExamRatio} &lt; \text{checkRatio} + 5.0" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7335em;vertical-align:-0.0391em;"></span><span class="mord text"><span class="mord">checkRatio</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord text"><span class="mord">ExamRatio</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">checkRatio</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.0</span></span></span></span></span> → <strong>「審査未定」</strong></li></ul><ul id="40d9d076-6c3b-80fb-b8ca-de431669d07c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><span data-notion-inline-equation="\text{ExamRatio} \ge \text{checkRatio} + 5.0" class="notion-text-equation-token" contenteditable="false"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord text"><span class="mord">ExamRatio</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">checkRatio</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.0</span></span></span></span></span> → <strong>「審査不可」</strong></li></ul><ul id="40d9d076-6c3b-801a-8cbd-e066320e68e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">※ 手動変更フラグ（<code>isManualStatus = true</code>）が立っている場合は自動上書きを行わない。</li></ul><hr id="40d9d076-6c3b-8066-afe6-db7acfae4aff" dir="auto"/><h2 id="40d9d076-6c3b-80a5-ac60-faa590fc8390" class="" dir="auto">5. UI/UX仕様・レスポンシブ・印刷制御</h2><ul id="40d9d076-6c3b-802c-8ed4-f4a5b109c44f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Sticky Header</strong>: 横スクロール時、第1列の「金融機関名」が常時左側に固定される (<code>position: sticky</code>)。</li></ul><ul id="40d9d076-6c3b-80ad-9ebc-c411a8d263f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ドラッグ＆ドロップ</strong>: HTML5 Drag and Drop API を用いて、テーブルヘッダー（列順入替）および行（金融機関の並び順入替）の直感的な並び替えを実現。</li></ul><ul id="40d9d076-6c3b-80df-ab20-f0dfc606a751" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>列幅リサイズ</strong>: マウスイベント（<code>mousedown</code>, <code>mousemove</code>, <code>mouseup</code>）を監視し、各列のピクセル幅を動的に可変調整可能。</li></ul><ul id="40d9d076-6c3b-8073-8c9e-edca6870935c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>印刷スタイル最適化</strong>: <code>@media print</code> により、A3横サイズ（<code>size: A3 landscape</code>）を指定。不要な操作ボタン等を非表示にし、顧客条件セクションのフォントサイズを拡大して視認性を確保。</li></ul><hr id="40d9d076-6c3b-8053-90b0-c2a3a0d9dccf" dir="auto"/><h2 id="40d9d076-6c3b-805d-84a0-e050ee006699" class="" dir="auto">6. 保守・拡張性に関する留意事項</h2><ul id="40d9d076-6c3b-80f4-90cb-caa43547464d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ストレージキーのバージョニング</strong>: データ構造変更時は <code>STORAGE_KEY_DATA</code> 等のサフィックス（例: <code>_v15</code>）をインクリメントし、古いスキーマとの衝突を防ぐこと。</li></ul><ul id="40d9d076-6c3b-8037-b96d-d7444771e009" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>初期データフォールバック</strong>: ローカルストレージにデータが存在しない場合、外部URL (<code>vladesite.github.io</code>) からのJSON取得を試み、失敗した場合はハードコードされた <code>initialBankData</code> にフォールバックする堅牢な設計となっている。</li></ul><hr id="40d9d076-6c3b-807b-8e90-d957ad2c139b" dir="auto"/><h2 id="40d9d076-6c3b-80ea-9ac7-ce1fbbad6777" class="" dir="auto">7. よくあるご質問（Q&amp;A） - 管理者・エンジニア向け</h2><h3 id="40d9d076-6c3b-80fe-90ed-ea46fd2fd923" class="" dir="auto">Q1. 金利データの入力値が小数点以下3桁に強制丸めされるのはなぜですか？</h3><ul id="40d9d076-6c3b-802c-8073-cf8ab224596e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: 金融機関の金利提示において0.001%単位の精度（例: <code>3.375%</code>、役務特約や優遇幅の正確な計算）が不可欠であるため、<code>formatRate</code> 関数および <code>toFixed(3)</code> をバインディング層および計算層で強制適用しているためです。</li></ul><h3 id="40d9d076-6c3b-8072-9519-dcf5792643a6" class="" dir="auto">Q2. ユーザがブラウザのキャッシュをクリアした場合、保存したカスタムデータはどうなりますか？</h3><ul id="40d9d076-6c3b-80e2-b97f-d1347250b8fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: 本システムはサーバーサイドDBを持たず、ブラウザの <code>localStorage</code> に依存しているため、キャッシュやストレージをクリアすると初期データにリセットされます。重要なカスタム状態は適宜「JSON保存」機能を用いてファイルとしてバックアップすることを推奨します。</li></ul><h3 id="40d9d076-6c3b-80c9-9dde-f4366d58f2b7" class="" dir="auto">Q3. 「返済期間」と「審査用返済期間」の連動仕様はどうなっていますか？</h3><ul id="40d9d076-6c3b-8025-ab2a-f8c5ab36f883" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: デフォルトでは「返済期間」の値が「審査用返済期間」にも同期して適用されますが、個別の金融機関で審査上の制限やストレステスト用期間が異なるケースに対応するため、手動で「審査用返済期間」を上書き変更できる個別オーバーライド機構を持たせています。</li></ul><h3 id="40d9d076-6c3b-808e-8fab-cb08a08ea5ed" class="" dir="auto">Q4. 一般閲覧モード切り替え時のDOM制御はどのように行われていますか？</h3><ul id="40d9d076-6c3b-80cd-9b4d-e7f1d7f608e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: Vue.jsのリアクティブ変数 <code>isExamColumnsHidden</code> を監視し、対象となる <code>&lt;th&gt;</code> および <code>&lt;td&gt;</code> 要素に対して動的に <code>.col-hidden</code> クラス（<code>display: none !important</code>）を付与・解除することで、DOMの破棄を伴わずに高速な表示切り替えを実現しています。</li></ul><h3 id="40d9d076-6c3b-8046-a6cf-e64b8af0b41b" class="" dir="auto">Q5. 印刷時にA3横サイズ以外のレイアウト（A4等）で崩れるリスクはありますか？</h3><ul id="40d9d076-6c3b-80c0-ba45-ee17fe600854" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: 本システムは情報量が多いため、印刷スタイルシートで <code>@page { size: A3 landscape; }</code> を厳格に指定しています。A4等で印刷した場合、テーブルの列数（19列）が多く自動縮小されるため、必ずA3プリンターまたはPDF出力時の用紙サイズ「A3」の指定を徹底してください。</li></ul><h3 id="40d9d076-6c3b-80a5-9471-c9aac3d082de" class="" dir="auto">Q6. 新規の金融機関行を追加した際の一意なIDの生成方式は何ですか？</h3><ul id="40d9d076-6c3b-8030-aa63-febe073ef4d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A</strong>: <code>addRow()</code> メソッド実行時に <code>Date.now().toString()</code> を用いてタイムスタンプベースの一意な文字列IDを生成し、Vueのリアクティブ配列に追加することで、V-forレンダリング時のキー衝突やDOMの誤描画を防止しています。</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
