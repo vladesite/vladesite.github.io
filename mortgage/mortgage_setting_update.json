@@ -1,10 +1,10 @@
 {
   "version": "4.0-vue",
-  "exportDate": "2026-11-02T07:08:37.603Z",
+  "exportDate": "2026-11-03T02:47:02.317Z",
   "conditions": {
     "income": 930,
-    "amount": 8090,
-    "years": 43,
+    "amount": 8160,
+    "age": 37,
     "filterType": "all"
   },
   "columnKeys": [
@@ -12,11 +12,13 @@
     "type",
     "baseRate",
     "preferentialRate",
-    "maxYears",
     "addRate",
     "appliedRate",
+    "repaymentYears",
+    "completionAge",
     "monthlyPayment",
     "examRate",
+    "maxYears",
     "examYears",
     "checkRatio",
     "examRatio",
@@ -27,22 +29,25 @@
     "action"
   ],
   "columnWidths": [
-    185,
+    140,
     75,
     73,
-    86,
+    84,
     79,
     80,
-    80,
-    98,
-    82,
-    68,
+    75,
+    53,
+    95,
+    75,
+    65,
+    66,
     68,
     74,
-    93,
-    278,
-    244,
-    350
+    83,
+    300,
+    193,
+    289,
+    40
   ],
   "banks": [
     {
@@ -62,7 +67,9 @@
       "examCheckRate": 40,
       "examLimit": 40,
       "_lastSig": "820_7240_42_4_40_40",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 40,
+      "completionAge": 79
     },
     {
       "id": "2",
@@ -75,12 +82,14 @@
       "maxYears": 35,
       "cancerInsurance": "+0.1がん(51歳未満),+0.3%ワイド(51歳未満)",
       "examCondition": "年収300万〜(35%〜45%)",
-      "status": "審査可能",
+      "status": "審査未定",
       "memo": "完済時81歳未満。手数料: 借入×2.2%。最低年収300万以上。",
       "examYears": 35,
       "examLimit": 45,
       "_lastSig": "820_7240_42_3.75_35_45",
-      "checkRatio": 45
+      "checkRatio": 45,
+      "repaymentYears": 35,
+      "completionAge": 80
     },
     {
       "id": "4",
@@ -98,7 +107,9 @@
       "examYears": 40,
       "examLimit": 40,
       "_lastSig": "820_7240_42_3.5_40_40",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 40,
+      "completionAge": 79
     },
     {
       "id": "3",
@@ -116,7 +127,9 @@
       "examYears": 40,
       "examLimit": 45,
       "_lastSig": "820_7240_42_3.8_40_45",
-      "checkRatio": 45
+      "checkRatio": 45,
+      "repaymentYears": 40,
+      "completionAge": 79
     },
     {
       "id": "5",
@@ -129,12 +142,14 @@
       "maxYears": 40,
       "cancerInsurance": "+0.1%がん(41歳未満),+0.2%8大疾病(56歳未満）",
       "examCondition": "年収400万未満35%/以上40%",
-      "status": "審査不可",
+      "status": "審査未定",
       "memo": "完済時81歳未満。全国保証付は審査金利3.605%",
-      "examYears": 30,
+      "examYears": 40,
       "examLimit": 40,
       "_lastSig": "820_7240_42_3.75_35_40",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 40,
+      "completionAge": 80
     },
     {
       "id": "6",
@@ -149,9 +164,11 @@
       "examCondition": "年収300万〜(25%〜40%)",
       "status": "審査可能",
       "memo": "41〜50年借入は金利+0.15%〜+0.2%。手数料: 借入×2.2%。",
-      "examYears": 43,
+      "examYears": 42,
       "_lastSig": "820_7240_42_3.25_35_40",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 42,
+      "completionAge": 79
     },
     {
       "id": "7",
@@ -164,11 +181,13 @@
       "maxYears": 50,
       "cancerInsurance": "がん50%基本付帯(50歳未満),+0.2%3大疾病(50歳未満)",
       "examCondition": "原則35%(最低年収400万)",
-      "status": "審査不可",
+      "status": "審査未定",
       "memo": "完済時85歳未満。自己資金10%以上で金利優遇あり。",
-      "examYears": 34,
+      "examYears": 47,
       "_lastSig": "820_7240_42_4_42_35",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 47,
+      "completionAge": 84
     },
     {
       "id": "8",
@@ -183,10 +202,12 @@
       "examCondition": "一律40%(最低年収300万)",
       "status": "審査可能",
       "memo": "38年〜50年は金利+0.1%。事務手数料定額/定率選択可。",
-      "examYears": 43,
+      "examYears": 42,
       "examLimit": 40,
       "_lastSig": "820_7240_42_3.5_42_40",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 42,
+      "completionAge": 79
     },
     {
       "id": "1792305457364",
@@ -199,12 +220,14 @@
       "maxYears": 40,
       "cancerInsurance": "がん50%基本付帯(50歳未満),+0.2%がん(50歳未満)",
       "examCondition": "返済比率45%以内（上場企業）",
-      "status": "審査未定",
+      "status": "審査可能",
       "memo": "完済時82歳未満。契約・派遣社員可能",
-      "examYears": 31,
+      "examYears": 40,
       "examLimit": 45,
       "_lastSig": "820_7240_42_3.5_40_45",
-      "checkRatio": 45
+      "checkRatio": 45,
+      "repaymentYears": 40,
+      "completionAge": 81
     },
     {
       "id": "1792305751935",
@@ -219,10 +242,12 @@
       "examCondition": "返済比率 45%以内",
       "status": "審査可能",
       "memo": "契約・派遣社員可能。",
-      "examYears": 43,
+      "examYears": 42,
       "examLimit": 45,
       "_lastSig": "820_7240_42_3.5_42_45",
-      "checkRatio": 45
+      "checkRatio": 45,
+      "repaymentYears": 42,
+      "completionAge": 79
     },
     {
       "id": "1792811484336",
@@ -233,12 +258,14 @@
       "addRate": 0,
       "examRate": 4.452,
       "maxYears": 50,
-      "examYears": 43,
+      "examYears": 42,
       "checkRatio": 35,
       "cancerInsurance": "がん50%+就業保障基本付帯（50歳未満）",
       "examCondition": "返済比率 35%以内※上場企業と一般では優遇が違う　",
       "status": "審査不可",
-      "memo": "借入条件関係なく、事務手数料が一律33万"
+      "memo": "借入条件関係なく、事務手数料が一律33万",
+      "repaymentYears": 42,
+      "completionAge": 79
     },
     {
       "id": "1792308182842",
@@ -256,7 +283,9 @@
       "examYears": 40,
       "examLimit": 50,
       "_lastSig": "820_7240_42_4.025_40_50",
-      "checkRatio": 50
+      "checkRatio": 50,
+      "repaymentYears": 40,
+      "completionAge": 79
     },
     {
       "id": "1792308402020",
@@ -271,10 +300,12 @@
       "examCondition": "返済比率 45%以上も可能かも。",
       "status": "審査可能",
       "memo": "年収の10倍まで可能。SET対応不可！SBI保証。",
-      "examYears": 43,
+      "examYears": 42,
       "examLimit": 45,
       "_lastSig": "820_7240_42_4_40_45",
-      "checkRatio": 45
+      "checkRatio": 45,
+      "repaymentYears": 42,
+      "completionAge": 79
     },
     {
       "id": "1792312052201",
@@ -287,12 +318,14 @@
       "maxYears": 50,
       "cancerInsurance": "+0.1%(51歳未満),+0.2%8大疾病特約",
       "examCondition": "返済比率 40%以内",
-      "status": "審査不可",
+      "status": "審査可能",
       "memo": "完済時85歳未満。厳しい客向け。Web審査可能。手数料:借入×2.2%+5.5万",
-      "examYears": 32,
+      "examYears": 47,
       "examLimit": 40,
       "_lastSig": "820_7240_42_3.5_42_40",
-      "checkRatio": 40
+      "checkRatio": 40,
+      "repaymentYears": 47,
+      "completionAge": 84
     }
   ]
 }
