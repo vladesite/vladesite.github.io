@@ -324,7 +324,7 @@
       }
 
       /* 印刷時のお客様条件入力項目（右揃え） */
-      #input-income, #input-amount, #input-years {
+      #input-income, #input-amount, #input-age {
         border: none !important;
         background: transparent !important;
         padding-right: 32px !important;
@@ -510,14 +510,14 @@
             </div>
           </div>
 
-          <!-- 借入希望期間 -->
+          <!-- 年齢 (実行時) （旧: 借入希望期間から置換） -->
           <div>
-            <label class="block text-[11px] font-semibold text-slate-700 mb-1">借入希望期間</label>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">年齢 (実行時)</label>
             <div class="relative rounded-lg shadow-sm">
-              <input type="number" id="input-years" v-model.number="conditions.years" min="1" max="50" @input="onConditionChange"
+              <input type="number" id="input-age" v-model.number="conditions.age" min="18" max="80" @input="onConditionChange"
                 style="width: 90%;"
                 class="pl-1 pr-8 py-1.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-slate-900 font-bold text-right text-base focus:ring-1 focus:ring-emerald-500 focus:bg-white focus:outline-none">
-              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(90% + 4px);">年</span>
+              <span class="absolute inset-y-0 pl-1.5 flex items-center pointer-events-none text-slate-600 text-xs font-bold" style="left: calc(90% + 4px);">歳</span>
             </div>
           </div>
 
@@ -638,16 +638,30 @@
                       <span class="year-symbol">年</span>
                     </div>
                   </td>
-                  <!-- 審査用返済期間 -->
-                  <td v-else-if="key === 'examYears'" :class="{'col-hidden': isExamColumnsHidden}">
+                  <!-- 完済時年齢 (新設) -->
+                  <td v-else-if="key === 'completionAge'">
                     <div class="year-input-wrapper">
-                      <input type="number" :value="getExamYears(item)" @input="updateExamYears(item, $event.target.value)" class="table-input">
+                      <input type="number" v-model.number="item.completionAge" @change="saveToStorage" class="table-input">
+                      <span class="year-symbol">歳</span>
+                    </div>
+                  </td>
+                  <!-- 返済期間 (新設・月々返済額の基準) -->
+                  <td v-else-if="key === 'repaymentYears'">
+                    <div class="year-input-wrapper">
+                      <input type="number" :value="getRepaymentYears(item)" @input="updateRepaymentYears(item, $event.target.value)" class="table-input font-bold text-teal-800">
                       <span class="year-symbol">年</span>
                     </div>
                   </td>
                   <!-- 月々返済額 -->
                   <td v-else-if="key === 'monthlyPayment'" class="font-bold text-sky-800 bg-sky-50/40 font-plus-1px">
                     {{ calculateMonthlyPaymentVal(item).toLocaleString() }} <span class="text-[9px] font-normal text-slate-500">円</span>
+                  </td>
+                  <!-- 審査用返済期間 -->
+                  <td v-else-if="key === 'examYears'" :class="{'col-hidden': isExamColumnsHidden}">
+                    <div class="year-input-wrapper">
+                      <input type="number" :value="getExamYears(item)" @input="updateExamYears(item, $event.target.value)" class="table-input">
+                      <span class="year-symbol">年</span>
+                    </div>
                   </td>
                   <!-- 審査返済率 -->
                   <td v-else-if="key === 'examRatio'" class="font-bold text-amber-900 bg-amber-50/40 exam-col" :class="{'col-hidden': isExamColumnsHidden}">
@@ -695,7 +709,7 @@
         </div>
 
         <div class="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 flex flex-wrap justify-between items-center gap-1.5">
-          <p>※ 「基準金利（店頭表示金利）」は変動金利ベース。「適用金利」＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利。「月々返済額」は元利均等返済計算。「審査返済率」＝ 審査金利での年間返済額 ÷ 年収 × 100</p>
+          <p>※ 「適用金利」＝ 基準金利 － 優遇金利幅 ＋ 上乗せ金利。「月々返済額」は「返済期間」を基に元利均等返済計算。「審査返済率」＝ 審査金利での年間返済額 ÷ 年収 × 100</p>
           <p class="no-print text-slate-400">※ 各列幅・並び順・入力データはブラウザに保持されます。</p>
         </div>
       </section>
@@ -733,21 +747,21 @@
     const STORAGE_KEY_COL_ORDER = 'mortgage_simulator_col_order_v15';
     const STORAGE_KEY_EXPORT_DATE = 'mortgage_simulator_export_date_v15';
 
-    // デフォルト列順キー配列
-    const defaultColumnKeys = ['name', 'type', 'baseRate', 'preferentialRate', 'addRate', 'appliedRate', 'examRate', 'maxYears', 'examYears', 'monthlyPayment', 'examRatio', 'checkRatio', 'cancerInsurance', 'examCondition', 'status', 'memo', 'action'];
+    // デフォルト列順キー配列（完済時年齢、返済期間を追加）
+    const defaultColumnKeys = ['name', 'type', 'baseRate', 'preferentialRate', 'addRate', 'appliedRate', 'examRate', 'maxYears', 'completionAge', 'repaymentYears', 'monthlyPayment', 'examYears', 'examRatio', 'checkRatio', 'cancerInsurance', 'examCondition', 'status', 'memo', 'action'];
 
-    // デフォルト列幅 (px) (17列分)
-    const defaultColumnWidths = [140, 75, 75, 75, 75, 80, 75, 65, 75, 95, 80, 85, 140, 150, 95, 170, 40];
+    // デフォルト列幅 (px) (19列分)
+    const defaultColumnWidths = [140, 75, 73, 86, 75, 80, 75, 65, 75, 75, 95, 75, 74, 68, 140, 150, 95, 170, 40];
 
     const initialBankData = [
-      { id: '1', name: '三菱UFJ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.380, addRate: 0.000, examRate: 4.000, maxYears: 40, examYears: 35, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.1%(満51歳未満)', examCondition: '返済比率〜40%(最低年収200万)', status: '審査可能', isManualStatus: false, memo: '手数料: 借入×2.2%。WEB金消手数料なし。ZEHで金利-0.1%' },
-      { id: '2', name: 'みずほ銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.375, addRate: 0.000, examRate: 3.750, maxYears: 35, examYears: 35, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '全疾病100%(+0.5%)等', examCondition: '年収300万〜(35%〜45%)', status: '審査可能', isManualStatus: false, memo: '手数料: 借入×2.2%。最低年収300万以上。' },
-      { id: '3', name: '三井住友銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.475, addRate: 0.000, examRate: 3.800, maxYears: 40, examYears: 35, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.1%(40歳未満がん)', examCondition: '年収300万〜(30%〜45%)', status: '審査可能', isManualStatus: false, memo: '手数料: 借入×2.2%。36年〜は金利+0.15%' },
-      { id: '4', name: 'りそな銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.370, addRate: 0.000, examRate: 3.500, maxYears: 40, examYears: 35, isManualExamYears: false, checkRatio: 35.0, cancerInsurance: '+0.1%(46歳未満 8大)', examCondition: '原則35%(属性で40%)', status: '審査可能', isManualStatus: false, memo: '手数料: 借入×2.2%+5.5万。最低年収100万。ZEH-0.01%' },
-      { id: '5', name: '三井住友信託銀行', type: '提携', baseRate: 3.375, preferentialRate: 0.400, addRate: 0.000, examRate: 3.750, maxYears: 40, examYears: 35, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.19%(41歳未満)', examCondition: '年収400万未満30%/以上40%', status: '審査可能', isManualStatus: false, memo: '保証料型・手数料型選択可。全国保証付は審査金利3.605%' },
-      { id: '6', name: 'ドコモSMTBネット銀行', type: '非提携', baseRate: 3.250, preferentialRate: 0.297, addRate: 0.000, examRate: 3.250, maxYears: 50, examYears: 35, isManualExamYears: false, checkRatio: 35.0, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '年収300万〜(25%〜35%)', status: '審査可能', isManualStatus: false, memo: '手数料: 借入×2.2%。41〜50年借入は金利+0.15%〜+0.2%' },
-      { id: '7', name: 'ソニー銀行', type: '非提携', baseRate: 4.025, preferentialRate: 0.397, addRate: 0.000, examRate: 4.000, maxYears: 50, examYears: 35, isManualExamYears: false, checkRatio: 35.0, cancerInsurance: 'がん50%基本付帯(50歳未満)', examCondition: '原則35%(最低年収400万)', status: '審査可能', isManualStatus: false, memo: '自己資金10%以上で金利優遇あり。完済時85歳未満' },
-      { id: '8', name: 'SBI新生銀行', type: '非提携', baseRate: 2.650, preferentialRate: 0.420, addRate: 0.000, examRate: 3.500, maxYears: 50, examYears: 35, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.1%(50歳未満)', examCondition: '一律40%(最低年収300万)', status: '審査可能', isManualStatus: false, memo: '事務手数料定額/定率選択可。38年〜50年は金利+0.1%' }
+      { id: '1', name: '三菱UFJ銀行', type: '提携', baseRate: 3.375, preferentialRate: 2.180, addRate: 0.000, examRate: 4.000, maxYears: 40, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 40, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.3%7大疾病(満50歳未満),他', examCondition: '一律40%(最低年収200万)', status: '審査未定', isManualStatus: false, memo: 'ZEHで金利-0.1%。手数料: 借入×2.2%。WEB金消手数料なし。' },
+      { id: '2', name: 'みずほ銀行', type: '提携', baseRate: 3.375, preferentialRate: 2.100, addRate: 0.000, examRate: 3.750, maxYears: 35, completionAge: 80, repaymentYears: 35, isManualRepaymentYears: false, examYears: 35, isManualExamYears: false, checkRatio: 45.0, cancerInsurance: '+0.1がん(51歳未満),+0.3%ワイド(51歳未満)', examCondition: '年収300万〜(35%〜45%)', status: '審査可能', isManualStatus: false, memo: '完済時81歳未満。手数料: 借入×2.2%。最低年収300万以上。' },
+      { id: '3', name: '三井住友銀行', type: '提携', baseRate: 3.375, preferentialRate: 1.000, addRate: 0.000, examRate: 3.800, maxYears: 40, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 40, isManualExamYears: false, checkRatio: 45.0, cancerInsurance: '8大疾病 +0.1%(46歳未満),+0.3%(56歳未満）', examCondition: '年収300万〜(30%〜45%)', status: '審査可能', isManualStatus: false, memo: '36年〜は金利+0.15%。手数料: 借入×2.2%。' },
+      { id: '4', name: 'りそな銀行', type: '提携', baseRate: 3.375, preferentialRate: 2.205, addRate: 0.000, examRate: 3.500, maxYears: 40, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 40, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.2%がん(50歳未満),+0.3団信革命（50歳未満)', examCondition: '原則35%(属性で40%)', status: '審査未定', isManualStatus: false, memo: 'ZEH-0.01%。手数料: 借入×2.2%+5.5万。最低年収100万。' },
+      { id: '5', name: '三井住友信託銀行', type: '提携', baseRate: 3.375, preferentialRate: 1.675, addRate: 0.000, examRate: 3.750, maxYears: 40, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 30, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.1%がん(41歳未満),+0.2%8大疾病(56歳未満）', examCondition: '年収400万未満35%/以上40%', status: '審査不可', isManualStatus: false, memo: '完済時81歳未満。全国保証付は審査金利3.605%' },
+      { id: '6', name: 'ドコモSMTBネット銀行', type: '提携', baseRate: 4.025, preferentialRate: 2.326, addRate: 0.000, examRate: 3.250, maxYears: 50, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 43, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '3大疾病50%基本付帯(50歳未満),+0.25%(51歳以上)', examCondition: '年収300万〜(25%〜40%)', status: '審査可能', isManualStatus: false, memo: '41〜50年借入は金利+0.15%〜+0.2%。手数料: 借入×2.2%。' },
+      { id: '7', name: 'ソニー銀行', type: '提携', baseRate: 3.257, preferentialRate: 1.050, addRate: 0.000, examRate: 4.000, maxYears: 50, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 34, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: 'がん50%基本付帯(50歳未満),+0.2%3大疾病(50歳未満)', examCondition: '原則35%(最低年収400万)', status: '審査不可', isManualStatus: false, memo: '完済時85歳未満。自己資金10%以上で金利優遇あり。' },
+      { id: '8', name: 'SBI新生銀行', type: '提携', baseRate: 2.650, preferentialRate: 1.370, addRate: 0.000, examRate: 3.500, maxYears: 50, completionAge: 80, repaymentYears: 38, isManualRepaymentYears: false, examYears: 43, isManualExamYears: false, checkRatio: 40.0, cancerInsurance: '+0.1%(50歳未満)', examCondition: '一律40%(最低年収300万)', status: '審査可能', isManualStatus: false, memo: '38年〜50年は金利+0.1%。事務手数料定額/定率選択可。' }
     ];
 
     const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
@@ -755,10 +769,11 @@
     createApp({
       setup() {
         const bankData = ref(JSON.parse(JSON.stringify(initialBankData)));
+        // 借入希望期間(years)を削除し、年齢(age)を追加
         const conditions = reactive({
-          income: 800,
-          amount: 7000,
-          years: 35,
+          income: 930,
+          amount: 8090,
+          age: 42,
           filterType: 'all'
         });
         const columnKeys = ref([...defaultColumnKeys]);
@@ -783,8 +798,10 @@
           appliedRate: '適用金利',
           examRate: '審査金利',
           maxYears: '最大期間',
-          examYears: '審査用返済期間',
+          completionAge: '完済時年齢',
+          repaymentYears: '返済期間',
           monthlyPayment: '月々返済額',
+          examYears: '審査用返済期間',
           examRatio: '審査返済率',
           checkRatio: '返済率上限',
           cancerInsurance: 'がん団信・特約',
@@ -842,7 +859,11 @@
               if (cond && typeof cond === 'object') {
                 if (cond.income !== undefined) conditions.income = cond.income;
                 if (cond.amount !== undefined) conditions.amount = cond.amount;
-                if (cond.years !== undefined) conditions.years = cond.years;
+                if (cond.age !== undefined) conditions.age = cond.age;
+                // 古いキー 'years' がある場合のフォールバック
+                if (cond.years !== undefined && cond.age === undefined) {
+                  conditions.age = 42;
+                }
                 if (cond.filterType !== undefined) conditions.filterType = cond.filterType;
               }
             }
@@ -885,15 +906,35 @@
           return base - pref + add;
         };
 
+        // 「返済期間」を基に月々返済額を計算
+        const getRepaymentYears = (item) => {
+          const maxYears = parseInt(item.maxYears) || 35;
+          const completionAge = parseInt(item.completionAge) || 80;
+          const currentAge = parseInt(conditions.age) || 40;
+          const ageCalculatedYears = Math.max(1, completionAge - currentAge);
+          const autoYears = Math.min(maxYears, ageCalculatedYears);
+
+          if (!item.isManualRepaymentYears) {
+            item.repaymentYears = autoYears;
+          }
+          return item.repaymentYears !== undefined && !isNaN(item.repaymentYears) ? item.repaymentYears : autoYears;
+        };
+
+        const updateRepaymentYears = (item, val) => {
+          item.repaymentYears = parseInt(val) || 35;
+          item.isManualRepaymentYears = true;
+          saveToStorage();
+        };
+
         const calculateMonthlyPaymentVal = (item) => {
           const principalYen = Math.max(0, conditions.amount) * 10000;
           const appliedRate = calculateAppliedRate(item);
-          const calcYears = Math.min(Math.max(1, conditions.years), parseInt(item.maxYears) || 35);
+          const calcYears = getRepaymentYears(item);
           return calculateMonthlyPayment(principalYen, appliedRate, calcYears);
         };
 
         const getExamYears = (item) => {
-          const autoExamYears = Math.min(Math.max(1, conditions.years), parseInt(item.maxYears) || 35);
+          const autoExamYears = getRepaymentYears(item);
           if (!item.isManualExamYears) {
             item.examYears = autoExamYears;
           }
@@ -998,9 +1039,9 @@
             localStorage.removeItem(STORAGE_KEY_EXPORT_DATE);
 
             bankData.value = JSON.parse(JSON.stringify(initialBankData));
-            conditions.income = 800;
-            conditions.amount = 7000;
-            conditions.years = 35;
+            conditions.income = 930;
+            conditions.amount = 8090;
+            conditions.age = 42;
             conditions.filterType = 'all';
             columnKeys.value = [...defaultColumnKeys];
             columnWidths.value = [...defaultColumnWidths];
@@ -1024,6 +1065,9 @@
             addRate: 0.000,
             examRate: 3.500,
             maxYears: 35,
+            completionAge: 80,
+            repaymentYears: 35,
+            isManualRepaymentYears: false,
             examYears: 35,
             isManualExamYears: false,
             checkRatio: 35.0,
@@ -1159,7 +1203,11 @@
               if (response.ok) {
                 const imported = await response.json();
                 if (imported && imported.banks && Array.isArray(imported.banks)) {
-                  bankData.value = imported.banks;
+                  bankData.value = imported.banks.map(b => ({
+                    ...b,
+                    completionAge: b.completionAge || 80,
+                    repaymentYears: b.repaymentYears || b.examYears || 35
+                  }));
                   if (imported.columnWidths) columnWidths.value = imported.columnWidths;
                   if (imported.columnKeys) columnKeys.value = imported.columnKeys;
                   if (imported.exportDate) rawExportDate.value = imported.exportDate;
@@ -1197,6 +1245,8 @@
           saveToStorage,
           calculateAppliedRate,
           calculateMonthlyPaymentVal,
+          getRepaymentYears,
+          updateRepaymentYears,
           getExamYears,
           updateExamYears,
           calculateExamRatio,
