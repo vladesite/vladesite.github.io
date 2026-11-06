@@ -1,6 +1,6 @@
 {
   "version": "4.0-vue",
-  "exportDate": "2026-11-06T02:57:42.687Z",
+  "exportDate": "2026-11-06T03:02:46.745Z",
   "conditions": {
     "income": 930,
     "amount": 8150,
@@ -326,7 +326,7 @@
       "examCondition": "返済比率 40%以内（年収750万以上)",
       "status": "審査未定",
       "isManualStatus": false,
-      "memo": ""
+      "memo": "完済時年齢（76歳未満）"
     },
     {
       "id": "1792308402020",
