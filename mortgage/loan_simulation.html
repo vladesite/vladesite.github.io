@@ -552,6 +552,10 @@
               {{ dataVersionText }}
             </span>
             <span id="bank-count-badge" class="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-sky-50 text-sky-700 rounded-full border border-sky-100">{{ visibleBanks.length }}件</span>
+            <!-- JSON読み取り更新日表示（○○年○月○日更新） -->
+            <span v-if="dataUpdateText" class="text-[10px] text-slate-500 font-normal ml-1">
+              {{ dataUpdateText }}
+            </span>
           </div>
           <div class="no-print flex items-center space-x-2">
             <span class="text-[11px] text-slate-400 hidden lg:inline">※ ヘッダー項目や行をドラッグして並び替え可能です。境界線ドラッグで幅調節も可能です。</span>
@@ -631,28 +635,28 @@
                   <td v-else-if="key === 'appliedRate'" class="font-bold text-sky-800 bg-sky-50/40 font-plus-1px">
                     {{ calculateAppliedRate(item).toFixed(3) }}%
                   </td>
-                  <!-- 審査金利 (小数点以下3桁固定表示) -->
+                  <!-- 審査金利 (入力欄の視認性を高めた配色: bg-sky-100/70) -->
                   <td v-else-if="key === 'examRate'" :class="{'col-hidden': isExamColumnsHidden}">
                     <div class="rate-input-wrapper">
-                      <input type="number" step="0.001" :value="formatRate(item.examRate)" @input="updateRate(item, 'examRate', $event.target.value)" class="table-input">
+                      <input type="number" step="0.001" :value="formatRate(item.examRate)" @input="updateRate(item, 'examRate', $event.target.value)" class="table-input bg-sky-100/70 text-sky-950 font-bold border border-sky-300">
                       <span class="percent-symbol">%</span>
                     </div>
                   </td>
-                  <!-- 最大期間 -->
+                  <!-- 最大期間 (入力欄の視認性を高めた配色: bg-sky-100/70) -->
                   <td v-else-if="key === 'maxYears'">
                     <div class="year-input-wrapper">
-                      <input type="number" v-model.number="item.maxYears" @change="saveToStorage" class="table-input">
+                      <input type="number" v-model.number="item.maxYears" @change="saveToStorage" class="table-input bg-sky-100/70 text-sky-950 font-bold border border-sky-300">
                       <span class="year-symbol">年</span>
                     </div>
                   </td>
-                  <!-- 完済時年齢 (新設) -->
+                  <!-- 完済時年齢 (入力欄の視認性を高めた配色: bg-sky-100/70) -->
                   <td v-else-if="key === 'completionAge'">
                     <div class="year-input-wrapper">
-                      <input type="number" v-model.number="item.completionAge" @change="saveToStorage" class="table-input">
+                      <input type="number" v-model.number="item.completionAge" @change="saveToStorage" class="table-input bg-sky-100/70 text-sky-950 font-bold border border-sky-300">
                       <span class="year-symbol">歳</span>
                     </div>
                   </td>
-                  <!-- 返済期間 (新設・月々返済額の基準) -->
+                  <!-- 返済期間 (月々返済額の基準) -->
                   <td v-else-if="key === 'repaymentYears'">
                     <div class="year-input-wrapper">
                       <input type="number" :value="getRepaymentYears(item)" @input="updateRepaymentYears(item, $event.target.value)" class="table-input font-bold text-teal-800">
@@ -663,10 +667,10 @@
                   <td v-else-if="key === 'monthlyPayment'" class="font-bold text-sky-800 bg-sky-50/40 font-plus-1px">
                     {{ calculateMonthlyPaymentVal(item).toLocaleString() }} <span class="text-[9px] font-normal text-slate-500">円</span>
                   </td>
-                  <!-- 審査用返済期間 -->
+                  <!-- 審査用返済期間 (入力欄の視認性を高めた配色: bg-sky-100/70) -->
                   <td v-else-if="key === 'examYears'" :class="{'col-hidden': isExamColumnsHidden}">
                     <div class="year-input-wrapper">
-                      <input type="number" :value="getExamYears(item)" @input="updateExamYears(item, $event.target.value)" class="table-input">
+                      <input type="number" :value="getExamYears(item)" @input="updateExamYears(item, $event.target.value)" class="table-input bg-sky-100/70 text-sky-950 font-bold border border-sky-300">
                       <span class="year-symbol">年</span>
                     </div>
                   </td>
@@ -674,10 +678,10 @@
                   <td v-else-if="key === 'examRatio'" class="font-bold text-amber-900 bg-amber-50/40 exam-col" :class="{'col-hidden': isExamColumnsHidden}">
                     {{ calculateExamRatio(item) }}%
                   </td>
-                  <!-- 返済率チェック -->
+                  <!-- 返済率上限 (入力欄の視認性を高めた配色: bg-sky-100/70) -->
                   <td v-else-if="key === 'checkRatio'" :class="{'col-hidden': isExamColumnsHidden}">
                     <div class="rate-input-wrapper">
-                      <input type="number" step="0.1" v-model.number="item.checkRatio" @change="saveToStorage" class="table-input">
+                      <input type="number" step="0.1" v-model.number="item.checkRatio" @change="saveToStorage" class="table-input bg-sky-100/70 text-sky-950 font-bold border border-sky-300">
                       <span class="percent-symbol">%</span>
                     </div>
                   </td>
@@ -838,6 +842,20 @@
           return `${year}年${month}月版`;
         });
 
+        const dataUpdateText = computed(() => {
+          let dateObj = null;
+          if (rawExportDate.value) {
+            dateObj = new Date(rawExportDate.value);
+          }
+          if (!dateObj || isNaN(dateObj.getTime())) {
+            dateObj = new Date();
+          }
+          const year = dateObj.getFullYear();
+          const month = dateObj.getMonth() + 1;
+          const day = dateObj.getDate();
+          return `${year}年${month}月${day}日更新`;
+        });
+
         const saveToStorage = () => {
           try {
             localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(bankData.value));
@@ -867,7 +885,6 @@
                 if (cond.income !== undefined) conditions.income = cond.income;
                 if (cond.amount !== undefined) conditions.amount = cond.amount;
                 if (cond.age !== undefined) conditions.age = cond.age;
-                // 古いキー 'years' がある場合のフォールバック
                 if (cond.years !== undefined && cond.age === undefined) {
                   conditions.age = 42;
                 }
@@ -913,7 +930,6 @@
           return base - pref + add;
         };
 
-        // 「返済期間」を基に月々返済額を計算
         const getRepaymentYears = (item) => {
           const maxYears = parseInt(item.maxYears) || 35;
           const completionAge = parseInt(item.completionAge) || 80;
@@ -994,7 +1010,6 @@
           saveToStorage();
         };
 
-        // 小数点以下3桁固定フォーマット関数
         const formatRate = (val) => {
           const num = parseFloat(val);
           return isNaN(num) ? '0.000' : num.toFixed(3);
@@ -1246,6 +1261,7 @@
           printDate,
           rawExportDate,
           dataVersionText,
+          dataUpdateText,
           modal,
           visibleBanks,
           getColumnHeaderName,
