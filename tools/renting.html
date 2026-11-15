@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>家賃と購入返済比較シミュレーション</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans JP & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', '"Inter"', 'sans-serif'],
+            num: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+          },
+          colors: {
+            inputYellow: {
+              bg: '#FEF9C3',      /* 視認性の高い柔らかな黄色 */
+              hover: '#FEF08A',
+              border: '#EAB308',
+              focus: '#CA8A04',
+            },
+            brandNavy: {
+              800: '#1E293B',
+              900: '#0F172A',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* 数値の桁揃え */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 黄色入力フォームの共通スタイル */
+    .yellow-input {
+      background-color: #FEF9C3;
+      border: 1.5px solid #EAB308;
+      color: #0F172A;
+      transition: all 0.15s ease-in-out;
+    }
+    .yellow-input:hover {
+      background-color: #FEF08A;
+      border-color: #CA8A04;
+    }
+    .yellow-input:focus {
+      outline: none;
+      background-color: #FFFBEB;
+      border-color: #B45309;
+      box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.28);
+    }
+
+    /* 数値入力のスピナー非表示（スッキリした見た目と印刷時の美しさのため） */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* A4印刷専用スタイル */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+      }
+
+      html, body {
+        width: 210mm;
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        font-size: 9.5pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .print-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+
+      .print-card {
+        box-shadow: none !important;
+        border: 1px solid #CBD5E1 !important;
+        margin-bottom: 6px !important;
+        padding: 8px 10px !important;
+        break-inside: avoid;
+      }
+
+      .print-compact-table th,
+      .print-compact-table td {
+        padding-top: 2.5px !important;
+        padding-bottom: 2.5px !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+      }
+
+      .yellow-input {
+        background-color: #FEF9C3 !important;
+        border: 1px solid #CA8A04 !important;
+        padding-top: 1px !important;
+        padding-bottom: 1px !important;
+      }
+
+      .print-grid-2 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+      }
+
+      .print-chart-box {
+        height: 130px !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased selection:bg-amber-200 selection:text-slate-900">
+
+  <!-- トースト通知（alert()の代替） -->
+  <div id="toast" class="no-print fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 translate-y-2 opacity-0">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium border border-slate-700">
+      <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span id="toast-message">初期値にリセットしました。</span>
+    </div>
+  </div>
+
+  <!-- メインコンテナ -->
+  <div class="print-container max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+
+    <!-- 最上部：コピーライト表記（必須要件） -->
+    <header class="mb-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-slate-300 pb-2 mb-3">
+        <p class="text-xs sm:text-sm font-semibold tracking-wide text-slate-600 font-num">
+          Copyright© 2025-2026 SHUICHI HIRAI All Rights Reserved.
+        </p>
+        <div class="no-print flex items-center gap-2 self-end sm:self-auto">
+          <button
+            type="button"
+            onclick="resetDefaults()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition shadow-sm"
+            title="入力内容を初期値に戻します"
+          >
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            初期値に戻す
+          </button>
+
+          <button
+            type="button"
+            onclick="printA4()"
+            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 transition shadow-sm"
+          >
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            A4サイズで印刷
+          </button>
+        </div>
+      </div>
+
+      <!-- タイトル・氏名・入力凡例バー -->
+      <div class="print-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-1.5 no-print">
+              <span>住宅購入 vs 賃貸 比較シミュレーター</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              家賃と購入返済比較
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              賃貸の必要経費、購入時の公租公課・住宅ローン減税まで含めた「実質年間支払額」と資産形成の差額を円単位で自動試算します。
+            </p>
+          </div>
+
+          <!-- 氏名（黄色入力）＆ 入力箇所凡例 -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+            <!-- 氏名入力ボックス -->
+            <div class="flex items-center bg-slate-50 border border-slate-300 rounded-xl overflow-hidden">
+              <label for="customerName" class="px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border-r border-slate-300 whitespace-nowrap">
+                氏名
+              </label>
+              <div class="flex items-center px-2 py-1 bg-[#FEF9C3]">
+                <input
+                  id="customerName"
+                  type="text"
+                  placeholder="お名前を入力"
+                  class="w-32 sm:w-36 bg-transparent text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none text-center"
+                />
+                <span class="text-xs font-bold text-slate-700 ml-1">様</span>
+              </div>
+            </div>
+
+            <!-- 入力箇所凡例 -->
+            <div class="flex items-center justify-between sm:justify-start gap-2 bg-amber-50/70 border border-amber-200 rounded-xl px-3 py-1.5">
+              <span class="inline-block w-5 h-5 rounded bg-[#FEF9C3] border-2 border-[#EAB308] shrink-0"></span>
+              <div class="text-xs leading-tight">
+                <span class="font-bold text-slate-800 block">黄色が入力箇所です</span>
+                <span class="text-slate-500 text-[11px]">他はすべて自動計算されます</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- エラー・注意メッセージ表示領域（ボーナス返済額超過など） -->
+    <div id="validation-banner" class="no-print hidden mb-4 bg-rose-50 border border-rose-200 text-rose-800 px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-2">
+      <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <span id="validation-text"></span>
+    </div>
+
+    <!-- セクション1：メイン比較テーブル（賃貸 vs 新築マンション） -->
+    <section class="print-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-4">
+      <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
+        <h2 class="text-sm sm:text-base font-bold flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span>住居費・実質年間支払額・累計支払額の比較（円単位）</span>
+        </h2>
+        <span class="text-[11px] sm:text-xs text-slate-300">※自動計算欄は入力に応じて即時更新</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="print-compact-table w-full border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-slate-100 border-b-2 border-slate-300 text-slate-700">
+              <th class="py-2.5 px-3 sm:px-5 text-left font-bold w-[36%]">比較項目</th>
+              <th class="py-2.5 px-3 sm:px-5 text-center font-bold w-[32%] border-l border-slate-200 bg-slate-100/90">
+                <span class="inline-block px-2.5 py-0.5 rounded-md bg-slate-200 text-slate-800 text-xs sm:text-sm">賃貸</span>
+              </th>
+              <th class="py-2.5 px-3 sm:px-5 text-center font-bold w-[32%] border-l border-slate-200 bg-blue-50/70">
+                <span class="inline-block px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm">新築マンション</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <!-- 1. 面積 -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                面積
+                <span class="block text-[11px] font-normal text-slate-400 no-print">専有面積の広さ</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="rentArea"
+                    data-key="rentArea"
+                    data-decimals="0"
+                    value="65"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">㎡</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="buyArea"
+                    data-key="buyArea"
+                    data-decimals="0"
+                    value="70"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">㎡</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 2. 毎月賃料 / 毎月返済額 -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                <span>毎月賃料 <span class="text-slate-400 font-normal">/</span> 毎月返済額</span>
+                <span class="block text-[11px] font-normal text-slate-400 no-print">賃貸は家賃、購入は住宅ローン月々返済</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="rentMonthly"
+                    data-key="rentMonthly"
+                    data-decimals="0"
+                    value="212,000"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-buyMonthlyLoan" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2 py-0.5">166,574</span>
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 3. 更新料 (1ヶ月分/2年) / ボーナス返済 -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                <span>更新料 <span class="text-xs font-normal text-slate-500">(1ヶ月分/2年)</span> <span class="text-slate-400 font-normal">/</span> ボーナス返済</span>
+                <span class="block text-[11px] font-normal text-slate-400 no-print">月額換算で自動算出（更新料＝賃料÷24ヶ月）</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-rentRenewalMonthly" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-800 px-2 py-0.5">8,833</span>
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex flex-col items-end w-full max-w-[195px]">
+                  <div class="inline-flex items-center justify-end gap-1.5 w-full">
+                    <span id="out-buyBonusLoan" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-800 px-2 py-0.5">0</span>
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                  <span id="out-bonusPerTimeNote" class="hidden text-[10px] text-blue-700 font-medium pr-7"></span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 4. 共益費等 / 管理費等 -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                <span>共益費等 <span class="text-slate-400 font-normal">/</span> 管理費等</span>
+                <span class="block text-[11px] font-normal text-slate-400 no-print">購入は管理費・修繕積立金等の月額</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="rentCommonFee"
+                    data-key="rentCommonFee"
+                    data-decimals="0"
+                    value="10,000"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="buyMgmtFee"
+                    data-key="buyMgmtFee"
+                    data-decimals="0"
+                    value="28,000"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 4-2. インターネット代（賃貸） -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                <span>インターネット代 <span class="text-xs font-normal text-slate-500">(月額)</span></span>
+                <span class="block text-[11px] font-normal text-slate-400 no-print">賃貸の通信費（新築マンションは管理費等に含む）</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="rentInternet"
+                    data-key="rentInternet"
+                    data-decimals="0"
+                    value="5,000"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-400 px-2 py-0.5">0</span>
+                  <span class="text-slate-500 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 4-3. 家賃の上昇率（0%〜30%） -->
+            <tr class="hover:bg-slate-50/60 bg-amber-50/20">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                <span>家賃の上昇率 <span class="text-xs font-normal text-slate-500">(更新毎/2年毎 0%〜30%)</span></span>
+                <span class="block text-[11px] font-normal text-slate-400 no-print">更新毎（2年毎）の家賃上昇率を実質年間支払額・累計に反映（毎月支払計には非反映）</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    id="rentIncreaseRate"
+                    data-key="rentIncreaseRate"
+                    data-decimals="1"
+                    value="0.0"
+                    class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-slate-600 font-medium w-6 text-left">%</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span class="font-bold text-xs sm:text-sm text-slate-400 px-2 py-0.5">ー</span>
+                  <span class="w-6"></span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 5. 賃貸の必要経費（年額） / 公租公課（固定資産税等・年額） -->
+            <tr class="hover:bg-slate-50/60 bg-amber-50/20">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                <span>賃貸必要経費 <span class="text-slate-400 font-normal">/</span> 公租公課 <span class="text-xs font-normal text-slate-500">(年額)</span></span>
+                <span class="block text-[11px] font-normal text-slate-500 no-print">賃貸：火災保険・保証料等 ／ 購入：固定資産税・都市計画税</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex flex-col items-end w-full max-w-[195px]">
+                  <div class="inline-flex items-center justify-end gap-1.5 w-full">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="rentAnnualExtra"
+                      data-key="rentAnnualExtra"
+                      data-decimals="0"
+                      value="30,000"
+                      class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                  <span class="text-[10px] text-slate-500 pr-7">月額換算: <span id="out-rentExtraMonthly">2,500</span>円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex flex-col items-end w-full max-w-[195px]">
+                  <div class="inline-flex items-center justify-end gap-1.5 w-full">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="buyAnnualTax"
+                      data-key="buyAnnualTax"
+                      data-decimals="0"
+                      value="150,000"
+                      class="yellow-input w-28 sm:w-32 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                  <span class="text-[10px] text-slate-500 pr-7">月額換算: <span id="out-buyTaxMonthly">12,500</span>円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 6. 毎月支払計（月額換算合計・減税前） -->
+            <tr class="bg-slate-50 border-t border-slate-300">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-800">
+                毎月支払計 <span class="text-xs font-normal text-slate-500">(月額換算・減税前)</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-rentTotalMonthly" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2">238,333</span>
+                  <span class="text-slate-700 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/40 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-buyTotalMonthly" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2">207,074</span>
+                  <span class="text-slate-700 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 7. 住宅ローン減税（控除期間中の年平均還付額） -->
+            <tr class="hover:bg-slate-50/60 bg-emerald-50/30">
+              <td class="py-2 px-3 sm:px-5 font-bold text-emerald-900">
+                <span id="label-taxCreditRow">住宅ローン減税 (13年間年平均)</span>
+                <span class="block text-[11px] font-normal text-emerald-700 no-print">年末ローン残高×0.7%の所得税・住民税還付（最大13年）</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-400 px-2">0</span>
+                  <span class="text-slate-500 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-emerald-50/40 text-right">
+                <div class="inline-flex flex-col items-end w-full max-w-[195px]">
+                  <div class="inline-flex items-center justify-end gap-1.5 w-full">
+                    <span id="out-avgAnnualTaxCredit" class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-emerald-700 px-2">▲ 245,000</span>
+                    <span class="text-emerald-800 font-bold w-6 text-left">円</span>
+                  </div>
+                  <span class="text-[10px] text-emerald-700 pr-7">控除累計: <span id="out-totalTaxCredit">3,185,000</span>円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 8. 【強調行】実質年間支払額（実質年間返済・住居費） -->
+            <tr class="bg-slate-100/90 border-t-2 border-b-2 border-slate-300">
+              <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
+                実質年間支払額 <span class="text-xs font-bold text-blue-700">(年額)</span>
+                <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課・ローン減税（控除期間平均）反映後の年間実質負担</span>
+              </td>
+              <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex flex-col items-end w-full max-w-[195px]">
+                  <div class="inline-flex items-center justify-end gap-1.5 w-full">
+                    <span id="out-rentAnnualNet" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-slate-900 px-2">2,860,000</span>
+                    <span class="text-slate-800 font-bold w-6 text-left">円</span>
+                  </div>
+                  <span id="note-rentFirstAnnual" class="hidden text-[10px] text-amber-700 font-medium pr-7"></span>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/70 text-right">
+                <div class="inline-flex flex-col items-end w-full max-w-[195px]">
+                  <div class="inline-flex items-center justify-end gap-1.5 w-full">
+                    <span id="out-buyAnnualNet" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-blue-700 px-2">2,239,888</span>
+                    <span class="text-blue-800 font-bold w-6 text-left">円</span>
+                  </div>
+                  <span class="text-[10px] text-slate-600 pr-7">実質月額換算: <span id="out-buyEffectiveMonthly">186,657</span>円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 9. 1㎡あたり単価 -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                1㎡あたり単価 <span class="text-xs font-normal text-slate-500">(実質月額ベース)</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-rentUnitCost" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-800 px-2">3,667</span>
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-buyUnitCost" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2">2,667</span>
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 10. 10年間支払累計 -->
+            <tr class="hover:bg-slate-50/60">
+              <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
+                10年間支払累計 <span class="text-xs font-normal text-slate-500">(減税・経費反映後)</span>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-rent10YearTotal" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-800 px-2">28,600,000</span>
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-buy10YearTotal" class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2">22,398,880</span>
+                  <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 11. 35年間（返済年数）支払累計 -->
+            <tr class="bg-slate-50/90 font-bold">
+              <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
+                <span id="label-yearsTotalRow">35年間支払累計</span> <span class="text-xs font-normal text-slate-500">(減税・経費反映後)</span>
+              </td>
+              <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-rentLoanYearsTotal" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-slate-900 px-2">100,100,000</span>
+                  <span class="text-slate-700 font-bold w-6 text-left">円</span>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/50 text-right">
+                <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
+                  <span id="out-buyLoanYearsTotal" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-blue-700 px-2">83,786,080</span>
+                  <span class="text-blue-800 font-bold w-6 text-left">円</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- セクション2 & 3：下部2カラム（左：資金計画・減税条件 / 右：【差額】購入の方が…） -->
+    <section class="print-grid-2 grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+
+      <!-- 左カラム：資金計画・住宅ローン減税条件 -->
+      <div class="print-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+        <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
+          <h2 class="text-sm sm:text-base font-bold flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>資金計画・住宅ローン減税条件</span>
+          </h2>
+          <span class="text-[11px] text-slate-300">元利均等返済・控除率0.7%</span>
+        </div>
+
+        <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+          <table class="print-compact-table w-full border-collapse text-xs sm:text-sm">
+            <tbody class="divide-y divide-slate-200">
+              <!-- 物件価格 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">物件価格</td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="propertyPrice"
+                      data-key="propertyPrice"
+                      data-decimals="0"
+                      value="62,980,000"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 諸費用 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">
+                  諸費用
+                  <span class="text-[11px] font-normal text-slate-400 ml-1 no-print">(登記・手数料等)</span>
+                </td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="miscExpenses"
+                      data-key="miscExpenses"
+                      data-decimals="0"
+                      value="2,000,000"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 合計（自動計算） -->
+              <tr class="bg-slate-50">
+                <td class="py-1.5 px-2 font-extrabold text-slate-800">合計</td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <span id="out-totalCost" class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2">64,980,000</span>
+                    <span class="text-slate-700 font-bold w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 自己資金 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">自己資金</td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="downPayment"
+                      data-key="downPayment"
+                      data-decimals="0"
+                      value="5,000,000"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 借入金（自動計算） -->
+              <tr class="bg-blue-50/50">
+                <td class="py-1.5 px-2 font-extrabold text-blue-900">借入金</td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <span id="out-loanAmount" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-blue-700 px-2">59,980,000</span>
+                    <span class="text-blue-800 font-bold w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ボーナス返済分 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">
+                  ボーナス返済分
+                  <span class="text-[11px] font-normal text-slate-400 ml-1 no-print">(借入元本のうち)</span>
+                </td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="bonusPortion"
+                      data-key="bonusPortion"
+                      data-decimals="0"
+                      value="0"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 金利 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">金利</td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      id="interestRate"
+                      data-key="interestRate"
+                      data-decimals="3"
+                      value="0.900"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">%</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 返済年数 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">返済年数</td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="loanYears"
+                      data-key="loanYears"
+                      data-decimals="0"
+                      value="35"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">年</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ローン減税 控除期間 -->
+              <tr class="bg-emerald-50/20">
+                <td class="py-1.5 px-2 font-bold text-emerald-900">
+                  ローン減税 控除期間
+                  <span class="text-[11px] font-normal text-emerald-700 ml-1 no-print">(新築最大13年)</span>
+                </td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="taxCreditYears"
+                      data-key="taxCreditYears"
+                      data-decimals="0"
+                      value="13"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">年</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ローン減税 借入限度額 -->
+              <tr class="bg-emerald-50/20">
+                <td class="py-1.5 px-2 font-bold text-emerald-900">
+                  ローン減税 借入限度額
+                  <span class="text-[11px] font-normal text-emerald-700 ml-1 no-print">(控除対象上限)</span>
+                </td>
+                <td class="py-1.5 px-2 text-right">
+                  <div class="inline-flex items-center justify-end gap-1.5">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="taxCreditLimit"
+                      data-key="taxCreditLimit"
+                      data-decimals="0"
+                      value="35,000,000"
+                      class="yellow-input w-32 sm:w-36 px-2.5 py-1 rounded-lg text-right font-bold font-num tabular-nums text-xs sm:text-sm"
+                    />
+                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 右カラム：【差額】 購入の方が… -->
+      <div class="print-card bg-white rounded-2xl shadow-sm border-2 border-blue-600/30 overflow-hidden flex flex-col">
+        <div class="bg-gradient-to-r from-blue-700 to-blue-600 text-white px-4 py-2.5 flex items-center justify-between">
+          <h2 class="text-sm sm:text-base font-extrabold flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-white/20 text-xs">【差額】</span>
+            <span>購入の方が…</span>
+          </h2>
+          <span class="text-[11px] text-blue-100 font-medium">▲は支出減（お得）を表示</span>
+        </div>
+
+        <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5">
+          <table class="print-compact-table w-full border-collapse text-xs sm:text-sm">
+            <tbody class="divide-y divide-slate-200">
+              <!-- 面積差額 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">面積</td>
+                <td class="py-1.5 px-2 text-right">
+                  <span id="diff-area" class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-emerald-700">+5</span>
+                  <span class="text-slate-600 font-medium ml-1 inline-block w-5 text-left">㎡</span>
+                </td>
+              </tr>
+
+              <!-- 毎月支払差額（減税前） -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">毎月支払 <span class="text-[11px] font-normal text-slate-400">(減税前)</span></td>
+                <td class="py-1.5 px-2 text-right">
+                  <span id="diff-monthly" class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-blue-700">▲ 31,259</span>
+                  <span class="text-slate-600 font-medium ml-1 inline-block w-5 text-left">円</span>
+                </td>
+              </tr>
+
+              <!-- 実質年間支払額の差額（減税・経費・公租公課反映後） -->
+              <tr class="bg-emerald-50/40">
+                <td class="py-1.5 px-2 font-extrabold text-emerald-950">実質年間支払額 <span class="text-[11px] font-normal text-emerald-700">(年額)</span></td>
+                <td class="py-1.5 px-2 text-right">
+                  <span id="diff-annualNet" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-emerald-700">▲ 620,112</span>
+                  <span class="text-emerald-800 font-bold ml-1 inline-block w-5 text-left">円</span>
+                </td>
+              </tr>
+
+              <!-- 1㎡あたり単価差額 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">1㎡あたり単価 <span class="text-[11px] font-normal text-slate-400">(実質月額)</span></td>
+                <td class="py-1.5 px-2 text-right">
+                  <span id="diff-unitCost" class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-blue-700">▲ 1,000</span>
+                  <span class="text-slate-600 font-medium ml-1 inline-block w-5 text-left">円</span>
+                </td>
+              </tr>
+
+              <!-- 10年間支払累計差額 -->
+              <tr>
+                <td class="py-1.5 px-2 font-bold text-slate-700">10年間支払累計</td>
+                <td class="py-1.5 px-2 text-right">
+                  <span id="diff-10Year" class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-blue-700">▲ 6,201,120</span>
+                  <span class="text-slate-600 font-medium ml-1 inline-block w-5 text-left">円</span>
+                </td>
+              </tr>
+
+              <!-- 35年間支払累計差額 -->
+              <tr class="bg-blue-50/50">
+                <td class="py-2 px-2 font-extrabold text-slate-900">
+                  <span id="label-diffYearsRow">35年間支払累計</span>
+                </td>
+                <td class="py-2 px-2 text-right">
+                  <span id="diff-loanYears" class="font-extrabold font-num tabular-nums text-sm sm:text-base text-blue-700">▲ 16,313,920</span>
+                  <span class="text-blue-800 font-bold ml-1 inline-block w-5 text-left">円</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 〇年後・騰落率による資産残存ハイライトボックス -->
+          <div class="rounded-xl bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-2 border-amber-400 p-2.5 sm:p-3 shadow-sm space-y-2">
+            <!-- 〇年後 ＆ 騰落率 入力行 -->
+            <div class="grid grid-cols-2 gap-2 pb-2 border-b border-amber-300/80">
+              <div class="flex items-center justify-between bg-white/80 rounded-lg px-2 py-1 border border-amber-200">
+                <label for="evalYears" class="text-xs font-bold text-slate-700 whitespace-nowrap">評価時期</label>
+                <div class="inline-flex items-center gap-1">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="evalYears"
+                    data-key="evalYears"
+                    data-decimals="0"
+                    value="10"
+                    class="yellow-input w-12 sm:w-14 px-1.5 py-0.5 rounded text-right font-extrabold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-xs font-bold text-slate-700">年後</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between bg-white/80 rounded-lg px-2 py-1 border border-amber-200">
+                <label for="priceChangeRate" class="text-xs font-bold text-slate-700 whitespace-nowrap">騰落率</label>
+                <div class="inline-flex items-center gap-1">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    id="priceChangeRate"
+                    data-key="priceChangeRate"
+                    data-decimals="1"
+                    data-allow-negative="true"
+                    value="0.0"
+                    class="yellow-input w-14 sm:w-16 px-1.5 py-0.5 rounded text-right font-extrabold font-num tabular-nums text-xs sm:text-sm"
+                  />
+                  <span class="text-xs font-bold text-slate-700">%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 想定物件価値・ローン残高の内訳（自動計算） -->
+            <div class="grid grid-cols-2 gap-2 text-[11px] sm:text-xs bg-white/60 rounded-lg px-2.5 py-1.5 border border-amber-200/80">
+              <div>
+                <span class="text-slate-500 block">想定物件価値（評価額）</span>
+                <span class="font-bold font-num tabular-nums text-slate-800"><span id="out-estimatedPropertyValue">62,980,000</span> 円</span>
+              </div>
+              <div class="text-right border-l border-amber-200 pl-2">
+                <span class="text-slate-500 block"><span id="label-evalLoanYears">10</span>年後のローン残高</span>
+                <span class="font-bold font-num tabular-nums text-rose-700">▲ <span id="out-evalLoanBalance">44,741,173</span> 円</span>
+              </div>
+            </div>
+
+            <!-- 算出結果：手元に残る資産額 -->
+            <div class="text-center pt-0.5">
+              <p class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">
+                <span id="label-assetYears">10年後</span>に
+                <span class="text-amber-900">資産として手元に残る額</span>
+              </p>
+              <div class="mt-0.5 flex items-baseline justify-center gap-1">
+                <span id="out-remainingAsset" class="text-xl sm:text-2xl font-extrabold font-num tabular-nums text-slate-900 tracking-tight">18,238,827</span>
+                <span class="text-sm sm:text-base font-extrabold text-slate-800">円</span>
+              </div>
+              <p class="text-[10px] text-slate-600">
+                ※想定物件価値 − <span id="label-formulaYears">10</span>年後のローン残高（賃貸の場合は0円）
+              </p>
+            </div>
+          </div>
+
+          <!-- 実質トータルメリットまとめバッジ -->
+          <div class="rounded-xl bg-slate-900 text-white px-3 py-2 flex items-center justify-between gap-2">
+            <div class="text-xs leading-tight">
+              <span class="text-slate-300 block">支払い差額 ＋ 資産額</span>
+              <span class="font-bold text-amber-300">購入による実質経済メリット</span>
+            </div>
+            <div class="text-right shrink-0">
+              <span id="out-totalEconomicBenefit" class="text-base sm:text-lg font-extrabold font-num tabular-nums text-amber-400">+34,552,747</span>
+              <span class="text-xs font-bold text-white ml-0.5">円</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション4：初心者にも一目でわかる累計推移グラフ（SVGチャート） -->
+    <section class="print-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+        <div>
+          <h2 class="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+            <span>累計支払額と純資産形成の推移イメージ（円単位）</span>
+          </h2>
+          <p class="text-[11px] sm:text-xs text-slate-500">
+            住宅ローン減税・公租公課・賃貸必要経費を反映した累計支払額と、不動産資産を差し引いた実質負担の推移です。
+          </p>
+        </div>
+        <!-- 凡例 -->
+        <div class="flex flex-wrap items-center gap-3 text-[11px] sm:text-xs font-bold">
+          <span class="inline-flex items-center gap-1.5 text-slate-700">
+            <span class="w-3 h-1 rounded bg-slate-500 inline-block"></span>
+            賃貸：累計支払額
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-blue-700">
+            <span class="w-3 h-1 rounded bg-blue-600 inline-block"></span>
+            購入：累計支払額（減税・税費反映）
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-amber-700">
+            <span class="w-3 h-1 rounded bg-amber-500 inline-block border-b border-dashed border-amber-700"></span>
+            購入：実質負担（累計支払 − 資産額）
+          </span>
+        </div>
+      </div>
+
+      <div class="print-chart-box w-full h-52 sm:h-60 relative">
+        <svg id="comparison-chart" class="w-full h-full overflow-visible" viewBox="0 0 820 230" preserveAspectRatio="none" aria-label="累計支払額と実質負担の推移グラフ"></svg>
+      </div>
+    </section>
+
+    <!-- フッター補足（画面表示用） -->
+    <footer class="no-print mt-4 text-center text-xs text-slate-500 space-y-1">
+      <p>※住宅ローン減税は年末借入残高（限度額上限）×0.7%で概算試算しています。実際の納税額や諸条件により還付額は異なります。</p>
+      <p class="font-num">Copyright© 2025-2026 SHUICHI HIRAI All Rights Reserved.</p>
+    </footer>
+
+  </div>
+
+  <!-- シミュレーション計算＆UI制御スクリプト -->
+  <script>
+    // 初期値定義（すべて「円」単位）
+    const DEFAULT_STATE = {
+      customerName: '',
+      rentArea: 65,
+      rentMonthly: 212000,
+      rentCommonFee: 10000,
+      rentInternet: 5000,
+      rentIncreaseRate: 0.0,
+      rentAnnualExtra: 30000,
+      buyArea: 70,
+      buyMgmtFee: 28000,
+      buyAnnualTax: 150000,
+      propertyPrice: 62980000,
+      miscExpenses: 2000000,
+      downPayment: 5000000,
+      bonusPortion: 0,
+      interestRate: 0.900,
+      loanYears: 35,
+      taxCreditYears: 13,
+      taxCreditLimit: 35000000,
+      evalYears: 10,
+      priceChangeRate: 0.0
+    };
+
+    // 現在の入力状態
+    let state = { ...DEFAULT_STATE };
+
+    /**
+     * カンマ除去して数値パース（マイナス符号対応）
+     */
+    function parseNumericInput(rawStr, allowNegative = false) {
+      if (typeof rawStr === 'number') return rawStr;
+      const cleaned = String(rawStr)
+        .replace(/[ー−―]/g, '-')
+        .replace(/,/g, '')
+        .trim();
+      if (cleaned === '' || cleaned === '-') return 0;
+      const parsed = parseFloat(cleaned);
+      if (isNaN(parsed)) return 0;
+      return allowNegative ? parsed : Math.max(0, parsed);
+    }
+
+    /**
+     * 元利均等返済の毎月返済額を算出（単位：円）
+     */
+    function calcMonthlyPMT(principalYen, annualRatePercent, years) {
+      if (principalYen <= 0 || years <= 0) return 0;
+      const months = years * 12;
+      if (annualRatePercent <= 0) {
+        return principalYen / months;
+      }
+      const r = (annualRatePercent / 100) / 12;
+      const factor = Math.pow(1 + r, months);
+      return principalYen * (r * factor) / (factor - 1);
+    }
+
+    /**
+     * ボーナス返済分の返済額を算出（年2回払い・単位：円）
+     */
+    function calcBonusRepayment(bonusPrincipalYen, annualRatePercent, years) {
+      if (bonusPrincipalYen <= 0 || years <= 0) {
+        return { monthlyEq: 0, perBonus: 0 };
+      }
+      const count = years * 2;
+      if (annualRatePercent <= 0) {
+        const perBonus = bonusPrincipalYen / count;
+        return { monthlyEq: (perBonus * 2) / 12, perBonus };
+      }
+      const rb = (annualRatePercent / 100) / 2;
+      const factor = Math.pow(1 + rb, count);
+      const perBonus = bonusPrincipalYen * (rb * factor) / (factor - 1);
+      const monthlyEq = (perBonus * 2) / 12;
+      return { monthlyEq, perBonus };
+    }
+
+    /**
+     * 各年末のローン残高配列（1年目〜years年目）を元利均等返済スケジュールから算出
+     */
+    function calcYearEndBalances(monthlyPrincipal, bonusPrincipal, annualRatePercent, years) {
+      const balances = [];
+      let remMonthly = monthlyPrincipal;
+      let remBonus = bonusPrincipal;
+
+      const rMonth = (annualRatePercent / 100) / 12;
+      const pmtMonth = calcMonthlyPMT(monthlyPrincipal, annualRatePercent, years);
+
+      const rBonus = (annualRatePercent / 100) / 2;
+      const pmtBonus = calcBonusRepayment(bonusPrincipal, annualRatePercent, years).perBonus;
+
+      for (let y = 1; y <= years; y++) {
+        // 月次返済（12ヶ月分）
+        for (let m = 0; m < 12; m++) {
+          if (remMonthly > 0) {
+            const interest = annualRatePercent > 0 ? remMonthly * rMonth : 0;
+            const principalPaid = Math.min(remMonthly, Math.max(0, pmtMonth - interest));
+            remMonthly = Math.max(0, remMonthly - principalPaid);
+          }
+        }
+        // ボーナス返済（年2回分）
+        for (let b = 0; b < 2; b++) {
+          if (remBonus > 0) {
+            const interestB = annualRatePercent > 0 ? remBonus * rBonus : 0;
+            const principalPaidB = Math.min(remBonus, Math.max(0, pmtBonus - interestB));
+            remBonus = Math.max(0, remBonus - principalPaidB);
+          }
+        }
+        balances.push(remMonthly + remBonus);
+      }
+      return balances;
+    }
+
+    /**
+     * 数値フォーマットヘルパー
+     */
+    function formatNum(val, decimals = 0) {
+      const factor = Math.pow(10, decimals);
+      const rounded = Math.round((val + Number.EPSILON) * factor) / factor;
+      return rounded.toLocaleString('ja-JP', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    /**
+     * 差額フォーマットヘルパー（マイナスは「▲」、プラスは「+」）
+     */
+    function formatDiff(val, decimals = 0) {
+      const factor = Math.pow(10, decimals);
+      const rounded = Math.round((val + Number.EPSILON) * factor) / factor;
+      if (rounded === 0) {
+        return decimals > 0 ? (0).toFixed(decimals) : '0';
+      }
+      const absStr = Math.abs(rounded).toLocaleString('ja-JP', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+      return rounded < 0 ? `▲ ${absStr}` : `+${absStr}`;
+    }
+
+    /**
+     * 全項目の再計算とDOM反映
+     */
+    function recalculateAndRender() {
+      try {
+        const rentArea = Math.max(0, Number(state.rentArea) || 0);
+        const rentMonthly = Math.max(0, Number(state.rentMonthly) || 0);
+        const rentCommonFee = Math.max(0, Number(state.rentCommonFee) || 0);
+        const rentInternet = Math.max(0, Number(state.rentInternet) || 0);
+        const rentIncreaseRate = Math.max(0, Math.min(30, Number(state.rentIncreaseRate) || 0));
+        const rentAnnualExtra = Math.max(0, Number(state.rentAnnualExtra) || 0);
+
+        const buyArea = Math.max(0, Number(state.buyArea) || 0);
+        const buyMgmtFee = Math.max(0, Number(state.buyMgmtFee) || 0);
+        const buyAnnualTax = Math.max(0, Number(state.buyAnnualTax) || 0);
+
+        const propertyPrice = Math.max(0, Number(state.propertyPrice) || 0);
+        const miscExpenses = Math.max(0, Number(state.miscExpenses) || 0);
+        const downPayment = Math.max(0, Number(state.downPayment) || 0);
+        const rawBonusPortion = Math.max(0, Number(state.bonusPortion) || 0);
+        const interestRate = Math.max(0, Number(state.interestRate) || 0);
+        const loanYears = Math.max(1, Math.min(50, Math.round(Number(state.loanYears) || 35)));
+
+        const taxCreditYears = Math.max(0, Math.min(loanYears, Math.round(Number(state.taxCreditYears) || 0)));
+        const taxCreditLimit = Math.max(0, Number(state.taxCreditLimit) || 0);
+
+        const evalYears = Math.max(1, Math.min(50, Math.round(Number(state.evalYears) || 10)));
+        const priceChangeRate = Math.max(-100, Math.min(300, Number(state.priceChangeRate) || 0));
+
+        // 1. 資金計画の計算（円単位）
+        const totalCost = propertyPrice + miscExpenses;
+        const loanAmount = Math.max(0, totalCost - downPayment);
+
+        // バリデーションチェック
+        const banner = document.getElementById('validation-banner');
+        const bannerText = document.getElementById('validation-text');
+        let effectiveBonus = rawBonusPortion;
+
+        if (rawBonusPortion > loanAmount) {
+          effectiveBonus = loanAmount;
+          bannerText.textContent = `ボーナス返済分（${formatNum(rawBonusPortion)}円）が借入金（${formatNum(loanAmount)}円）を超えているため、借入金上限で試算しています。`;
+          banner.classList.remove('hidden');
+        } else if (downPayment > totalCost) {
+          bannerText.textContent = `自己資金（${formatNum(downPayment)}円）が合計費用（${formatNum(totalCost)}円）以上のため、借入金は0円で試算しています。`;
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
+
+        const monthlyPrincipal = Math.max(0, loanAmount - effectiveBonus);
+
+        // 2. 新築マンションの返済額・公租公課・住宅ローン減税計算
+        const buyMonthlyLoan = calcMonthlyPMT(monthlyPrincipal, interestRate, loanYears);
+        const bonusCalc = calcBonusRepayment(effectiveBonus, interestRate, loanYears);
+        const buyBonusLoan = bonusCalc.monthlyEq;
+        const buyTaxMonthly = buyAnnualTax / 12;
+
+        // 毎月支払計（減税前・公租公課月額換算含む）
+        const buyTotalMonthly = buyMonthlyLoan + buyBonusLoan + buyMgmtFee + buyTaxMonthly;
+        const buyAnnualGross = buyTotalMonthly * 12;
+
+        // 各年末残高から住宅ローン減税額（残高と限度額の小さい方 × 0.7%）を年ごとに算出
+        const yearEndBalances = calcYearEndBalances(monthlyPrincipal, effectiveBonus, interestRate, loanYears);
+        const annualTaxCredits = [];
+        let totalTaxCredit = 0;
+
+        for (let y = 1; y <= loanYears; y++) {
+          let credit = 0;
+          if (y <= taxCreditYears && loanAmount > 0) {
+            const eligibleBalance = Math.min(yearEndBalances[y - 1], taxCreditLimit);
+            credit = Math.floor(eligibleBalance * 0.007);
+          }
+          annualTaxCredits.push(credit);
+          totalTaxCredit += credit;
+        }
+
+        const avgAnnualTaxCredit = taxCreditYears > 0
+          ? annualTaxCredits.slice(0, taxCreditYears).reduce((a, b) => a + b, 0) / taxCreditYears
+          : 0;
+
+        // 実質年間支払額（控除期間中の年平均実質負担）
+        const buyAnnualNet = buyAnnualGross - avgAnnualTaxCredit;
+        const buyEffectiveMonthly = buyAnnualNet / 12;
+        const buyUnitCost = buyArea > 0 ? Math.round(buyEffectiveMonthly / buyArea) : 0;
+
+        // 年次別の実質累計支払額を算出（1年目〜loanYears年目）
+        const buyCumulativeByYear = [0];
+        let runningBuyCum = 0;
+        for (let y = 1; y <= loanYears; y++) {
+          runningBuyCum += (buyAnnualGross - annualTaxCredits[y - 1]);
+          buyCumulativeByYear.push(runningBuyCum);
+        }
+
+        const buy10YearTotal = buyCumulativeByYear[Math.min(10, loanYears)];
+        const buyLoanYearsTotal = buyCumulativeByYear[loanYears];
+
+        // 3. 賃貸の計算（インターネット代・更新毎の家賃上昇率・必要経費含む）
+        const rentRenewalMonthly = rentMonthly / 24;
+        const rentExtraMonthly = rentAnnualExtra / 12;
+        // 毎月支払計は家賃の上昇率を反映しない基準月額（初年度ベース）とする
+        const rentTotalMonthly = rentMonthly + rentRenewalMonthly + rentCommonFee + rentInternet + rentExtraMonthly;
+        const rentFirstAnnual = rentTotalMonthly * 12;
+
+        // 家賃の上昇率（更新毎/2年毎 0%〜30%）を反映した年次別累計と期間平均の算出
+        const growthRate = rentIncreaseRate / 100;
+        const rentCumulativeByYear = [0];
+        let runningRentCum = 0;
+
+        for (let y = 1; y <= loanYears; y++) {
+          // 2年毎の更新回数（1〜2年目: 0回、3〜4年目: 1回、5〜6年目: 2回…）
+          const renewalCount = Math.floor((y - 1) / 2);
+          const factor = Math.pow(1 + growthRate, renewalCount);
+          const yearMonthlyRent = rentMonthly * factor;
+          const yearMonthlyRenewal = yearMonthlyRent / 24;
+          const yearTotalMonthly = yearMonthlyRent + yearMonthlyRenewal + rentCommonFee + rentInternet + rentExtraMonthly;
+          runningRentCum += yearTotalMonthly * 12;
+          rentCumulativeByYear.push(runningRentCum);
+        }
+
+        const rentLoanYearsTotal = rentCumulativeByYear[loanYears];
+        const rent10YearTotal = rentCumulativeByYear[Math.min(10, loanYears)];
+        const rentAnnualNet = rentLoanYearsTotal / loanYears;
+        const rentUnitCost = rentArea > 0 ? Math.round((rentAnnualNet / 12) / rentArea) : 0;
+
+        // 4. 差額（購入 - 賃貸）
+        const diffArea = buyArea - rentArea;
+        const diffMonthly = buyTotalMonthly - rentTotalMonthly;
+        const diffAnnualNet = buyAnnualNet - rentAnnualNet;
+        const diffUnitCost = buyUnitCost - rentUnitCost;
+        const diff10Year = buy10YearTotal - rent10YearTotal;
+        const diffLoanYears = buyLoanYearsTotal - rentLoanYearsTotal;
+
+        // 5. 〇年後・騰落率による資産額 ＆ 支払い差額＋資産額
+        const estimatedPropertyValue = Math.round(propertyPrice * (1 + priceChangeRate / 100));
+        const evalLoanBalance = evalYears >= loanYears
+          ? 0
+          : Math.round(yearEndBalances[evalYears - 1] || 0);
+        const remainingAsset = estimatedPropertyValue - evalLoanBalance;
+        const totalEconomicBenefit = remainingAsset - diffLoanYears;
+
+        // --- DOM更新：資金計画 ---
+        document.getElementById('out-totalCost').textContent = formatNum(totalCost, 0);
+        document.getElementById('out-loanAmount').textContent = formatNum(loanAmount, 0);
+
+        // --- DOM更新：比較テーブル ---
+        document.getElementById('out-rentRenewalMonthly').textContent = formatNum(rentRenewalMonthly, 0);
+        document.getElementById('out-rentExtraMonthly').textContent = formatNum(rentExtraMonthly, 0);
+        document.getElementById('out-rentTotalMonthly').textContent = formatNum(rentTotalMonthly, 0);
+        document.getElementById('out-rentAnnualNet').textContent = formatNum(rentAnnualNet, 0);
+
+        // 家賃上昇率が0%より大きい場合は実質年間支払額に初年度との比較注記を表示
+        const noteRentFirstAnnualEl = document.getElementById('note-rentFirstAnnual');
+        if (rentIncreaseRate > 0) {
+          noteRentFirstAnnualEl.textContent = `(初年度: ${formatNum(rentFirstAnnual, 0)}円 / ${loanYears}年平均)`;
+          noteRentFirstAnnualEl.classList.remove('hidden');
+        } else {
+          noteRentFirstAnnualEl.classList.add('hidden');
+        }
+
+        document.getElementById('out-rentUnitCost').textContent = formatNum(rentUnitCost, 0);
+        document.getElementById('out-rent10YearTotal').textContent = formatNum(rent10YearTotal, 0);
+        document.getElementById('out-rentLoanYearsTotal').textContent = formatNum(rentLoanYearsTotal, 0);
+
+        document.getElementById('out-buyMonthlyLoan').textContent = formatNum(buyMonthlyLoan, 0);
+        document.getElementById('out-buyBonusLoan').textContent = formatNum(buyBonusLoan, 0);
+        document.getElementById('out-buyTaxMonthly').textContent = formatNum(buyTaxMonthly, 0);
+
+        const bonusNoteEl = document.getElementById('out-bonusPerTimeNote');
+        if (effectiveBonus > 0) {
+          bonusNoteEl.textContent = `(ボーナス時1回: ${formatNum(bonusCalc.perBonus, 0)}円)`;
+          bonusNoteEl.classList.remove('hidden');
+        } else {
+          bonusNoteEl.classList.add('hidden');
+        }
+
+        document.getElementById('out-buyTotalMonthly').textContent = formatNum(buyTotalMonthly, 0);
+        document.getElementById('label-taxCreditRow').textContent = taxCreditYears > 0
+          ? `住宅ローン減税 (${taxCreditYears}年間年平均)`
+          : '住宅ローン減税 (対象外)';
+        document.getElementById('out-avgAnnualTaxCredit').textContent = avgAnnualTaxCredit > 0
+          ? `▲ ${formatNum(avgAnnualTaxCredit, 0)}`
+          : '0';
+        document.getElementById('out-totalTaxCredit').textContent = formatNum(totalTaxCredit, 0);
+
+        document.getElementById('out-buyAnnualNet').textContent = formatNum(buyAnnualNet, 0);
+        document.getElementById('out-buyEffectiveMonthly').textContent = formatNum(buyEffectiveMonthly, 0);
+        document.getElementById('out-buyUnitCost').textContent = formatNum(buyUnitCost, 0);
+        document.getElementById('out-buy10YearTotal').textContent = formatNum(buy10YearTotal, 0);
+        document.getElementById('out-buyLoanYearsTotal').textContent = formatNum(buyLoanYearsTotal, 0);
+
+        // 年数ラベルの動的更新
+        document.getElementById('label-yearsTotalRow').textContent = `${loanYears}年間支払累計`;
+        document.getElementById('label-diffYearsRow').textContent = `${loanYears}年間支払累計`;
+        document.getElementById('label-evalLoanYears').textContent = `${evalYears}`;
+        document.getElementById('label-assetYears').textContent = `${evalYears}年後`;
+        document.getElementById('label-formulaYears').textContent = `${evalYears}`;
+
+        // --- DOM更新：差額ボックス ---
+        const diffAreaEl = document.getElementById('diff-area');
+        diffAreaEl.textContent = formatDiff(diffArea, 0);
+        diffAreaEl.className = `font-extrabold font-num tabular-nums text-xs sm:text-sm ${diffArea >= 0 ? 'text-emerald-700' : 'text-rose-600'}`;
+
+        const diffMonthlyEl = document.getElementById('diff-monthly');
+        diffMonthlyEl.textContent = formatDiff(diffMonthly, 0);
+        diffMonthlyEl.className = `font-extrabold font-num tabular-nums text-xs sm:text-sm ${diffMonthly <= 0 ? 'text-blue-700' : 'text-rose-600'}`;
+
+        const diffAnnualEl = document.getElementById('diff-annualNet');
+        diffAnnualEl.textContent = formatDiff(diffAnnualNet, 0);
+        diffAnnualEl.className = `font-extrabold font-num tabular-nums text-sm sm:text-base ${diffAnnualNet <= 0 ? 'text-emerald-700' : 'text-rose-600'}`;
+
+        const diffUnitEl = document.getElementById('diff-unitCost');
+        diffUnitEl.textContent = formatDiff(diffUnitCost, 0);
+        diffUnitEl.className = `font-extrabold font-num tabular-nums text-xs sm:text-sm ${diffUnitCost <= 0 ? 'text-blue-700' : 'text-rose-600'}`;
+
+        const diff10El = document.getElementById('diff-10Year');
+        diff10El.textContent = formatDiff(diff10Year, 0);
+        diff10El.className = `font-extrabold font-num tabular-nums text-xs sm:text-sm ${diff10Year <= 0 ? 'text-blue-700' : 'text-rose-600'}`;
+
+        const diffYearsEl = document.getElementById('diff-loanYears');
+        diffYearsEl.textContent = formatDiff(diffLoanYears, 0);
+        diffYearsEl.className = `font-extrabold font-num tabular-nums text-sm sm:text-base ${diffLoanYears <= 0 ? 'text-blue-700' : 'text-rose-600'}`;
+
+        document.getElementById('out-estimatedPropertyValue').textContent = formatNum(estimatedPropertyValue, 0);
+        document.getElementById('out-evalLoanBalance').textContent = formatNum(evalLoanBalance, 0);
+
+        const assetEl = document.getElementById('out-remainingAsset');
+        assetEl.textContent = remainingAsset < 0
+          ? `▲ ${formatNum(Math.abs(remainingAsset), 0)}`
+          : formatNum(remainingAsset, 0);
+        assetEl.className = `text-xl sm:text-2xl font-extrabold font-num tabular-nums tracking-tight ${remainingAsset >= 0 ? 'text-slate-900' : 'text-rose-700'}`;
+
+        const benefitEl = document.getElementById('out-totalEconomicBenefit');
+        benefitEl.textContent = formatDiff(totalEconomicBenefit, 0);
+        benefitEl.className = `text-base sm:text-lg font-extrabold font-num tabular-nums ${totalEconomicBenefit >= 0 ? 'text-amber-400' : 'text-rose-400'}`;
+
+        // 推移グラフの描画更新（すべて円単位）
+        renderChart({
+          loanYears,
+          rentCumulativeByYear,
+          buyCumulativeByYear,
+          remainingAsset,
+          evalYears
+        });
+      } catch (err) {
+        console.error('計算エラー:', err);
+      }
+    }
+
+    /**
+     * SVG推移グラフの描画（円単位）
+     */
+    function renderChart({ loanYears, rentCumulativeByYear, buyCumulativeByYear, remainingAsset, evalYears }) {
+      const svg = document.getElementById('comparison-chart');
+      if (!svg) return;
+
+      const W = 820;
+      const H = 230;
+      const padL = 88;
+      const padR = 24;
+      const padT = 18;
+      const padB = 30;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      // 各年（0年〜loanYears年）のデータポイントを生成
+      const rentPoints = [];
+      const buyPoints = [];
+      const netBuyPoints = [];
+      const refYears = Math.max(1, evalYears);
+
+      for (let y = 0; y <= loanYears; y++) {
+        const rentCum = rentCumulativeByYear[y] || 0;
+        const buyCum = buyCumulativeByYear[y] || 0;
+        const assetAtYear = (remainingAsset * y) / refYears;
+        const netBuy = buyCum - assetAtYear;
+
+        rentPoints.push({ y, val: rentCum });
+        buyPoints.push({ y, val: buyCum });
+        netBuyPoints.push({ y, val: netBuy });
+      }
+
+      const maxVal = Math.max(
+        10000000,
+        ...rentPoints.map(p => p.val),
+        ...buyPoints.map(p => p.val)
+      );
+      // Y軸の上限をキリの良い円単位（1,000万円または2,000万円刻み）に丸める
+      const yStep = maxVal <= 50000000 ? 10000000 : maxVal <= 120000000 ? 20000000 : 50000000;
+      const yMax = Math.ceil(maxVal / yStep) * yStep;
+
+      const toX = (year) => padL + (year / loanYears) * plotW;
+      const toY = (val) => padT + plotH - (Math.max(0, val) / yMax) * plotH;
+
+      let html = '';
+
+      // 水平グリッド線とY軸ラベル（円単位）
+      for (let v = 0; v <= yMax; v += yStep) {
+        const yPos = toY(v);
+        html += `
+          <line x1="${padL}" y1="${yPos}" x2="${W - padR}" y2="${yPos}" stroke="#E2E8F0" stroke-width="1" />
+          <text x="${padL - 8}" y="${yPos + 4}" text-anchor="end" fill="#64748B" font-size="10.5" font-family="Inter, sans-serif">
+            ${v.toLocaleString('ja-JP')}円
+          </text>
+        `;
+      }
+
+      // X軸年数ラベル
+      const tickYears = [0];
+      for (let y = 5; y < loanYears; y += 5) {
+        if (loanYears - y >= 3) tickYears.push(y);
+      }
+      tickYears.push(loanYears);
+
+      tickYears.forEach((yr) => {
+        const xPos = toX(yr);
+        html += `
+          <line x1="${xPos}" y1="${padT}" x2="${xPos}" y2="${padT + plotH}" stroke="#F1F5F9" stroke-width="1" />
+          <text x="${xPos}" y="${H - 8}" text-anchor="middle" fill="#475569" font-size="11" font-weight="600" font-family="Noto Sans JP, sans-serif">
+            ${yr}年目
+          </text>
+        `;
+      });
+
+      const makePath = (pts) => pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${toX(p.y).toFixed(1)} ${toY(p.val).toFixed(1)}`).join(' ');
+
+      const rentPath = makePath(rentPoints);
+      const buyPath = makePath(buyPoints);
+      const netBuyPath = makePath(netBuyPoints);
+      const netAreaPath = `${netBuyPath} L ${toX(loanYears).toFixed(1)} ${toY(0).toFixed(1)} L ${toX(0).toFixed(1)} ${toY(0).toFixed(1)} Z`;
+
+      html += `
+        <defs>
+          <linearGradient id="netBuyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#F59E0B" stop-opacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        <path d="${netAreaPath}" fill="url(#netBuyGrad)" />
+        <path d="${rentPath}" fill="none" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" />
+        <path d="${buyPath}" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" />
+        <path d="${netBuyPath}" fill="none" stroke="#D97706" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round" />
+      `;
+
+      const endX = toX(loanYears);
+      const endRentY = toY(rentPoints[loanYears].val);
+      const endBuyY = toY(buyPoints[loanYears].val);
+      const endNetY = toY(netBuyPoints[loanYears].val);
+
+      html += `
+        <circle cx="${endX}" cy="${endRentY}" r="4.5" fill="#64748B" />
+        <circle cx="${endX}" cy="${endBuyY}" r="4.5" fill="#2563EB" />
+        <circle cx="${endX}" cy="${endNetY}" r="4.5" fill="#D97706" />
+
+        <text x="${endX - 6}" y="${endRentY - 8}" text-anchor="end" fill="#475569" font-size="10.5" font-weight="700">
+          賃貸累計: ${Math.round(rentPoints[loanYears].val).toLocaleString('ja-JP')}円
+        </text>
+        <text x="${endX - 6}" y="${endBuyY - 8}" text-anchor="end" fill="#1D4ED8" font-size="10.5" font-weight="700">
+          購入累計: ${Math.round(buyPoints[loanYears].val).toLocaleString('ja-JP')}円
+        </text>
+        <text x="${endX - 6}" y="${Math.min(endNetY + 15, padT + plotH - 4)}" text-anchor="end" fill="#B45309" font-size="10.5" font-weight="700">
+          実質負担: ${Math.round(netBuyPoints[loanYears].val).toLocaleString('ja-JP')}円
+        </text>
+      `;
+
+      svg.innerHTML = html;
+    }
+
+    /**
+     * トースト通知表示
+     */
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toast-message');
+      msgEl.textContent = message;
+      toast.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 2400);
+    }
+
+    /**
+     * 入力欄の表示フォーマット整形（整数はカンマ区切り、小数は指定桁数）
+     */
+    function formatInputDisplay(val, decimals) {
+      if (decimals > 0) {
+        return Number(val).toFixed(decimals);
+      }
+      return Math.round(Number(val)).toLocaleString('ja-JP');
+    }
+
+    /**
+     * 初期値リセット
+     */
+    function resetDefaults() {
+      state = { ...DEFAULT_STATE };
+      document.getElementById('customerName').value = state.customerName;
+
+      document.querySelectorAll('input[data-key]').forEach((input) => {
+        const key = input.dataset.key;
+        const decimals = Number(input.dataset.decimals || 0);
+        input.value = formatInputDisplay(state[key], decimals);
+      });
+
+      recalculateAndRender();
+      showToast('すべての入力項目を初期値に戻しました。');
+    }
+
+    /**
+     * A4サイズ印刷実行
+     */
+    function printA4() {
+      window.print();
+    }
+
+    /**
+     * 初期化・イベントバインド
+     */
+    window.addEventListener('DOMContentLoaded', () => {
+      // 氏名入力の同期
+      const nameInput = document.getElementById('customerName');
+      nameInput.addEventListener('input', (e) => {
+        state.customerName = e.target.value;
+      });
+
+      // 全黄色数値入力フォームへのイベント登録（カンマ区切り円入力・マイナス入力対応）
+      document.querySelectorAll('input[data-key]').forEach((input) => {
+        const key = input.dataset.key;
+        const decimals = Number(input.dataset.decimals || 0);
+        const allowNegative = input.dataset.allowNegative === 'true';
+
+        // 初期表示を整形
+        input.value = formatInputDisplay(state[key], decimals);
+
+        // 入力中はカンマを除去してリアルタイム再計算
+        input.addEventListener('input', (e) => {
+          const parsed = parseNumericInput(e.target.value, allowNegative);
+          state[key] = parsed;
+          recalculateAndRender();
+        });
+
+        // フォーカス時はカンマを外して編集しやすくし、全選択する
+        input.addEventListener('focus', (e) => {
+          const cleanVal = state[key];
+          e.target.value = decimals > 0 ? Number(cleanVal).toFixed(decimals) : String(Math.round(cleanVal));
+          e.target.select();
+        });
+
+        // フォーカスが外れた時に3桁カンマ区切り・小数桁数・範囲制限へ整形
+        input.addEventListener('blur', (e) => {
+          let cleanVal = parseNumericInput(e.target.value, allowNegative);
+          if (key === 'loanYears' || key === 'evalYears') {
+            cleanVal = Math.max(1, Math.min(50, Math.round(cleanVal)));
+          } else if (key === 'taxCreditYears') {
+            cleanVal = Math.max(0, Math.min(50, Math.round(cleanVal)));
+          } else if (key === 'rentIncreaseRate') {
+            cleanVal = Math.max(0, Math.min(30, cleanVal));
+          } else if (key === 'priceChangeRate') {
+            cleanVal = Math.max(-100, Math.min(300, cleanVal));
+          } else if (!allowNegative) {
+            cleanVal = Math.max(0, cleanVal);
+          }
+          state[key] = cleanVal;
+          e.target.value = formatInputDisplay(cleanVal, decimals);
+          recalculateAndRender();
+        });
+      });
+
+      // 初回レンダリング
+      recalculateAndRender();
+    });
+  </script>
+</body>
+</html>
