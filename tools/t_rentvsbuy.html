@@ -535,49 +535,6 @@
                 </td>
               </tr>
 
-              <!-- 10. 10年間支払累計（ローン控除額は含めない） -->
-              <tr class="hover:bg-slate-50/60">
-                <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
-                  10年間支払累計 <span class="text-xs font-normal text-slate-500">(経費・公租公課反映後)</span>
-                </td>
-                <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
-                  <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
-                    <span class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-800 px-2">{{ formatNum(calc.rent10YearTotal, 0) }}</span>
-                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
-                  </div>
-                </td>
-                <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-blue-50/20 text-right">
-                  <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
-                    <span class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-900 px-2">{{ formatNum(calc.buy10YearTotal, 0) }}</span>
-                    <span class="text-slate-600 font-medium w-6 text-left">円</span>
-                  </div>
-                </td>
-              </tr>
-
-              <!-- 11. 35年間（返済年数）支払累計（ローン控除額は含めない） -->
-              <tr class="bg-slate-50/90 font-bold">
-                <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
-                  <span>{{ calc.loanYears }}年間支払累計</span> <span class="text-xs font-normal text-slate-500">(経費・公租公課反映後)</span>
-                </td>
-                <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
-                  <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
-                    <span class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-400 px-2">0</span>
-                    <span class="text-slate-500 font-medium w-6 text-left">円</span>
-                  </div>
-                </td>
-                <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-emerald-50/40 text-right">
-                  <div class="inline-flex flex-col items-end w-full max-w-[195px]">
-                    <div class="inline-flex items-center justify-end gap-1.5 w-full">
-                      <span class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-emerald-700 px-2">
-                        {{ calc.avgAnnualTaxCredit > 0 ? `▲ ${formatNum(calc.avgAnnualTaxCredit, 0)}` : '0' }}
-                      </span>
-                      <span class="text-emerald-800 font-bold w-6 text-left">円</span>
-                    </div>
-                    <span class="text-[10px] text-emerald-700 pr-7">控除累計: <span>{{ formatNum(calc.totalTaxCredit, 0) }}</span>円</span>
-                  </div>
-                </td>
-              </tr>
-
               <!-- 8. 【強調行】実質年間支払額（実質年間返済・住居費） -->
               <tr class="bg-slate-100/90 border-t-2 border-b-2 border-slate-300">
                 <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
