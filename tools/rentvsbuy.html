@@ -924,7 +924,7 @@
 
                 <!-- 実質年間支払額の差額（ローン控除額は含めない） -->
                 <tr class="bg-emerald-50/50">
-                  <td class="py-2.5 px-2.5 font-extrabold text-emerald-950">実質年間支払差額 <span class="text-xs font-normal text-emerald-700">(年額)</span><span class="block sm:inline text-xs font-normal text-slate-500">※ローン控除分含まず</span></td>
+                  <td class="py-2.5 px-2.5 font-extrabold text-emerald-950">実質年間支払額 <span class="text-xs font-normal text-emerald-700">(年額)</span><span class="block sm:inline text-xs font-normal text-slate-500">※ローン控除分含まず</span></td>
                   <td class="py-2.5 px-2.5 text-right whitespace-nowrap">
                     <span
                       class="font-extrabold font-num tabular-nums text-base sm:text-lg"
@@ -936,7 +936,7 @@
 
                 <!-- 1㎡あたり単価差額 -->
                 <tr>
-                  <td class="py-2 px-2.5 font-bold text-slate-700">1㎡あたり単価差額 <span class="text-xs font-normal text-slate-500">(実質月額)</span></td>
+                  <td class="py-2 px-2.5 font-bold text-slate-700">1㎡あたり単価 <span class="text-xs font-normal text-slate-500">(実質月額)</span></td>
                   <td class="py-2 px-2.5 text-right whitespace-nowrap">
                     <span
                       class="font-extrabold font-num tabular-nums text-sm sm:text-base"
@@ -948,7 +948,7 @@
 
                 <!-- 10年間支払累計差額（ローン控除額は含めない） -->
                 <tr>
-                  <td class="py-2 px-2.5 font-bold text-slate-700">10年間支払累計差額</td>
+                  <td class="py-2 px-2.5 font-bold text-slate-700">10年間支払累計</td>
                   <td class="py-2 px-2.5 text-right whitespace-nowrap">
                     <span
                       class="font-extrabold font-num tabular-nums text-sm sm:text-base"
@@ -961,7 +961,7 @@
                 <!-- 35年間支払累計差額（ローン控除額は含めない） -->
                 <tr class="bg-blue-50/60">
                   <td class="py-2.5 px-2.5 font-extrabold text-slate-900">
-                    <span>{{ calc.loanYears }}年間支払累計差額</span>
+                    <span>{{ calc.loanYears }}年間支払累計</span>
                   </td>
                   <td class="py-2.5 px-2.5 text-right whitespace-nowrap">
                     <span
@@ -976,7 +976,7 @@
                 <tr class="bg-emerald-50/50">
                   <td class="py-2 px-2.5 font-bold text-emerald-950">
                     住宅ローン控除額 <span class="text-xs font-normal text-emerald-700">(累計)</span>
-                    <span class="block text-[11px] font-normal text-emerald-700">※控除の累計額（ペアローン分を含む）を入力してください。</span>
+                    <span class="block text-[11px] font-normal text-emerald-700">※控除累計額（ペアローン分を含む）を入力してください。</span>
                   </td>
                   <td class="py-2 px-2.5 text-right whitespace-nowrap">
                     <div class="inline-flex items-center justify-end gap-1">
@@ -1069,9 +1069,9 @@
             </div>
 
             <!-- 実質トータルメリットまとめバッジ（注釈：○年後時点の支払い差額＋資産額に手入力された住宅ローン控除額の累計を加算） -->
-            <div class="rounded-2xl bg-slate-900 text-white px-4 py-3.5 sm:px-5 sm:py-4 border-2 border-amber-400/60 shadow-md flex items-center justify-between gap-3">
-              <div class="leading-snug">
-                <span class="text-xs sm:text-sm text-slate-300 block whitespace-nowrap">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額 ＋ 住宅ローン控除額</span>
+            <div class="rounded-2xl bg-slate-900 text-white px-4 py-3.5 sm:px-5 sm:py-4 border-2 border-amber-400/60 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+              <div class="leading-snug min-w-0">
+                <span class="text-[11px] sm:text-xs text-slate-300 block whitespace-nowrap">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額 ＋ 住宅ローン控除額</span>
                 <span class="text-sm sm:text-base font-extrabold text-amber-300">購入による実質メリット</span>
                 <span class="text-[11px] text-slate-400 block mt-0.5">
                   ※支払差額({{ formatDiff(calc.diffEvalYears, 0) }}円) ＋ 資産額({{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円) ＋ ローン控除累計({{ formatNum(calc.manualTaxCreditTotal, 0) }}円)
