@@ -254,10 +254,10 @@
               <tr class="bg-slate-100 border-b-2 border-slate-300 text-slate-700">
                 <th class="py-2.5 px-3 sm:px-5 text-left font-bold w-[36%]">比較項目</th>
                 <th class="py-2.5 px-3 sm:px-5 text-center font-bold w-[32%] border-l border-slate-200 bg-slate-100/90">
-                  <span class="inline-block px-2.5 py-0.5 rounded-md bg-slate-200 text-slate-800 text-xs sm:text-sm">賃貸</span>
+                  <span class="inline-block px-2.5 py-0.5 rounded-md bg-slate-200 text-slate-800 text-xs sm:text-sm">賃貸住まい</span>
                 </th>
                 <th class="py-2.5 px-3 sm:px-5 text-center font-bold w-[32%] border-l border-slate-200 bg-blue-50/70">
-                  <span class="inline-block px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm">新築マンション</span>
+                  <span class="inline-block px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm">新築マンション購入</span>
                 </th>
               </tr>
             </thead>
@@ -472,7 +472,7 @@
               <!-- 6. 毎月支払計（月額換算合計・減税前） -->
               <tr class="bg-slate-50 border-t border-slate-300">
                 <td class="py-2 px-3 sm:px-5 font-bold text-slate-800">
-                  毎月支払計 <span class="text-xs font-normal text-slate-500">(月額換算・減税前)</span>
+                  毎月の支払合計 <span class="text-xs font-normal text-slate-500">(月額換算)</span>
                 </td>
                 <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
@@ -492,7 +492,7 @@
               <tr class="bg-slate-100/90 border-t-2 border-b-2 border-slate-300">
                 <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
                   実質年間支払額 <span class="text-xs font-bold text-blue-700">(年額)</span>
-                  <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課反映後の年間実質負担（ローン控除額は含まず）</span>
+                  <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課反映後の年間実質負担</span>
                 </td>
                 <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex flex-col items-end w-full max-w-[195px]">
@@ -582,7 +582,7 @@
               <tr class="bg-slate-100/90 border-t-2 border-b-2 border-slate-300">
                 <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
                   実質年間支払額 <span class="text-xs font-bold text-blue-700">(年額)</span>
-                  <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課・ローン減税（控除期間平均）反映後の年間実質負担</span>
+                  <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課　反映後の年間実質負担</span>
                 </td>
                 <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex flex-col items-end w-full max-w-[195px]">
@@ -1057,7 +1057,7 @@
                 <tr class="bg-emerald-50/50">
                   <td class="py-2 px-2.5 font-bold text-emerald-950">
                     住宅ローン控除額 <span class="text-xs font-normal text-emerald-700">(累計)</span>
-                    <span class="block text-[11px] font-normal text-emerald-700">※手入力した控除累計額を下の経済メリットに加算</span>
+                    <span class="block text-[11px] font-normal text-emerald-700">※控除累計額（ペアローン分を含む）を入力してください。</span>
                   </td>
                   <td class="py-2 px-2.5 text-right whitespace-nowrap">
                     <div class="inline-flex items-center justify-end gap-1">
@@ -1131,7 +1131,7 @@
               <!-- 算出結果：手元に残る資産額 -->
               <div class="text-center pt-1">
                 <p class="text-sm sm:text-base font-extrabold text-slate-800 leading-snug">
-                  <span>{{ calc.evalYears }}年後</span>に
+                  <span>{{ calc.evalYears }}年後</span>に売却した場合
                   <span class="text-amber-900">資産として手元に残る額</span>
                 </p>
                 <div class="mt-1 flex items-baseline justify-center gap-1.5">
@@ -1153,7 +1153,7 @@
             <div class="rounded-2xl bg-slate-900 text-white px-4 py-3.5 sm:px-5 sm:py-4 border-2 border-amber-400/60 shadow-md flex items-center justify-between gap-3">
               <div class="leading-snug">
                 <span class="text-xs sm:text-sm text-slate-300 block">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額 ＋ 住宅ローン控除額</span>
-                <span class="text-sm sm:text-base font-extrabold text-amber-300">購入による実質経済メリット</span>
+                <span class="text-sm sm:text-base font-extrabold text-amber-300">購入による実質メリット</span>
                 <span class="text-[11px] text-slate-400 block mt-0.5">
                   ※支払差額({{ formatDiff(calc.diffEvalYears, 0) }}円) ＋ 資産額({{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円) ＋ ローン控除累計({{ formatNum(calc.manualTaxCreditTotal, 0) }}円)
                 </span>
@@ -1250,7 +1250,7 @@
 
       <!-- フッター補足（画面表示用） -->
       <footer class="no-print mt-4 text-center text-xs text-slate-500 space-y-1">
-        <p>※実質年間支払額および各期間の支払累計・差額には住宅ローン控除額を含めず算出し、手入力された「住宅ローン控除額（累計）」は評価時期の実質経済メリットに加算しています。</p>
+        <p>※実質年間支払額および各期間の支払累計・差額には住宅ローン控除額を含めず算出し、手入力された「住宅ローン控除額（累計）」は評価時期のメリットに加算しています。</p>
         <p class="font-num">Copyright© 2025-2026 SHUICHI HIRAI All Rights Reserved.</p>
       </footer>
 
@@ -1264,32 +1264,32 @@
     // 初期値定義（すべて「円」単位）
     const DEFAULT_STATE = {
       customerName: '',
-      rentArea: 65,
-      rentMonthly: 247000,
-      rentCommonFee: 10000,
+      rentArea: 58,
+      rentMonthly: 251000,
+      rentCommonFee: 15000,
       rentInternet: 5000,
       rentIncreaseRate: 0.0,
       rentAnnualExtra: 30000,
-      buyArea: 70,
-      buyMgmtFee: 35000,
+      buyArea: 64,
+      buyMgmtFee: 31500,
       buyAnnualTax: 180000,
-      propertyPrice: 89400000,
+      propertyPrice: 95000000,
       miscExpenses: 4000000,
       downPayment: 5000000,
       bonusPortion: 0,
-      interestRate: 1.195,
+      interestRate: 1.42,
       loanYears: 40,
-      evalYears: 10,
+      evalYears: 12,
       priceChangeRate: 0.0,
       // 手入力の住宅ローン控除額（累計）
       manualTaxCreditTotal: 0,
       // 賃貸入居時・退去時の諸費用
-      rentDepositMonths: 2.0,
-      rentBrokerageFee: 247000,
-      rentGuaranteeFee: 123500,
+      rentDepositMonths: 4.0,
+      rentBrokerageFee: 275000,
+      rentGuaranteeFee: 251000,
       rentFireInsurance: 20000,
       rentKeyExchangeFee: 22000,
-      rentMoveOutCleaningFee: 70000
+      rentMoveOutCleaningFee: 100000
     };
 
     /**
