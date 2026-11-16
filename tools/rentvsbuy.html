@@ -203,7 +203,7 @@
                 家賃と購入返済比較
               </h1>
               <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
-                賃貸の必要経費、購入時の公租公課・住宅ローン減税まで含めた「実質年間支払額」と資産形成の差額を自動試算します。
+                賃貸の必要経費、購入時の公租公課・住宅ローン減税まで含めた「実質年間支払額」と資産形成の差額を円単位で自動試算します。
               </p>
             </div>
 
@@ -472,7 +472,7 @@
               <!-- 6. 毎月支払計（月額換算合計・減税前） -->
               <tr class="bg-slate-50 border-t border-slate-300">
                 <td class="py-2 px-3 sm:px-5 font-bold text-slate-800">
-                  毎月支払計 <span class="text-xs font-normal text-slate-500">(月額換算・減税前)</span>
+                  毎月の支払合計 <span class="text-xs font-normal text-slate-500">(月額換算)</span>
                 </td>
                 <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
@@ -488,36 +488,11 @@
                 </td>
               </tr>
 
-              <!-- 7. 住宅ローン減税（控除期間中の年平均還付額） -->
-              <tr class="hover:bg-slate-50/60 bg-emerald-50/30">
-                <td class="py-2 px-3 sm:px-5 font-bold text-emerald-900">
-                  <span>{{ calc.taxCreditYears > 0 ? `住宅ローン減税 (${calc.taxCreditYears}年間年平均)` : '住宅ローン減税 (対象外)' }}</span>
-                  <span class="block text-[11px] font-normal text-emerald-700 no-print">年末ローン残高×0.7%の所得税・住民税還付（最大13年）</span>
-                </td>
-                <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
-                  <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
-                    <span class="font-bold font-num tabular-nums text-xs sm:text-sm text-slate-400 px-2">0</span>
-                    <span class="text-slate-500 font-medium w-6 text-left">円</span>
-                  </div>
-                </td>
-                <td class="py-2 px-3 sm:px-5 border-l border-slate-200 bg-emerald-50/40 text-right">
-                  <div class="inline-flex flex-col items-end w-full max-w-[195px]">
-                    <div class="inline-flex items-center justify-end gap-1.5 w-full">
-                      <span class="font-extrabold font-num tabular-nums text-xs sm:text-sm text-emerald-700 px-2">
-                        {{ calc.avgAnnualTaxCredit > 0 ? `▲ ${formatNum(calc.avgAnnualTaxCredit, 0)}` : '0' }}
-                      </span>
-                      <span class="text-emerald-800 font-bold w-6 text-left">円</span>
-                    </div>
-                    <span class="text-[10px] text-emerald-700 pr-7">控除累計: <span>{{ formatNum(calc.totalTaxCredit, 0) }}</span>円</span>
-                  </div>
-                </td>
-              </tr>
-
               <!-- 8. 【強調行】実質年間支払額（実質年間返済・住居費） -->
               <tr class="bg-slate-100/90 border-t-2 border-b-2 border-slate-300">
                 <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
                   実質年間支払額 <span class="text-xs font-bold text-blue-700">(年額)</span>
-                  <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課・ローン減税（控除期間平均）反映後の年間実質負担</span>
+                  <span class="block text-[11px] font-normal text-slate-600 no-print">家賃上昇率・経費・公租公課　反映後の年間実質負担</span>
                 </td>
                 <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex flex-col items-end w-full max-w-[195px]">
@@ -563,7 +538,7 @@
               <!-- 10. 10年間支払累計 -->
               <tr class="hover:bg-slate-50/60">
                 <td class="py-2 px-3 sm:px-5 font-bold text-slate-700">
-                  10年間支払累計 <span class="text-xs font-normal text-slate-500">(減税・経費反映後)</span>
+                  10年間支払累計 <span class="text-xs font-normal text-slate-500">(経費・公租公課反映後)</span>
                 </td>
                 <td class="py-2 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
@@ -582,7 +557,7 @@
               <!-- 11. 35年間（返済年数）支払累計 -->
               <tr class="bg-slate-50/90 font-bold">
                 <td class="py-2.5 px-3 sm:px-5 font-extrabold text-slate-900">
-                  <span>{{ calc.loanYears }}年間支払累計</span> <span class="text-xs font-normal text-slate-500">(減税・経費反映後)</span>
+                  <span>{{ calc.loanYears }}年間支払累計</span> <span class="text-xs font-normal text-slate-500">(経費・公租公課反映後)</span>
                 </td>
                 <td class="py-2.5 px-3 sm:px-5 border-l border-slate-200 text-right">
                   <div class="inline-flex items-center justify-end gap-1.5 w-full max-w-[195px]">
@@ -613,9 +588,9 @@
             <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
               <h2 class="text-sm sm:text-base font-bold flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                <span>資金計画・住宅ローン減税条件</span>
+                <span>資金計画・住宅ローン条件</span>
               </h2>
-              <span class="text-[11px] text-slate-300">元利均等返済・控除率0.7%</span>
+              <span class="text-[11px] text-slate-300">元利均等返済</span>
             </div>
 
             <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between">
@@ -749,48 +724,6 @@
                           width-class="w-32 sm:w-36"
                         ></yellow-num-input>
                         <span class="text-slate-600 font-medium w-6 text-left">年</span>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <!-- ローン減税 控除期間 -->
-                  <tr class="bg-emerald-50/20">
-                    <td class="py-1.5 px-2 font-bold text-emerald-900">
-                      ローン減税 控除期間
-                      <span class="text-[11px] font-normal text-emerald-700 ml-1 no-print">(新築最大13年)</span>
-                    </td>
-                    <td class="py-1.5 px-2 text-right">
-                      <div class="inline-flex items-center justify-end gap-1.5">
-                        <yellow-num-input
-                          input-id="taxCreditYears"
-                          v-model="state.taxCreditYears"
-                          :decimals="0"
-                          :min="0"
-                          :max="50"
-                          input-mode="numeric"
-                          width-class="w-32 sm:w-36"
-                        ></yellow-num-input>
-                        <span class="text-slate-600 font-medium w-6 text-left">年</span>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <!-- ローン減税 借入限度額 -->
-                  <tr class="bg-emerald-50/20">
-                    <td class="py-1.5 px-2 font-bold text-emerald-900">
-                      ローン減税 借入限度額
-                      <span class="text-[11px] font-normal text-emerald-700 ml-1 no-print">(控除対象上限)</span>
-                    </td>
-                    <td class="py-1.5 px-2 text-right">
-                      <div class="inline-flex items-center justify-end gap-1.5">
-                        <yellow-num-input
-                          input-id="taxCreditLimit"
-                          v-model="state.taxCreditLimit"
-                          :decimals="0"
-                          input-mode="numeric"
-                          width-class="w-32 sm:w-36"
-                        ></yellow-num-input>
-                        <span class="text-slate-600 font-medium w-6 text-left">円</span>
                       </div>
                     </td>
                   </tr>
@@ -979,31 +912,19 @@
               <tbody class="divide-y divide-slate-200">
                 <!-- 面積差額 -->
                 <tr>
-                  <td class="py-2 px-2.5 font-bold text-slate-700">面積<span class="block sm:inline text-xs font-normal text-slate-500">（広さ・収納も増え「快適」な暮らし）</span></td>
+                  <td class="py-2 px-2.5 font-bold text-slate-700">面積 <span class="text-xs font-normal text-slate-500">(広さの差)</span></td>
                   <td class="py-2 px-2.5 text-right whitespace-nowrap">
                     <span
                       class="font-extrabold font-num tabular-nums text-sm sm:text-base"
-                      :class="calc.diffArea >= 0 ? 'text-emerald-700' : 'text-rose-600'"
-                    >{{ formatDiff(calc.diffArea, 0) }}</span>
+                      :class="calc.diffArea >= 0 ? 'text-blue-700' : 'text-rose-600'"
+                    >{{ calc.diffArea >= 0 ? `+${calc.diffArea}` : `▲ ${Math.abs(calc.diffArea)}` }}</span>
                     <span class="text-slate-600 font-medium ml-1 inline-block w-5 text-left text-xs sm:text-sm">㎡</span>
                   </td>
                 </tr>
 
-                <!-- 毎月支払差額（減税前） -->
-                <tr>
-                  <td class="py-2 px-2.5 font-bold text-slate-700">毎月返済額 <span class="text-xs font-normal text-slate-500">※ローン控除分含まず</span></td>
-                  <td class="py-2 px-2.5 text-right whitespace-nowrap">
-                    <span
-                      class="font-extrabold font-num tabular-nums text-sm sm:text-base"
-                      :class="calc.diffMonthly <= 0 ? 'text-blue-700' : 'text-rose-600'"
-                    >{{ formatDiff(calc.diffMonthly, 0) }}</span>
-                    <span class="text-slate-600 font-medium ml-1 inline-block w-5 text-left text-xs sm:text-sm">円</span>
-                  </td>
-                </tr>
-
-                <!-- 実質年間支払額の差額（減税・経費・公租公課反映後） -->
+                <!-- 実質年間支払額の差額（ローン控除額は含めない） -->
                 <tr class="bg-emerald-50/50">
-                  <td class="py-2.5 px-2.5 font-extrabold text-emerald-950">実質年間支払額 <span class="text-xs font-normal text-emerald-700">(年額)</span><span class="block sm:inline text-xs font-normal text-slate-500">※ローン控除分含む</span></td>
+                  <td class="py-2.5 px-2.5 font-extrabold text-emerald-950">実質年間支払額 <span class="text-xs font-normal text-emerald-700">(年額)</span><span class="block sm:inline text-xs font-normal text-slate-500">※ローン控除分含まず</span></td>
                   <td class="py-2.5 px-2.5 text-right whitespace-nowrap">
                     <span
                       class="font-extrabold font-num tabular-nums text-base sm:text-lg"
@@ -1025,7 +946,7 @@
                   </td>
                 </tr>
 
-                <!-- 10年間支払累計差額 -->
+                <!-- 10年間支払累計差額（ローン控除額は含めない） -->
                 <tr>
                   <td class="py-2 px-2.5 font-bold text-slate-700">10年間支払累計</td>
                   <td class="py-2 px-2.5 text-right whitespace-nowrap">
@@ -1037,7 +958,7 @@
                   </td>
                 </tr>
 
-                <!-- 35年間支払累計差額 -->
+                <!-- 35年間支払累計差額（ローン控除額は含めない） -->
                 <tr class="bg-blue-50/60">
                   <td class="py-2.5 px-2.5 font-extrabold text-slate-900">
                     <span>{{ calc.loanYears }}年間支払累計</span>
@@ -1048,6 +969,27 @@
                       :class="calc.diffLoanYears <= 0 ? 'text-blue-700' : 'text-rose-600'"
                     >{{ formatDiff(calc.diffLoanYears, 0) }}</span>
                     <span class="text-blue-800 font-bold ml-1 inline-block w-5 text-left text-xs sm:text-sm">円</span>
+                  </td>
+                </tr>
+
+                <!-- 住宅ローン控除額（累計）手入力フォーム -->
+                <tr class="bg-emerald-50/50">
+                  <td class="py-2 px-2.5 font-bold text-emerald-950">
+                    住宅ローン控除額 <span class="text-xs font-normal text-emerald-700">(累計)</span>
+                    <span class="block text-[11px] font-normal text-emerald-700">※控除累計額（ペアローン分を含む）を入力してください。</span>
+                  </td>
+                  <td class="py-2 px-2.5 text-right whitespace-nowrap">
+                    <div class="inline-flex items-center justify-end gap-1">
+                      <yellow-num-input
+                        input-id="manualTaxCreditTotal"
+                        v-model="state.manualTaxCreditTotal"
+                        :decimals="0"
+                        input-mode="numeric"
+                        width-class="w-28 sm:w-32"
+                        extra-class="px-2 py-1 rounded-lg font-extrabold"
+                      ></yellow-num-input>
+                      <span class="text-emerald-800 font-bold ml-0.5 inline-block w-5 text-left text-xs sm:text-sm">円</span>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -1108,7 +1050,7 @@
               <!-- 算出結果：手元に残る資産額 -->
               <div class="text-center pt-1">
                 <p class="text-sm sm:text-base font-extrabold text-slate-800 leading-snug">
-                  <span>{{ calc.evalYears }}年後</span>に
+                  <span>{{ calc.evalYears }}年後</span>に売却した場合
                   <span class="text-amber-900">資産として手元に残る額</span>
                 </p>
                 <div class="mt-1 flex items-baseline justify-center gap-1.5">
@@ -1126,13 +1068,13 @@
               </div>
             </div>
 
-            <!-- 実質トータルメリットまとめバッジ -->
+            <!-- 実質トータルメリットまとめバッジ（注釈：○年後時点の支払い差額＋資産額に手入力された住宅ローン控除額の累計を加算） -->
             <div class="rounded-2xl bg-slate-900 text-white px-4 py-3.5 sm:px-5 sm:py-4 border-2 border-amber-400/60 shadow-md flex items-center justify-between gap-3">
               <div class="leading-snug">
-                <span class="text-xs sm:text-sm text-slate-300 block">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額</span>
-                <span class="text-sm sm:text-base font-extrabold text-amber-300">購入による実質経済メリット</span>
+                <span class="text-xs sm:text-sm text-slate-300 block">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額 ＋ 住宅ローン控除額</span>
+                <span class="text-sm sm:text-base font-extrabold text-amber-300">購入による実質メリット</span>
                 <span class="text-[11px] text-slate-400 block mt-0.5">
-                  支払差額: {{ formatDiff(calc.diffEvalYears, 0) }}円 ／ 資産額: {{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円
+                  ※支払差額({{ formatDiff(calc.diffEvalYears, 0) }}円) ＋ 資産額({{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円) ＋ ローン控除累計({{ formatNum(calc.manualTaxCreditTotal, 0) }}円)
                 </span>
               </div>
               <div class="text-right shrink-0">
@@ -1156,7 +1098,7 @@
               <span>累計支払額と純資産形成の推移イメージ（円単位）</span>
             </h2>
             <p class="text-[11px] sm:text-xs text-slate-500">
-              住宅ローン減税・公租公課・賃貸必要経費を反映した累計支払額と、不動産資産を差し引いた実質負担の推移です。
+              公租公課・賃貸必要経費を反映した累計支払額（ローン控除額は含まず）と、不動産資産を差し引いた実質負担の推移です。
             </p>
           </div>
           <!-- 凡例 -->
@@ -1167,7 +1109,7 @@
             </span>
             <span class="inline-flex items-center gap-1.5 text-blue-700">
               <span class="w-3 h-1 rounded bg-blue-600 inline-block"></span>
-              購入：累計支払額（減税・税費反映）
+              購入：累計支払額（税費反映）
             </span>
             <span class="inline-flex items-center gap-1.5 text-amber-700">
               <span class="w-3 h-1 rounded bg-amber-500 inline-block border-b border-dashed border-amber-700"></span>
@@ -1227,7 +1169,7 @@
 
       <!-- フッター補足（画面表示用） -->
       <footer class="no-print mt-4 text-center text-xs text-slate-500 space-y-1">
-        <p>※住宅ローン減税は年末借入残高（限度額上限）×0.7%で概算試算しています。実際の納税額や諸条件により還付額は異なります。</p>
+        <p>※実質年間支払額および各期間の支払累計・差額には住宅ローン控除額を含めず算出し、手入力された「住宅ローン控除額（累計）」は評価時期のメリットに加算しています。</p>
         <p class="font-num">Copyright© 2025-2026 SHUICHI HIRAI All Rights Reserved.</p>
       </footer>
 
@@ -1241,32 +1183,32 @@
     // 初期値定義（すべて「円」単位）
     const DEFAULT_STATE = {
       customerName: '',
-      rentArea: 65,
-      rentMonthly: 247000,
-      rentCommonFee: 10000,
+      rentArea: 58,
+      rentMonthly: 251000,
+      rentCommonFee: 15000,
       rentInternet: 5000,
       rentIncreaseRate: 0.0,
       rentAnnualExtra: 30000,
-      buyArea: 70,
-      buyMgmtFee: 35000,
+      buyArea: 64,
+      buyMgmtFee: 31500,
       buyAnnualTax: 180000,
-      propertyPrice: 89400000,
+      propertyPrice: 95000000,
       miscExpenses: 4000000,
       downPayment: 5000000,
       bonusPortion: 0,
-      interestRate: 1.195,
+      interestRate: 1.42,
       loanYears: 40,
-      taxCreditYears: 13,
-      taxCreditLimit: 45000000,
-      evalYears: 10,
+      evalYears: 12,
       priceChangeRate: 0.0,
+      // 手入力の住宅ローン控除額（累計）
+      manualTaxCreditTotal: 0,
       // 賃貸入居時・退去時の諸費用
-      rentDepositMonths: 2.0,
-      rentBrokerageFee: 247000,
-      rentGuaranteeFee: 123500,
+      rentDepositMonths: 4.0,
+      rentBrokerageFee: 275000,
+      rentGuaranteeFee: 251000,
       rentFireInsurance: 20000,
       rentKeyExchangeFee: 22000,
-      rentMoveOutCleaningFee: 70000
+      rentMoveOutCleaningFee: 100000
     };
 
     /**
@@ -1551,11 +1493,9 @@
           const interestRate = Math.max(0, Number(state.interestRate) || 0);
           const loanYears = Math.max(1, Math.min(50, Math.round(Number(state.loanYears) || 35)));
 
-          const taxCreditYears = Math.max(0, Math.min(loanYears, Math.round(Number(state.taxCreditYears) || 0)));
-          const taxCreditLimit = Math.max(0, Number(state.taxCreditLimit) || 0);
-
           const evalYears = Math.max(1, Math.min(50, Math.round(Number(state.evalYears) || 10)));
           const priceChangeRate = Math.max(-100, Math.min(300, Number(state.priceChangeRate) || 0));
+          const manualTaxCreditTotal = Math.max(0, Number(state.manualTaxCreditTotal) || 0);
           const maxSimYears = Math.max(loanYears, evalYears);
 
           // 1. 資金計画の計算（円単位）
@@ -1575,47 +1515,31 @@
 
           const monthlyPrincipal = Math.max(0, loanAmount - effectiveBonus);
 
-          // 2. 新築マンションの返済額・公租公課・住宅ローン減税計算
+          // 2. 新築マンションの返済額・公租公課計算（ローン控除額は含めない）
           const buyMonthlyLoan = calcMonthlyPMT(monthlyPrincipal, interestRate, loanYears);
           const bonusCalc = calcBonusRepayment(effectiveBonus, interestRate, loanYears);
           const buyBonusLoan = bonusCalc.monthlyEq;
           const buyTaxMonthly = buyAnnualTax / 12;
 
-          // 毎月支払計（減税前・公租公課月額換算含む）
+          // 毎月支払計（公租公課月額換算含む）
           const buyTotalMonthly = buyMonthlyLoan + buyBonusLoan + buyMgmtFee + buyTaxMonthly;
           const buyAnnualGross = buyTotalMonthly * 12;
 
-          // 各年末残高から住宅ローン減税額（残高と限度額の小さい方 × 0.7%）を年ごとに算出
+          // 各年末残高配列（評価時期のローン残高算出用）
           const yearEndBalances = calcYearEndBalances(monthlyPrincipal, effectiveBonus, interestRate, loanYears);
-          const annualTaxCredits = [];
-          let totalTaxCredit = 0;
 
-          for (let y = 1; y <= loanYears; y++) {
-            let credit = 0;
-            if (y <= taxCreditYears && loanAmount > 0) {
-              const eligibleBalance = Math.min(yearEndBalances[y - 1], taxCreditLimit);
-              credit = Math.floor(eligibleBalance * 0.007);
-            }
-            annualTaxCredits.push(credit);
-            totalTaxCredit += credit;
-          }
-
-          const avgAnnualTaxCredit = taxCreditYears > 0
-            ? annualTaxCredits.slice(0, taxCreditYears).reduce((a, b) => a + b, 0) / taxCreditYears
-            : 0;
-
-          // 実質年間支払額（控除期間中の年平均実質負担）
-          const buyAnnualNet = buyAnnualGross - avgAnnualTaxCredit;
+          // 実質年間支払額（ローン控除額を含めない年間支払額）
+          const buyAnnualNet = buyAnnualGross;
           const buyEffectiveMonthly = buyAnnualNet / 12;
           const buyUnitCost = buyArea > 0 ? Math.round(buyEffectiveMonthly / buyArea) : 0;
 
-          // 年次別の実質累計支払額を算出（1年目〜maxSimYears年目）
+          // 年次別の実質累計支払額を算出（1年目〜maxSimYears年目・ローン控除額は含めない）
           const buyCumulativeByYear = [0];
           let runningBuyCum = 0;
           const buyPostLoanAnnual = (buyMgmtFee + buyTaxMonthly) * 12;
           for (let y = 1; y <= maxSimYears; y++) {
             if (y <= loanYears) {
-              runningBuyCum += (buyAnnualGross - annualTaxCredits[y - 1]);
+              runningBuyCum += buyAnnualGross;
             } else {
               runningBuyCum += buyPostLoanAnnual;
             }
@@ -1652,8 +1576,7 @@
           const rent10YearTotal = rentCumulativeByYear[Math.min(10, loanYears)];
           const rentAnnualNet = rentLoanYearsTotal / loanYears;
           const rentUnitCost = rentArea > 0 ? Math.round((rentAnnualNet / 12) / rentArea) : 0;
-
-          // 4. 差額（購入 - 賃貸）
+          // 4. 差額（購入 - 賃貸：ローン控除額は含めない）
           const diffArea = buyArea - rentArea;
           const diffMonthly = buyTotalMonthly - rentTotalMonthly;
           const diffAnnualNet = buyAnnualNet - rentAnnualNet;
@@ -1661,7 +1584,7 @@
           const diff10Year = buy10YearTotal - rent10YearTotal;
           const diffLoanYears = buyLoanYearsTotal - rentLoanYearsTotal;
 
-          // 5. 〇年後・騰落率による資産額 ＆ 評価時期時点の支払い差額＋資産額
+          // 5. 〇年後・騰落率による資産額 ＆ 評価時期時点の支払い差額＋資産額＋手入力の住宅ローン控除額（累計）
           const estimatedPropertyValue = Math.round(propertyPrice * (1 + priceChangeRate / 100));
           const evalLoanBalance = evalYears >= loanYears
             ? 0
@@ -1670,7 +1593,8 @@
           const buyEvalYearsTotal = buyCumulativeByYear[evalYears];
           const rentEvalYearsTotal = rentCumulativeByYear[evalYears];
           const diffEvalYears = buyEvalYearsTotal - rentEvalYearsTotal;
-          const totalEconomicBenefit = remainingAsset - diffEvalYears;
+          // 注釈：○年後時点の支払い差額（支出減はマイナス値のため減算でメリット加算）＋ 資産額 ＋ 手入力された住宅ローン控除額（累計）
+          const totalEconomicBenefit = remainingAsset - diffEvalYears + manualTaxCreditTotal;
 
           // 6. 賃貸入居時・退去時の諸費用合計額の自動算出
           const rentDepositMonths = Math.max(0, Number(state.rentDepositMonths) || 0);
@@ -1687,9 +1611,9 @@
 
           return {
             loanYears,
-            taxCreditYears,
             evalYears,
             rentIncreaseRate,
+            manualTaxCreditTotal,
             validationMessage,
             effectiveBonus,
             bonusPerTime: bonusCalc.perBonus,
@@ -1699,8 +1623,6 @@
             buyBonusLoan,
             buyTaxMonthly,
             buyTotalMonthly,
-            avgAnnualTaxCredit,
-            totalTaxCredit,
             buyAnnualNet,
             buyEffectiveMonthly,
             buyUnitCost,
