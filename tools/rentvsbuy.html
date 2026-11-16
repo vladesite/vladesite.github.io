@@ -1071,7 +1071,7 @@
             <!-- 実質トータルメリットまとめバッジ（注釈：○年後時点の支払い差額＋資産額に手入力された住宅ローン控除額の累計を加算） -->
             <div class="rounded-2xl bg-slate-900 text-white px-4 py-3.5 sm:px-5 sm:py-4 border-2 border-amber-400/60 shadow-md flex items-center justify-between gap-3">
               <div class="leading-snug">
-                <span class="text-xs sm:text-sm text-slate-300 block">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額 ＋ 住宅ローン控除額</span>
+                <span class="text-xs sm:text-sm text-slate-300 block whitespace-nowrap">{{ calc.evalYears }}年後時点の支払い差額 ＋ 資産額 ＋ 住宅ローン控除額</span>
                 <span class="text-sm sm:text-base font-extrabold text-amber-300">購入による実質メリット</span>
                 <span class="text-[11px] text-slate-400 block mt-0.5">
                   ※支払差額({{ formatDiff(calc.diffEvalYears, 0) }}円) ＋ 資産額({{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円) ＋ ローン控除累計({{ formatNum(calc.manualTaxCreditTotal, 0) }}円)
