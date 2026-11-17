@@ -1,0 +1,797 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>賃貸と購入返済比較シミュレーションユーザーマニュアル</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+	/* Paint a complete callout box on every PDF page fragment. */
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+/*
+ * Toggles and callouts hold arbitrary content, so they can easily be taller
+ * than a page. They must stay breakable: avoiding breaks inside them makes
+ * Chromium push the whole block onto the next page, which leaves the previous
+ * page mostly empty before every long toggle.
+ */
+details,
+aside {
+	margin: 1.25em 0;
+}
+
+/* Keep a toggle's title on the same page as the start of its content. */
+summary {
+	page-break-after: avoid;
+	break-after: avoid;
+}
+
+/*
+ * Toggle headings render as <h1/h2/h3 style="display:inline-block"> inside
+ * <summary>. Without this reset, the heading's margin-top pushes it below the
+ * ::marker (▼), so the triangle and the title appear on separate lines.
+ */
+summary h1,
+summary h2,
+summary h3,
+summary h4 {
+	margin-top: 0;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="7d89d076-6c3b-839a-86a9-01e78790bb86" class="page sans"><header><img class="page-cover-image" src="https://t3.ftcdn.net/jpg/12/32/64/00/240_F_1232640010_73KThUoVQRos9MsCESBYDR5xpkvSNqSC.jpg" style="object-position:center 53.48%"/><h1 class="page-title" dir="auto"><strong>賃貸と購入返済比較シミュレーションユーザーマニュアル</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="41a9d076-6c3b-8167-9fa3-c894bbf134a9" class="block-color-default" data-notion-highlight="default" dir="auto">1. このWebアプリの目的と特徴</h2><p id="41a9d076-6c3b-811b-a4f8-c39bcfde9099" class="" dir="auto">接客していると必ず出る「賃貸に住み続けるのと、新築マンションを購入するのとでは、将来的にどちらがお得になるのだろう？」という疑問💡<br/><strong>目先の「毎月の家賃 vs ローン返済額」だけでなく、税金・維持費・将来の資産価値まで含めてトータルで比較できるシミュレーター</strong>を作成しましたので、ご活用ください。<div class="indented"><p id="41a9d076-6c3b-80d5-83ba-ceca45075332" class="" dir="auto">Copyright© 2025-2026 Shuichi Hirai All Rights Reserved.</p></div></p><h3 id="41a9d076-6c3b-817f-a86a-dd80cad98ad3" class="" dir="auto">主な特徴</h3><ul id="41a9d076-6c3b-81c6-89de-f1743c06cd21" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>黄色い枠に数字を入れるだけ</strong>：入力が必要なのは「<mark class="highlight-yellow_background" data-notion-highlight="yellow_background"><strong>黄色い背景の枠</strong></mark>」だけです。その他の項目はすべて自動で瞬時に計算されます。</li></ul><ul id="41a9d076-6c3b-81d2-a01f-e1d425278d23" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>隠れたコストも網羅</strong>：賃貸の「更新料」「家賃の値上がり」「引越し初期費用」や、購入時の「固定資産税」「管理費・修繕積立金」「住宅ローン減税」まで考慮できます。</li></ul><ul id="41a9d076-6c3b-81b7-82a8-fd0f29c37765" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>将来の「売却益（資産価値）」を計算</strong>：何年後にいくらで売れそうかを設定することで、「支払ったお金」から「手元に残る資産」を差し引いた<strong>実質の購入メリット</strong>がわかります。</li></ul><ul id="41a9d076-6c3b-8110-846f-f2e18bb7283b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>A4サイズで綺麗に印刷可能</strong>：画面右上の「A4サイズで印刷」ボタンを押すと、比較表とグラフがA4用紙1枚に収まるレイアウトで印刷（またはPDF保存）できます。</li></ul><hr id="41a9d076-6c3b-816c-af8b-f741c00ff06c" dir="auto"/><h2 id="41a9d076-6c3b-8161-98da-dfa4314a42d3" class="" dir="auto">2. 画面の見方と入力項目の解説</h2><p id="41a9d076-6c3b-8152-926b-d035a4c4dac5" class="" dir="auto">画面は大きく分けて4つのブロックで構成されています。<strong>黄色い枠（入力箇所）</strong>にあなたの希望条件や現在の数値を入力してください。</p><h3 id="41a9d076-6c3b-81f8-9221-ceb3840bc866" class="" dir="auto">① メイン比較テーブル（賃貸住まい vs 新築マンション購入）</h3><p id="41a9d076-6c3b-8147-afb5-fba0f3df7f9a" class="" dir="auto">毎月の支払額や、10年間・ローン完済までの累計支払額を比較する表です。</p><table id="41a9d076-6c3b-8198-9578-d8940e8a3324" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41a9d076-6c3b-8146-90c0-f4efcaa51a59" dir="ltr"><th id="`h?i" class="simple-table-header-color simple-table-header" style="width:151px">項目名</th><th id="oyUX" class="simple-table-header-color simple-table-header">入力対象</th><th id="Pb&lt;`" class="simple-table-header-color simple-table-header" style="width:534px">意味と入力の目安</th></tr></thead><tbody><tr id="41a9d076-6c3b-8121-a4eb-c7f3ea62c29d" dir="ltr"><td id="`h?i" class="" style="width:151px"><strong>面積（賃貸 / 購入）</strong></td><td id="oyUX" class="">賃貸・購入</td><td id="Pb&lt;`" class="" style="width:534px">部屋の広さ（専有面積・㎡）を入力します。広さあたりの単価（1㎡あたり単価）を計算するために使います。</td></tr><tr id="41a9d076-6c3b-818a-af59-e32cb69b124e" dir="ltr"><td id="`h?i" class="" style="width:151px"><strong>毎月賃料</strong></td><td id="oyUX" class="">賃貸</td><td id="Pb&lt;`" class="" style="width:534px">現在の家賃、または検討中の賃貸物件の月額家賃（円）を入力します。※購入側の「毎月返済額」は自動計算されます。</td></tr><tr id="41a9d076-6c3b-8131-8bae-eb1f7e9741a2" dir="ltr"><td id="`h?i" class="" style="width:151px"><strong>共益費等 / 管理費等</strong></td><td id="oyUX" class="">賃貸・購入</td><td id="Pb&lt;`" class="" style="width:534px"><strong>賃貸</strong>：毎月の共益費・管理費。<strong>購入</strong>：毎月の管理費と修繕積立金の合計額を入力します。</td></tr><tr id="41a9d076-6c3b-8123-ac0f-fe897ebf0a9a" dir="ltr"><td id="`h?i" class="" style="width:151px"><strong>インターネット代</strong></td><td id="oyUX" class="">賃貸</td><td id="Pb&lt;`" class="" style="width:534px">賃貸で毎月かかるネット通信費を入力します。（新築マンションは管理費に含まれる前提で「0円」固定です）</td></tr><tr id="41a9d076-6c3b-8191-a090-e4424c04cd26" dir="ltr"><td id="`h?i" class="" style="width:151px"><strong>家賃の上昇率</strong></td><td id="oyUX" class="">賃貸</td><td id="Pb&lt;`" class="" style="width:534px">2年ごとの契約更新時に家賃が何％上がるか（0%〜30%）を設定します。物価上昇を見込む場合は <code>1.0</code>〜<code>2.0</code> などを入力します。</td></tr><tr id="41a9d076-6c3b-814d-b7a5-e557f01acb28" dir="ltr"><td id="`h?i" class="" style="width:151px"><strong>賃貸必要経費 / 公租公課</strong></td><td id="oyUX" class="">賃貸・購入</td><td id="Pb&lt;`" class="" style="width:534px"><strong>賃貸</strong>：火災保険料や保証会社の更新料などの<strong>年額</strong>。<strong>購入</strong>：毎年かかる固定資産税・都市計画税の<strong>年額</strong>（目安：15万〜25万円程度）。</td></tr></tbody></table><h3 id="41a9d076-6c3b-812b-9b1d-ea5b5cb23701" class="" dir="auto">② 資金計画・住宅ローン条件（左下・上段）</h3><p id="41a9d076-6c3b-81ca-95c2-f12eb2411853" class="" dir="auto">マンションを購入するための予算と、住宅ローンの借り入れ条件を入力します。</p><table id="41a9d076-6c3b-8106-ae03-cee0810c1ddc" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41a9d076-6c3b-8123-8fe6-faa00b491bc9" dir="ltr"><th id="bwLO" class="simple-table-header-color simple-table-header" style="width:125px">項目名</th><th id="|e@=" class="simple-table-header-color simple-table-header" style="width:685px">意味と入力の目安</th></tr></thead><tbody><tr id="41a9d076-6c3b-8188-91bb-e65bf57dd797" dir="ltr"><td id="bwLO" class="" style="width:125px"><strong>物件価格</strong></td><td id="|e@=" class="" style="width:685px">購入を検討しているマンションの本体価格（税込・円）を入力します。</td></tr><tr id="41a9d076-6c3b-81f6-9a49-f3231f28971f" dir="ltr"><td id="bwLO" class="" style="width:125px"><strong>諸費用</strong></td><td id="|e@=" class="" style="width:685px">登記費用、ローン手数料、不動産取得税などの初期費用（目安：物件価格の4%〜7%程度）を入力します。</td></tr><tr id="41a9d076-6c3b-81e1-922c-d9a996b1618e" dir="ltr"><td id="bwLO" class="" style="width:125px"><strong>自己資金</strong></td><td id="|e@=" class="" style="width:685px">頭金や諸費用として、現金で用意する金額（円）を入力します。（「物件価格＋諸費用－自己資金」が借入金になります）<strong>自己資金を</strong><code><strong>0円</strong></code><strong>にした場合（手出し無し）でも、返済額の違いは少額です。賃貸の場合諸費用の持ち出しがあります。</strong></td></tr><tr id="41a9d076-6c3b-81f0-862c-e241011ace0e" dir="ltr"><td id="bwLO" class="" style="width:125px"><strong>ボーナス返済分</strong></td><td id="|e@=" class="" style="width:685px">借入金のうち、年2回のボーナス払いに充てる<strong>元本（円）を入力</strong>します。ボーナス払いを使わない場合は <code>0</code> のままにします。</td></tr><tr id="41a9d076-6c3b-81c5-bfc2-fdf873df143c" dir="ltr"><td id="bwLO" class="" style="width:125px"><strong>金利</strong></td><td id="|e@=" class="" style="width:685px">住宅ローンの適用金利（年利・％）を入力します。（例：変動金利なら <code>0.5</code>〜<code>1.5</code> 程度）</td></tr><tr id="41a9d076-6c3b-817c-902b-fb53e77e9238" dir="ltr"><td id="bwLO" class="" style="width:125px"><strong>返済年数</strong></td><td id="|e@=" class="" style="width:685px">ローンの返済期間（年）を入力します。（例：<code>35</code> や <code>40</code> など）</td></tr></tbody></table><h3 id="41a9d076-6c3b-8141-8193-e241d2e5d563" class="" dir="auto">③ 賃貸入居時・退去時の諸費用（左下・下段）</h3><p id="41a9d076-6c3b-81f4-8f93-c93f24001655" class="" dir="auto">賃貸を選んだ場合にかかる、初期費用と退去時費用の目安を自動試算するエリアです。（※メインテーブルの累計額とは別枠で参考表示されます）</p><table id="41a9d076-6c3b-813b-a584-e55cf7f96da1" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41a9d076-6c3b-8146-ad8e-f039d28c0d3a" dir="ltr"><th id="|soX" class="simple-table-header-color simple-table-header" style="width:201px">項目名</th><th id="BOf?" class="simple-table-header-color simple-table-header" style="width:612px">意味と入力の目安</th></tr></thead><tbody><tr id="41a9d076-6c3b-81f9-86e9-e752f2027f84" dir="ltr"><td id="|soX" class="" style="width:201px"><strong>敷金・礼金</strong></td><td id="BOf?" class="" style="width:612px">合計で家賃の「何ヶ月分」かかるか入力します。（例：敷金2ヶ月＋礼金2ヶ月なら <code>4.0</code>）</td></tr><tr id="41a9d076-6c3b-81b6-8e7a-f07a2ace286a" dir="ltr"><td id="|soX" class="" style="width:201px"><strong>仲介手数料</strong></td><td id="BOf?" class="" style="width:612px">不動産会社に支払う手数料（目安：家賃1ヶ月分＋消費税）を入力します。</td></tr><tr id="41a9d076-6c3b-810e-9005-e22e0ba6d732" dir="ltr"><td id="|soX" class="" style="width:201px"><strong>保証会社利用料</strong></td><td id="BOf?" class="" style="width:612px">賃貸保証会社に支払う初回保証料（目安：家賃の50%〜100%）を入力します。</td></tr><tr id="41a9d076-6c3b-81e2-9f82-c45935edcc59" dir="ltr"><td id="|soX" class="" style="width:201px"><strong>火災保険 / 鍵交換費用</strong></td><td id="BOf?" class="" style="width:612px">入居時にかかる保険料と鍵交換代を入力します。</td></tr><tr id="41a9d076-6c3b-81b4-8e1a-db2e1b389672" dir="ltr"><td id="|soX" class="" style="width:201px"><strong>現状回復・クリーニング代</strong></td><td id="BOf?" class="" style="width:612px">将来退去するときにかかる原状回復費用の目安を入力します。</td></tr></tbody></table><h3 id="41a9d076-6c3b-81ca-be8d-f5d9ecbd8ef8" class="" dir="auto">④ 【差額】購入した場合は… ＆ 資産価値シミュレーション（右側）</h3><p id="41a9d076-6c3b-8188-ac92-e5c18c9d9578" class="" dir="auto">賃貸と比較したときの「お得度（差額）」と、将来売却した場合の資産価値を計算する最も重要なエリアです。</p><ul id="41a9d076-6c3b-8131-a350-d0e03acca9d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>差額表示のルール</strong>：<strong>「▲（黒三角）」がついている金額は、購入の方が支出が少なくお得になる金額</strong>を表します。（逆に「＋」は購入の方が支払額が多いことを示します）</li></ul><ul id="41a9d076-6c3b-81fb-b862-e371dd2779f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>住宅ローン控除額（累計）</strong>：住宅ローン減税で戻ってくる税金の累計見込み額（ペアローンの場合は2人分の合計）を手入力します。<mark class="highlight-pink" data-notion-highlight="pink"><code>（例:ZEH仕様・40歳未満の夫婦の場合：31.5万×10年間=3,150,000を入力、ペアローンの場合は共有者分を含めた累計額を入力）</code></mark></li></ul><ul id="41a9d076-6c3b-816f-ab6a-dfa6379dd781" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>評価時期（〇年後）</strong>：将来、物件を売却したり資産価値を評価したいタイミング（例：<code>10</code>年後、<code>15</code>年後など）を入力します。</li></ul><ul id="41a9d076-6c3b-8158-a4aa-f6ed1e187685" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>騰落率（％）</strong>：購入時から評価時期までに、物件価格が何％変化するかの予想を入力します。<ul id="41a9d076-6c3b-81ec-b90d-daf1c7304a21" class="bulleted-list" dir="auto"><li style="list-style-type:circle">価格が変わらない予想：<code>0.0</code></li></ul><ul id="41a9d076-6c3b-8138-a1d9-db96b6bc5bd2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">10%値上がりする予想：<code>10.0</code></li></ul><ul id="41a9d076-6c3b-814a-b4f3-f6203762de52" class="bulleted-list" dir="auto"><li style="list-style-type:circle">15%値下がりする予想：<code>-15.0</code>（マイナス記号をつけて入力）</li></ul></li></ul><hr id="41a9d076-6c3b-816b-afd1-e58019157dcb" dir="auto"/><h2 id="41a9d076-6c3b-818f-bdb3-c54cd06c6e09" class="" dir="auto">3. よくある質問（Q&amp;A）</h2><h3 id="41a9d076-6c3b-813b-a1a6-f2e917cd2ed3" class="" dir="auto">Q1. 入力を間違えてしまい、最初の状態に戻したいです。</h3><p id="41a9d076-6c3b-811e-9e72-c80d8e7bc6be" class="" dir="auto"><strong>A.</strong> 画面右上にある<strong>「初期値に戻す」ボタン</strong>をクリックしてください。すべての入力項目が初期のサンプル値にリセットされます。</p><h3 id="41a9d076-6c3b-8115-b99a-df505e03a7f9" class="" dir="auto">Q2. なぜ「毎月の支払合計」だけ見ると、購入の方が高く見えるのですか？</h3><p id="41a9d076-6c3b-8100-a089-c80469cef6ac" class="" dir="auto"><strong>A.</strong> 賃貸の「家賃」はすべて掛け捨ての経費になりますが、購入の「ローン返済額」には<strong>自分の資産（不動産の元本返済）になるお金</strong>が含まれているためです。右側の「<strong>購入の実質メリット</strong>」を見ていただくと、将来の資産価値を含めた本当のお得度がわかります。</p><h3 id="41a9d076-6c3b-818c-98c8-d2be655c313d" class="" dir="auto">Q3. 騰落率（値上がり・値下がり率）はどうやって入力すればいいですか？</h3><p id="41a9d076-6c3b-815d-9ee4-eece8078cdb0" class="" dir="auto"><strong>A.</strong> マイナス値を入力したい場合は、キーボードの半角ハイフン <code>-</code> を先頭につけて <code>-10.0</code> のように入力してください。入力枠からカーソルを外すと自動で整形されます。</p><h3 id="41a9d076-6c3b-81a7-9a32-d3a7f423c847" class="" dir="auto">Q4. 「購入の実質メリット」はどのように計算されていますか？</h3><p id="41a9d076-6c3b-817c-96df-d883053e38b3" class="" dir="auto"><strong>A.</strong> 以下の3つを合計して算出しています。</p><ol type="1" id="41a9d076-6c3b-8125-b3bc-ef7f333823de" class="numbered-list" start="1" dir="auto"><li>評価時期（〇年後）までの<strong>住居費の支払い差額</strong>（賃貸より安く済んだ分はプラス、多く払った分はマイナス）</li></ol><ol type="1" id="41a9d076-6c3b-81cc-8e1a-ed72163f9b06" class="numbered-list" start="2" dir="auto"><li>評価時期に売却した場合に<strong>手元に残る資産額</strong>（想定物件価値 － その時点のローン残高）</li></ol><ol type="1" id="41a9d076-6c3b-8105-b0c2-c45d5087bc56" class="numbered-list" start="3" dir="auto"><li>手入力した<strong>住宅ローン控除額（累計）※年収や面積によってローン控除が使えない方がいるため手入力にしています。</strong></li></ol><h3 id="41a9d076-6c3b-8113-bbf6-c975ef5609b5" class="" dir="auto">Q5. 入力したデータはサーバーに保存されますか？他の人に見られませんか？</h3><p id="41a9d076-6c3b-81ee-9bb4-cab223657abf" class="" dir="auto"><strong>A.</strong> いいえ、このアプリはすべてお使いのブラウザ（パソコンやスマホの画面上）だけで計算を行っています。入力した金額や条件がインターネット経由で外部に送信・保存されることは一切ありませんので、安心してご利用ください。</p><h3 id="41a9d076-6c3b-813d-9513-e22b03c44ddd" class="" dir="auto">Q6. スマートフォンでも使えますか？</h3><p id="41a9d076-6c3b-812f-8d22-d98caa12f969" class="" dir="auto"><strong>A.</strong> はい、ご利用いただけます。ただし、比較表の項目数が多いため、パソコンやタブレットの横画面、またはA4サイズでPDF出力してご覧いただくと全体のバランスが一目で把握しやすくなります。</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
