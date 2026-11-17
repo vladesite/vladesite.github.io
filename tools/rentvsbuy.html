@@ -907,7 +907,7 @@
             <span class="text-xs text-blue-100 font-medium">▲は支出減（お得）を表示</span>
           </div>
 
-          <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3.5">
+          <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
             <table class="print-compact-table w-full border-collapse text-sm sm:text-base">
               <tbody class="divide-y divide-slate-200">
                 <!-- 面積差額 -->
@@ -995,13 +995,13 @@
               </tbody>
             </table>
 
-            <!-- 〇年後・騰落率による資産残存ハイライトボックス -->
-            <div class="rounded-2xl bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/90 border-[3px] border-amber-500 p-4 sm:p-5 shadow-md space-y-3.5">
+            <!-- 〇年後・騰落率による資産残存ハイライトボックス（コンパクト設計） -->
+            <div class="rounded-xl bg-gradient-to-br from-amber-50/90 via-yellow-50/80 to-amber-100/70 border-2 border-amber-400/90 p-2.5 sm:p-3 shadow-sm space-y-2">
               <!-- 〇年後 ＆ 騰落率 入力行 -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-3 border-b-2 border-amber-300/80">
-                <div class="flex items-center justify-between bg-white/90 rounded-xl px-3 py-2 border-2 border-amber-300 shadow-sm">
-                  <label for="evalYears" class="text-sm sm:text-base font-extrabold text-slate-800 whitespace-nowrap">評価時期</label>
-                  <div class="inline-flex items-center gap-1.5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pb-2 border-b border-amber-300/70">
+                <div class="flex items-center justify-between bg-white/90 rounded-lg px-2.5 py-1 border border-amber-300">
+                  <label for="evalYears" class="text-xs sm:text-sm font-extrabold text-slate-800 whitespace-nowrap">評価時期</label>
+                  <div class="inline-flex items-center gap-1">
                     <yellow-num-input
                       input-id="evalYears"
                       v-model="state.evalYears"
@@ -1009,16 +1009,16 @@
                       :min="1"
                       :max="50"
                       input-mode="numeric"
-                      width-class="w-16 sm:w-20"
-                      extra-class="px-2 py-1 rounded-lg font-extrabold !text-sm sm:!text-base"
+                      width-class="w-14 sm:w-16"
+                      extra-class="px-1.5 py-0.5 rounded font-extrabold !text-xs sm:!text-sm"
                     ></yellow-num-input>
-                    <span class="text-sm sm:text-base font-extrabold text-slate-800">年後</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-slate-800">年後</span>
                   </div>
                 </div>
 
-                <div class="flex items-center justify-between bg-white/90 rounded-xl px-3 py-2 border-2 border-amber-300 shadow-sm">
-                  <label for="priceChangeRate" class="text-sm sm:text-base font-extrabold text-slate-800 whitespace-nowrap">騰落率</label>
-                  <div class="inline-flex items-center gap-1.5">
+                <div class="flex items-center justify-between bg-white/90 rounded-lg px-2.5 py-1 border border-amber-300">
+                  <label for="priceChangeRate" class="text-xs sm:text-sm font-extrabold text-slate-800 whitespace-nowrap">騰落率</label>
+                  <div class="inline-flex items-center gap-1">
                     <yellow-num-input
                       input-id="priceChangeRate"
                       v-model="state.priceChangeRate"
@@ -1027,62 +1027,82 @@
                       :max="300"
                       :allow-negative="true"
                       input-mode="decimal"
-                      width-class="w-20 sm:w-24"
-                      extra-class="px-2 py-1 rounded-lg font-extrabold !text-sm sm:!text-base"
+                      width-class="w-16 sm:w-20"
+                      extra-class="px-1.5 py-0.5 rounded font-extrabold !text-xs sm:!text-sm"
                     ></yellow-num-input>
-                    <span class="text-sm sm:text-base font-extrabold text-slate-800">%</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-slate-800">%</span>
                   </div>
                 </div>
               </div>
 
               <!-- 想定物件価値・ローン残高の内訳（自動計算） -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white/80 rounded-xl px-3.5 py-2.5 border-2 border-amber-300/90">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white/80 rounded-lg px-2.5 py-1.5 border border-amber-300/80">
                 <div>
-                  <span class="text-xs sm:text-sm font-bold text-slate-600 block">想定物件価値（評価額）</span>
-                  <span class="text-base sm:text-lg font-extrabold font-num tabular-nums text-slate-900"><span>{{ formatNum(calc.estimatedPropertyValue, 0) }}</span> 円</span>
+                  <span class="text-[11px] font-bold text-slate-600 block">想定物件価値（評価額）</span>
+                  <span class="text-xs sm:text-sm font-extrabold font-num tabular-nums text-slate-900"><span>{{ formatNum(calc.estimatedPropertyValue, 0) }}</span> 円</span>
                 </div>
-                <div class="sm:text-right sm:border-l-2 sm:border-amber-200 sm:pl-3 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-amber-200/70">
-                  <span class="text-xs sm:text-sm font-bold text-slate-600 block"><span>{{ calc.evalYears }}</span>年後のローン残高</span>
-                  <span class="text-base sm:text-lg font-extrabold font-num tabular-nums text-rose-700">▲ <span>{{ formatNum(calc.evalLoanBalance, 0) }}</span> 円</span>
+                <div class="sm:text-right sm:border-l sm:border-amber-200 sm:pl-2.5 pt-1 sm:pt-0 border-t sm:border-t-0 border-amber-200/70">
+                  <span class="text-[11px] font-bold text-slate-600 block"><span>{{ calc.evalYears }}</span>年後のローン残高</span>
+                  <span class="text-xs sm:text-sm font-extrabold font-num tabular-nums text-rose-700">▲ <span>{{ formatNum(calc.evalLoanBalance, 0) }}</span> 円</span>
                 </div>
               </div>
 
               <!-- 算出結果：手元に残る資産額 -->
-              <div class="text-center pt-1">
-                <p class="text-sm sm:text-base font-extrabold text-slate-800 leading-snug">
-                  <span>{{ calc.evalYears }}年後</span>に売却した場合
-                  <span class="text-amber-900">資産として手元に残る額</span>
-                </p>
-                <div class="mt-1 flex items-baseline justify-center gap-1.5">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 bg-white/60 rounded-lg px-2.5 py-1.5 border border-amber-300/60">
+                <div class="leading-tight">
+                  <p class="text-xs sm:text-sm font-extrabold text-slate-800">
+                    <span>{{ calc.evalYears }}年後</span>売却時の<span class="text-amber-900">手元残存資産額</span>
+                  </p>
+                  <p class="text-[10px] font-medium text-slate-500">
+                    ※想定物件価値 − <span>{{ calc.evalYears }}</span>年後ローン残高（賃貸は0円）
+                  </p>
+                </div>
+                <div class="text-right shrink-0">
                   <span
-                    class="text-2xl sm:text-4xl font-extrabold font-num tabular-nums tracking-tight"
+                    class="text-lg sm:text-2xl font-extrabold font-num tabular-nums tracking-tight"
                     :class="calc.remainingAsset >= 0 ? 'text-slate-900' : 'text-rose-700'"
                   >
                     {{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}
                   </span>
-                  <span class="text-base sm:text-xl font-extrabold text-slate-800">円</span>
+                  <span class="text-xs sm:text-sm font-extrabold text-slate-800 ml-0.5">円</span>
                 </div>
-                <p class="text-xs font-medium text-slate-600 mt-1">
-                  ※想定物件価値 − <span>{{ calc.evalYears }}</span>年後のローン残高（賃貸の場合は0円）
-                </p>
               </div>
             </div>
 
             <!-- 実質トータルメリットまとめバッジ（注釈：○年後時点の支払い差額＋資産額に手入力された住宅ローン控除額の累計を加算） -->
-            <div class="rounded-2xl bg-slate-900 text-white px-4 py-3.5 sm:px-5 sm:py-4 border-2 border-amber-400/60 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-              <div class="leading-snug min-w-0">
-                <span class="text-[11px] sm:text-xs text-slate-300 block whitespace-nowrap">{{ calc.evalYears }}年後時点の支払い差額 ＋ (想定)物件価値 ＋ 住宅ローン控除額</span>
-                <span class="text-sm sm:text-base font-extrabold text-amber-300">購入の実質メリット</span>
-                <span class="text-[11px] text-slate-400 block mt-0.5">
-                  ※支払差額({{ formatDiff(calc.diffEvalYears, 0) }}円) ＋ 資産額({{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円) ＋ ローン控除累計({{ formatNum(calc.manualTaxCreditTotal, 0) }}円)
+            <div class="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white px-4 py-4 sm:px-5 sm:py-5 border-[3px] border-amber-400 shadow-xl ring-4 ring-amber-400/20 flex flex-col justify-between gap-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-400 text-slate-950 tracking-wide shadow-sm">
+                    トータル試算結果
+                  </span>
+                  <span class="text-base sm:text-xl font-extrabold text-amber-300 tracking-tight">購入の実質メリット</span>
+                </div>
+                <span class="text-[11px] sm:text-xs text-amber-100/90 font-semibold whitespace-nowrap">
+                  {{ calc.evalYears }}年後時点の支払い差額 ＋ (想定)物件価値 ＋ 住宅ローン控除額
                 </span>
               </div>
-              <div class="text-right shrink-0">
-                <span
-                  class="text-xl sm:text-3xl font-extrabold font-num tabular-nums"
-                  :class="calc.totalEconomicBenefit >= 0 ? 'text-amber-400' : 'text-rose-400'"
-                >{{ formatDiff(calc.totalEconomicBenefit, 0) }}</span>
-                <span class="text-sm sm:text-base font-bold text-white ml-1">円</span>
+
+              <div class="flex flex-col justify-between gap-2 pt-0.5">
+                <div class="text-right self-end">
+                  <span
+                    class="text-3xl sm:text-5xl font-extrabold font-num tabular-nums tracking-tight drop-shadow"
+                    :class="calc.totalEconomicBenefit >= 0 ? 'text-amber-400' : 'text-rose-400'"
+                  >{{ formatDiff(calc.totalEconomicBenefit, 0) }}</span>
+                  <span class="text-base sm:text-2xl font-extrabold text-white ml-1.5">円</span>
+                </div>
+
+                <!-- 算出内訳（スクロールバーなしの2段表示） -->
+                <div class="w-full bg-slate-800/70 rounded-lg px-3 py-2 border border-slate-700/80 text-right">
+                  <div class="text-[11px] sm:text-xs text-slate-200 font-num tabular-nums leading-relaxed">
+                    <p>
+                      <span class="font-bold text-amber-300/90">算出内訳：</span>支払い差額({{ formatDiff(calc.diffEvalYears, 0) }}円) ＋ 資産額({{ calc.remainingAsset < 0 ? `▲ ${formatNum(Math.abs(calc.remainingAsset), 0)}` : formatNum(calc.remainingAsset, 0) }}円)
+                    </p>
+                    <p>
+                      ＋ ローン控除累計({{ formatNum(calc.manualTaxCreditTotal, 0) }}円)
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
